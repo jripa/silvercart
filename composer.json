@@ -17,12 +17,16 @@
         {
           "type": "vcs",
           "url": "https://github.com/jripa/payment-prepayment"
+        },
+        {
+          "type": "vcs",
+          "url": "https://github.com/jripa/widgetsets"
         }
     ],
     "require": {
         "silverstripe/cms": "^5.0",
         "silverstripe/widgets": "^3.0",
-        "silvercart/widgetsets": "^4",
+        "jripa/widgetsets": "dev-master",
         "jripa/payment-prepayment": "dev-master",
         "tractorcow/silverstripe-fluent": "^7.2",
         "matthiasmullie/minify": "^1.3",
