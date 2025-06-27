@@ -98,16 +98,6 @@ class ProductImageImportTask extends BuildTask
     private static $image_endings = ['jpg', 'jpeg', 'png'];
     
     /**
-     * Constructor.
-     * 
-     * @return void
-     */
-    public function __construct()
-    {
-        $this->initArgs();
-    }
-    
-    /**
      * Returns the files (including drafts) from the given $dir.
      * 
      * @param string $dir        Directory
@@ -177,9 +167,7 @@ class ProductImageImportTask extends BuildTask
     public function run($request) : void
     {
         self::$log_file_name = 'ProductImageImportTask';
-        if (self::is_running()
-         && $this->getCliArg('force-run') !== '1'
-        ) {
+        if (self::is_running()) {
             $this->printInfo('quit, import is already running.');
             return;
         }
@@ -209,7 +197,7 @@ class ProductImageImportTask extends BuildTask
                 $this->printProgressInfo("{$logString}");
                 $consecutiveNumber = 1;
                 $nameWithoutEnding = strrev(substr(strrev($uploadedFile), strpos(strrev($uploadedFile), '.') + 1));
-                $ending            = strrev(substr(strrev($uploadedFile), 0, strpos(strrev($uploadedFile), '.')));
+                $ending            = substr($uploadedFile, strpos($uploadedFile, '.') + 1);
                 $description       = '';
                 $separator         = self::get_image_name_separator();
                 $file              = $folder->myChildren()->filter('FileHash:StartsWith', $nameWithoutEnding)->first();
@@ -374,9 +362,8 @@ class ProductImageImportTask extends BuildTask
             $this->printInfo("\t   created new image #{$image->ID}", self::$CLI_COLOR_GREEN);
         }
         $silvercartImage = SilverCartImage::create();
-        $silvercartImage->ImageID   = $image->ID;
-        $silvercartImage->Title     = $description;
-        $silvercartImage->SortOrder = $consecutiveNumber;
+        $silvercartImage->ImageID = $image->ID;
+        $silvercartImage->Title   = $description;
         $silvercartImage->write();
         $product->Images()->add($silvercartImage);
     }
@@ -580,7 +567,7 @@ class ProductImageImportTask extends BuildTask
      */
     public static function is_installed() : bool
     {
-        return file_exists((string) self::get_import_is_installed_file_path());
+        return file_exists(self::get_import_is_installed_file_path());
     }
     
     /**
@@ -590,7 +577,7 @@ class ProductImageImportTask extends BuildTask
      */
     public static function is_running() : bool
     {
-        return file_exists((string) self::get_import_is_running_file_path());
+        return file_exists(self::get_import_is_running_file_path());
     }
     
     /**

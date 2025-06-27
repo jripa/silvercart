@@ -2,14 +2,12 @@
 
 namespace SilverCart\Model\Translation;
 
-use ReflectionClass;
 use SilverCart\Admin\Model\Config;
 use SilverCart\Dev\Tools;
 use SilverCart\Model\Translation\TranslationTools;
 use SilverStripe\Core\ClassInfo;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormField;
-use SilverStripe\Forms\GridField\GridFieldFilterHeader;
 use SilverStripe\ORM\DataExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DataQuery;
@@ -17,7 +15,7 @@ use SilverStripe\ORM\HasManyList;
 use SilverStripe\ORM\Queries\SQLSelect;
 use SilverStripe\Versioned\ReadingMode;
 use SilverStripe\Versioned\Versioned;
-use function singleton;
+use ReflectionClass;
 
 /** 
  * Extends DataObjects to make them multilingual.
@@ -39,13 +37,6 @@ class TranslatableDataObjectExtension extends DataExtension
      * @var array
      */
     protected $translationCache = [];
-    /**
-     * Grouped list (by ClassName) of object IDs to write without a translation
-     * update.
-     * 
-     * @var array
-     */
-    protected array $writeWithoutTranslation = [];
     
     /**
      * Updates the CMS fields.
@@ -56,14 +47,6 @@ class TranslatableDataObjectExtension extends DataExtension
      */
     public function updateCMSFields(FieldList $fields) : void
     {
-        if ($this->owner->exists()) {
-            $translationsField = $fields->dataFieldByName($this->getTranslationRelationName());
-            if ($translationsField === null) {
-                return;
-            }
-            $translationsFieldConfig = $translationsField->getConfig();
-            $translationsFieldConfig->removeComponentsByType(GridFieldFilterHeader::class);
-        }
         $insertFields = (bool) $this->owner->config()->insert_translation_cms_fields;
         if (!$insertFields) {
             return;
@@ -72,7 +55,7 @@ class TranslatableDataObjectExtension extends DataExtension
         $insertAfter  = $this->owner->config()->insert_translation_cms_fields_after;
         $languageFields = TranslationTools::prepare_cms_fields($this->owner->getTranslationClassName());
         foreach ($languageFields as $languageField) {
-            /* @var $languageField FormField */
+            /* @var $languageField \SilverStripe\Forms\FormField */
             if ($insertBefore === null
              && $insertAfter === null
             ) {
@@ -98,7 +81,6 @@ class TranslatableDataObjectExtension extends DataExtension
                 }
             }
         }
-        $this->owner->extend('updateTranslatableCMSFields', $fields);
     }
     
     /**
@@ -107,45 +89,41 @@ class TranslatableDataObjectExtension extends DataExtension
      * @param SQLSelect $query Query to manipulate
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 04.05.2012
      */
     public function augmentSQL(SQLSelect $query, DataQuery $dataQuery = null) : void
     {
         $translationTableName = $this->getTranslationTableName();
         if (!$query->isJoinedTo($translationTableName)) {
-            $idField                  = 'ID';
             $tableName                = $this->getTableName();
             $baseTableName            = $this->getBaseTableName();
             $baseTranslationTableName = $this->getBaseTranslationTableName();
             $relationFieldName        = $this->getRelationFieldName();
             $currentLocale            = Tools::current_locale();
             $silvercartDefaultLocale  = Config::Locale();
-            $addToWhere               = '';
             if ($this->owner->hasExtension(Versioned::class)) {
                 $versionedMode  = $dataQuery->getQueryParam('Versioned.mode');
                 $versionedStage = $dataQuery->getQueryParam('Versioned.stage');
                 ReadingMode::validateStage($versionedStage);
-                if (in_array($versionedMode, ['archive', 'latest_version_single', 'latest_versions', 'version', 'all_versions'])) {
-                    $baseTableName            = "{$baseTableName}_Versions";
-                    $translationTableName     = "{$translationTableName}_Versions";
-                    $baseTranslationTableName = "{$baseTranslationTableName}_Versions";
-                    $idField                  = 'RecordID';
-                    $addToWhere               = " AND {$baseTableName}.TranslationVersion = {$baseTranslationTableName}.TranslationVersion";
-                } elseif ($versionedStage === Versioned::LIVE
-                       && $this->owner->hasStages()
-                ) {
+                if (in_array($versionedMode, ['archive', 'latest_versions', 'version', 'all_versions'])) {
+                    $baseTableName = "{$baseTableName}_Versions";
+                } elseif ($versionedStage === Versioned::LIVE) {
                     $baseTableName = "{$baseTableName}_Live";
                 }
             }
             $query->addLeftJoin(
                     $translationTableName,
-                    "({$baseTableName}.{$idField} = {$translationTableName}.{$relationFieldName})"
+                    "({$baseTableName}.ID = {$translationTableName}.{$relationFieldName})"
             );
+            $addToWhere = '';
             if ($baseTranslationTableName != $translationTableName) {
                 $query->addLeftJoin(
                         $baseTranslationTableName,
-                        "({$translationTableName}.{$idField} = {$baseTranslationTableName}.{$idField})"
+                        "({$translationTableName}.ID = {$baseTranslationTableName}.ID)"
                 );
-                $addToWhere = "AND {$baseTranslationTableName}.{$idField} = {$translationTableName}.{$idField}{$addToWhere}";
+                $addToWhere = "AND {$baseTranslationTableName}.ID = {$translationTableName}.ID";
             }
             if (Config::useDefaultLanguageAsFallback()
              && $currentLocale != $silvercartDefaultLocale
@@ -411,6 +389,9 @@ class TranslatableDataObjectExtension extends DataExtension
      * @param string $fieldName Field name to check change for
      * 
      * @return bool
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 21.10.2014
      */
     public function translationFieldValueIsChanged($fieldName) : bool
     {
@@ -432,6 +413,9 @@ class TranslatableDataObjectExtension extends DataExtension
      * @param string $locale Locale to check
      * 
      * @return bool
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.07.2012
      */
     public function hasTranslation($locale) : bool
     {
@@ -447,6 +431,9 @@ class TranslatableDataObjectExtension extends DataExtension
      * Returns if there's a translation for the current locale.
      *
      * @return bool
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 28.09.2017
      */
     public function hasCurrentTranslation() : bool
     {
@@ -464,6 +451,9 @@ class TranslatableDataObjectExtension extends DataExtension
      * @param string $locale Locale to get translation for
      * 
      * @return DataObject
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 28.09.2017
      */
     public function getTranslationFor($locale)
     {
@@ -477,7 +467,7 @@ class TranslatableDataObjectExtension extends DataExtension
     /**
      * Returns the translations for the extended object.
      * 
-     * @return HasManyList
+     * @return \SilverStripe\ORM\HasManyList
      */
     public function getTranslations() : HasManyList
     {
@@ -485,31 +475,16 @@ class TranslatableDataObjectExtension extends DataExtension
     }
     
     /**
-     * Writes the main record without a translation.
-     * 
-     * @return void
-     */
-    public function writeWithoutTranslation() : void
-    {
-        if (!array_key_exists($this->owner->ClassName, $this->writeWithoutTranslation)) {
-            $this->writeWithoutTranslation[$this->owner->ClassName] = [];
-        }
-        $this->writeWithoutTranslation[$this->owner->ClassName][] = $this->owner->ID;
-        $this->owner->write();
-    }
-    
-    /**
      * hook
      *
-     * @return void
+     * @return void 
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>,
+     *         Roland Lehmann <rlehmann@pixeltricks.de>
+     * @since 09.02.2017
      */
     public function onBeforeWrite() : void
     {
-        if (array_key_exists($this->owner->ClassName, $this->writeWithoutTranslation)
-         && array_key_exists($this->owner->ID, $this->writeWithoutTranslation[$this->owner->ClassName])
-        ) {
-            return;
-        }
         $translation = $this->getTranslation();
         if ($translation instanceof DataObject
          && $translation->exists()
@@ -526,7 +501,10 @@ class TranslatableDataObjectExtension extends DataExtension
      * augments the hook of the decorated object so that the input in the fields
      * that are multilingual gets written to the related translation object
      *
-     * @return void
+     * @return void 
+     * 
+     * @author Roland Lehmann <rlehmann@pixeltricks.de>
+     * @since 06.01.2012
      */
     public function onAfterWrite() : void
     {
@@ -537,11 +515,14 @@ class TranslatableDataObjectExtension extends DataExtension
      * Deletes some relations
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 10.05.2012 
      */
     public function onBeforeDelete() : void
     {
         foreach ($this->getTranslationRelation() as $translation) {
-            $translation->deleteTranslationForced();
+            $translation->delete();
         }
     }
     
@@ -552,6 +533,9 @@ class TranslatableDataObjectExtension extends DataExtension
      * @param bool       &$doWrite Write clone to database?
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.03.2013
      */
     public function onBeforeDuplicate(DataObject $original, bool &$doWrite) : void
     {
@@ -565,26 +549,25 @@ class TranslatableDataObjectExtension extends DataExtension
      * @param bool       &$doWrite Write clone to database?
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 28.01.2015
      */
     public function onAfterDuplicate(DataObject $original, bool &$doWrite) : void
     {
         $translationClassName = $this->getTranslationClassName();
         $emptyTranslation     = $this->owner->getTranslationRelation()->first();
+        if ($emptyTranslation instanceof DataObject
+         && $emptyTranslation->exists()
+        ) {
+            $emptyTranslation->delete();
+        }
         foreach ($original->getTranslationRelation() as $translation) {
             $clonedTranslation = new $translationClassName();
             $clonedTranslation->castedUpdate($translation->toMap());
             $clonedTranslation->ID = 0;
             $clonedTranslation->write();
-            $this->owner->getTranslationRelation()->add($clonedTranslation);
-        }
-        if ($emptyTranslation instanceof DataObject
-         && $emptyTranslation->exists()
-        ) {
-            $emptyTranslation->deleteTranslationForced();
-            $translationCacheKey = get_class($this->owner) . '-' . $this->owner->ID;
-            if (array_key_exists($translationCacheKey, $this->translationCache)) {
-                unset($this->translationCache[$translationCacheKey]);
-            }
+            $this->owner->getTranslationRelation()->add($translation);
         }
     }
     
@@ -592,7 +575,10 @@ class TranslatableDataObjectExtension extends DataExtension
      * determin wether all multilingual attributes for all existing translations
      * are empty
      *
-     * @return bool
+     * @return bool 
+     * 
+     * @author Roland Lehmann <rlehmann@pixeltricks.de>
+     * @since 16.07.2012
      */
     public function isEmptyMultilingualAttributes() : bool
     {

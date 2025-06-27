@@ -4,13 +4,10 @@ namespace SilverCart\Model\Forms;
 
 use SilverCart\Dev\Tools;
 use SilverCart\Model\Translation\TranslatableDataObjectExtension;
-use SilverCart\ORM\ExtensibleDataObject;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\HasManyList;
 use SilverStripe\ORM\SS_List;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
@@ -31,12 +28,11 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  * 
  * @method FormField FormField() Returns the related FormField.
  * 
- * @method HasManyList FormFieldOptionTranslations() Returns the related FormFieldOptionTranslations.
- * @method HasManyList DependentFormFields()         Returns the related DependentFormFields.
+ * @method \SilverStripe\ORM\HasManyList FormFieldOptionTranslations() Return the related FormFieldOptionTranslations.
  */
 class FormFieldOption extends DataObject
 {
-    use ExtensibleDataObject;
+    use \SilverCart\ORM\ExtensibleDataObject;
     
     /**
      * Adds the blacklist management fields to the given CMS $fields.
@@ -81,8 +77,7 @@ class FormFieldOption extends DataObject
      * @var string[]
      */
     private static $casting = [
-        'Title'   => 'Varchar',
-        'Content' => 'HTMLText',
+        'Title' => 'Varchar',
     ];
     /**
      * Has one relations.
@@ -99,7 +94,6 @@ class FormFieldOption extends DataObject
      */
     private static $has_many = [
         'FormFieldOptionTranslations' => FormFieldOptionTranslation::class,
-        'DependentFormFields'         => FormField::class . '.ParentOption',
     ];
     /**
      * Default sort
@@ -176,9 +170,7 @@ class FormFieldOption extends DataObject
     public function getCMSFields() : FieldList
     {
         $this->beforeUpdateCMSFields(function(FieldList $fields) {
-            FormField::getFormFieldCMSFields($fields, $this->DependentFormFields(), 'DependentFormFields');
-            $tab = $fields->findOrMakeTab('Root.DependentFormFields');
-            $tab->setTitle($this->fieldLabel('DependentFormFields'));
+            
         });
         return parent::getCMSFields();
     }
@@ -191,25 +183,5 @@ class FormFieldOption extends DataObject
     public function getTitle() : string
     {
         return (string) $this->getTranslationFieldValue('Title');
-    }
-    
-    /**
-     * Returns the translated content.
-     * 
-     * @return DBHTMLText
-     */
-    public function getContent() : DBHTMLText
-    {
-        return DBHTMLText::create()->setValue($this->getTranslationFieldValue('Content'));
-    }
-    
-    /**
-     * Returns whether this option is selected.
-     * 
-     * @return bool
-     */
-    public function isSelectedOption() : bool
-    {
-        return (int) $this->FormField()->getFormFieldValue() === (int) $this->ID;
     }
 }

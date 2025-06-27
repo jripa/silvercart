@@ -2,34 +2,27 @@
 
 namespace SilverCart\Admin\Controllers;
 
+use SilverCart\Dev\Tools;
 use SilverCart\Admin\Forms\GridField\GridFieldBatchController;
 use SilverCart\Admin\Forms\GridField\GridFieldQuickAccessController;
-use SilverCart\Dev\Tools;
-use SilverStripe\Admin\ModelAdmin as SilverStripeModelAdmin;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig;
 use SilverStripe\Forms\GridField\GridFieldExportButton;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\Security\Member;
-use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
-use UndefinedOffset\SortableGridField\Forms\GridFieldSortableRows;
-use function singleton;
 
 /**
  * ModelAdmin extension for SilverCart.
  * Provides some special functions for SilverCarts admin area.
  * 
  * @package SilverCart
- * @subpackage Admin\Controllers
+ * @subpackage Admin_Controllers
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @copyright 2017 pixeltricks GmbH
  * @since 22.09.2017
  * @license see license file in modules root directory
  */
-class ModelAdmin extends SilverStripeModelAdmin
+class ModelAdmin extends \SilverStripe\Admin\ModelAdmin
 {
     /**
      * Allowed actions.
@@ -78,7 +71,7 @@ class ModelAdmin extends SilverStripeModelAdmin
     /**
      * GridField of the edit form
      *
-     * @var GridField
+     * @var \SilverStripe\Forms\GridField\GridField
      */
     protected $gridField = null;
     /**
@@ -100,6 +93,9 @@ class ModelAdmin extends SilverStripeModelAdmin
      * and other definitions.
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.09.2018
      */
     protected function init()
     {
@@ -114,6 +110,9 @@ class ModelAdmin extends SilverStripeModelAdmin
      * @param callable $callback The callback to execute
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.09.2018
      */
     protected function beforeUpdateInit($callback)
     {
@@ -127,6 +126,9 @@ class ModelAdmin extends SilverStripeModelAdmin
      * @param callable $callback The callback to execute
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.09.2018
      */
     protected function beforeUpdateEditForm($callback)
     {
@@ -137,6 +139,9 @@ class ModelAdmin extends SilverStripeModelAdmin
      * title in the top bar of the CMS
      *
      * @return string 
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 24.10.2017
      */
     public function SectionTitle()
     {
@@ -153,34 +158,27 @@ class ModelAdmin extends SilverStripeModelAdmin
      * @param int       $id     The current records ID. Won't be used for ModelAdmins.
      * @param FieldList $fields Fields to use. Won't be used for ModelAdmins.
      * 
-     * @return Form
+     * @return \SilverStripe\Forms\Form
      */
     public function getEditForm($id = null, $fields = null) : Form
     {
-        $this->beforeUpdateEditForm(function(Form $form) {
-            $grid           = $this->getGridFieldFor($form);
+        $this->beforeUpdateEditForm(function(\SilverStripe\Forms\Form $form) {
             $config         = $this->getGridFieldConfigFor($form);
-            $sortable_field = $this->stat('sortable_field');
-            $model          = singleton($this->modelClass);
-            if ($model->hasField($sortable_field)) {
-                if (class_exists(GridFieldOrderableRows::class)
-                 && !empty($sortable_field)
-                ) {
-                    $config->addComponent(new GridFieldOrderableRows($sortable_field));
-                } elseif (class_exists(GridFieldSortableRows::class)
-                 && !empty($sortable_field)
-                ) {
-                    $config->addComponent(new GridFieldSortableRows($sortable_field));
-                }
+            $sortable_field = $this->config()->get('sortable_field');
+            if (class_exists('\Symbiote\GridFieldExtensions\GridFieldOrderableRows')
+             && !empty($sortable_field)
+            ) {
+                $config->addComponent(new \Symbiote\GridFieldExtensions\GridFieldOrderableRows($sortable_field));
+            } elseif (class_exists('\UndefinedOffset\SortableGridField\Forms\GridFieldSortableRows')
+             && !empty($sortable_field)
+            ) {
+                $config->addComponent(new \UndefinedOffset\SortableGridField\Forms\GridFieldSortableRows($sortable_field));
             }
             if (GridFieldBatchController::hasBatchActionsFor($this->modelClass)) {
                 $config->addComponent(new GridFieldBatchController($this->modelClass, 'buttons-before-left'));
             }
-            if ($model->hasMethod('getQuickAccessFields')) {
+            if (singleton($this->modelClass)->hasMethod('getQuickAccessFields')) {
                 $config->addComponent(new GridFieldQuickAccessController());
-            }
-            if ($model->hasMethod('getGridFieldDescription')) {
-                $grid->setDescription($model->getGridFieldDescription());
             }
             $exportButton = $config->getComponentByType(GridFieldExportButton::class);
             if ($exportButton instanceof GridFieldExportButton) {
@@ -193,21 +191,12 @@ class ModelAdmin extends SilverStripeModelAdmin
     }
     
     /**
-     * Adds the possibility to update the tabs by decorator.
-     * 
-     * @return ArrayList
-     */
-    protected function getManagedModelTabs() : ArrayList
-    {
-        $forms = parent::getManagedModelTabs();
-        $this->extend('updateManagedModelTabs', $forms);
-        return $forms;
-    }
-    
-    /**
      * Returns the CSS class to use for the SearchForms collapse state.
      * 
      * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 06.03.2014
      */
     public function SearchFormCollapseClass() : string
     {
@@ -224,6 +213,9 @@ class ModelAdmin extends SilverStripeModelAdmin
      * @param HTTPRequest $request Request to handle
      * 
      * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.03.2013
      */
     public function handleBatchCallback(HTTPRequest $request)
     {
@@ -239,7 +231,7 @@ class ModelAdmin extends SilverStripeModelAdmin
      * 
      * @param Form $form The edit form to get GridField for
      * 
-     * @return GridField
+     * @return \SilverStripe\Forms\GridField\GridField
      */
     public function getGridFieldFor(Form $form) : GridField
     {
@@ -270,6 +262,9 @@ class ModelAdmin extends SilverStripeModelAdmin
      * @param Member $member Member
      * 
      * @return bool
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 24.10.2017
      */
     public function canView($member = null) : bool
     {

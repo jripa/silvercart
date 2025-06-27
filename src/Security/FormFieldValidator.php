@@ -122,18 +122,6 @@ class FormFieldValidator extends RequiredFields
             if ($existing instanceof FormField) {
                 $filter['ContactFormPageID'] = $existing->ContactFormPageID;
             }
-            $this->extend('updateDuplicateFilter', $filter, $existing);
-            if ($existing->ParentOption()->exists()) {
-                $parent = $existing->ParentOption()->FormField();
-                foreach ($filter as $key => $value) {
-                    if ($key === 'Name') {
-                        continue;
-                    }
-                    if ($parent->hasField($key)) {
-                        $filter["ParentOption.FormField.{$key}"] = $parent->{$key};
-                    }
-                }
-            }
             $duplicates = FormField::get()->filter($filter);
             if ($id > 0) {
                 $duplicates = $duplicates->exclude('ID', $id);

@@ -139,18 +139,6 @@ class ShippingFee extends DataObject
      * @var Tax
      */
     protected $cachedTax = null;
-    /**
-     * Contains all requested free of shipping costs from properties by country.
-     * 
-     * @var DBMoney[]
-     */
-    protected $freeOfShippingCostsFromCache = [];
-    /**
-     * Contains all requested shipping is free properties by country.
-     * 
-     * @var bool[]
-     */
-    protected $shippingIsFreeCache = [];
     
     /**
      * Returns the translated singular name of the object.
@@ -534,46 +522,6 @@ class ShippingFee extends DataObject
         }
         return $price;
     }
-    
-    /**
-     * Returns the fee's original price gross or net dependent on the current 
-     * price type context.
-     * 
-     * @return DBMoney
-     */
-    public function getOriginalPrice() : DBMoney
-    {
-        if (Config::PriceType() === Config::PRICE_TYPE_NET) {
-            return $this->getOriginalPriceNet();
-        }
-        return $this->getOriginalPriceGross();
-    }
-    
-    /**
-     * Returns the fee's original price gross.
-     * 
-     * @return DBMoney
-     */
-    public function getOriginalPriceGross() : DBMoney
-    {
-        return $this->Price;
-    }
-    
-    /**
-     * Returns the fee's original price net.
-     * 
-     * @return DBMoney
-     */
-    public function getOriginalPriceNet() : DBMoney
-    {
-        $priceGross = (float) $this->Price->getAmount();
-        $taxRate    = $this->getTaxRate();
-        $taxAmount  = $priceGross - ($priceGross / (100 + $taxRate) * 100);
-        $priceNet   = $priceGross - $taxAmount;
-        return DBMoney::create()
-                ->setAmount($priceNet)
-                ->setCurrency($this->Price->getCurrency());
-    }
 
     /**
      * Returns the prices amount
@@ -635,27 +583,21 @@ class ShippingFee extends DataObject
         }
         return $useFreeOfShippingCostsFrom;
     }
-
+    
     /**
      * Returns needed value for free shipping
      * 
      * @param Country $country Country to get free of shipping costs from value
      * 
      * @return DBMoney
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 22.09.2018
      */
     public function FreeOfShippingCostsFrom(Country $country = null) : DBMoney
     {
-        $key = $country === null ? 0 : $country->ID;
-        if (array_key_exists($key, $this->freeOfShippingCostsFromCache)) {
-            return $this->freeOfShippingCostsFromCache[$key];
-        }
-        if ($country === null) {
-            $country = $this->ShippingMethod()->getShippingCountry();
-            if ($country === null
-             && $this->Zone()->Countries()->exists()
-            ) {
-                $country = $this->Zone()->Countries()->first();
-            }
+        if (is_null($country)) {
+            $country = $this->Zone()->Countries()->first();
         }
         $freeOfShippingCostsFrom = DBMoney::create();
         if ($this->UseFreeOfShippingCostsFrom()) {
@@ -665,9 +607,7 @@ class ShippingFee extends DataObject
                 $freeOfShippingCostsFrom = Config::FreeOfShippingCostsFrom($country);
             }
         }
-        $this->extend('updateFreeOfShippingCostsFrom', $freeOfShippingCostsFrom, $country);
-        $this->freeOfShippingCostsFromCache[$key] = $freeOfShippingCostsFrom;
-        return $this->freeOfShippingCostsFromCache[$key];
+        return $freeOfShippingCostsFrom;
     }
     
     /**
@@ -677,31 +617,20 @@ class ShippingFee extends DataObject
      * @param Country $country Country to get free of shipping info
      * 
      * @return bool
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 17.10.2012
      */
     public function ShippingIsFree(float $amount, Country $country = null) : bool
     {
-        $key = ($country === null ? 0 : $country->ID) . "-{$amount}";
-        if (array_key_exists($key, $this->shippingIsFreeCache)) {
-            return $this->shippingIsFreeCache[$key];
-        }
         $shippingIsFree = false;
-        if ($country === null) {
-            $country = $this->ShippingMethod()->getShippingCountry();
-            if ($country === null
-             && $this->Zone()->Countries()->exists()
-            ) {
-                $country = $this->Zone()->Countries()->first();
-            }
-        }
         if ($this->UseFreeOfShippingCostsFrom()
          && $this->FreeOfShippingCostsFrom($country)->getAmount() > 0
          && (float) $this->FreeOfShippingCostsFrom($country)->getAmount() <= $amount
         ) {
             $shippingIsFree = true;
         }
-        $this->extend('updateShippingIsFree', $shippingIsFree, $amount, $country);
-        $this->shippingIsFreeCache[$key] = $shippingIsFree;
-        return $this->shippingIsFreeCache[$key];
+        return $shippingIsFree;
     }
     
     /**

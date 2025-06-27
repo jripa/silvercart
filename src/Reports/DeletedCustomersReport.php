@@ -2,20 +2,15 @@
 
 namespace SilverCart\Reports;
 
-use IntlDateFormatter;
 use SilverCart\Dev\Tools;
 use SilverCart\Model\Customer\DeletedCustomer;
 use SilverCart\Model\Customer\DeletedCustomerReason;
-use SilverCart\Model\Customer\DeletedCustomerReasonTranslation;
 use SilverCart\Model\Pages\Page;
 use SilverCart\Model\Product\Product;
-use SilverStripe\Forms\GridField\GridField;
-use SilverStripe\Forms\GridField\GridFieldExportButton;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DB;
 use SilverStripe\Reports\Report;
 use SilverStripe\View\ArrayData;
-use function _t;
 
 /**
  * Report to show reasons for customer deletions.
@@ -48,24 +43,6 @@ class DeletedCustomersReport extends Report
     {
         return _t(__CLASS__ . '.Title', 'Deleted Customers');
     }
-    
-    /**
-     * Overwrites the default CSV export columns and returns the report field.
-     * 
-     * @return GridField
-     */
-    public function getReportField()
-    {
-        $field = parent::getReportField();
-        $exportBtn = $field->getConfig()->getComponentByType(GridFieldExportButton::class);
-        $exportBtn->setExportColumns([
-            'Year'        => _t(Page::class . '.YEAR', 'Year'),
-            'Month'       => _t(Page::class . '.MONTH', 'Month'),
-            'ReasonTitle' => DeletedCustomerReason::singleton()->fieldLabel('Reason'),
-            'Total'       => _t(Product::class . '.QUANTITY', 'Quantity'),
-        ]);
-        return $field;
-    }
 
     /**
      * Returns the source records.
@@ -76,45 +53,33 @@ class DeletedCustomersReport extends Report
      */
     public function sourceRecords($params = []) : ArrayList
     {
-        $tableDeletedCustomer       = DeletedCustomer::config()->table_name;
-        $tableDeletedCustomerReason = DeletedCustomerReasonTranslation::config()->table_name;
+        $tableDeletedCustomer = DeletedCustomer::config()->table_name;
         
         $whereParts = [];
         if (isset($params[static::REASON_FILTER_KEY])) {
-            $whereParts[] = "{$tableDeletedCustomer}.ReasonID = {$params[static::REASON_FILTER_KEY]}";
+            $whereParts[] = "ReasonID = {$params[static::REASON_FILTER_KEY]}";
             $this->setIsFilteredByReason(true);
         }
         if (isset($params[static::YEAR_FILTER_KEY])) {
             if (isset($params[static::MONTH_FILTER_KEY])) {
                 $lastDay = date('t', strtotime("{$params[static::YEAR_FILTER_KEY]}-{$params[static::MONTH_FILTER_KEY]}-01"));
-                $whereParts[] = "{$tableDeletedCustomer}.Created BETWEEN '{$params[static::YEAR_FILTER_KEY]}-{$params[static::MONTH_FILTER_KEY]}-01' AND '{$params[static::YEAR_FILTER_KEY]}-{$params[static::MONTH_FILTER_KEY]}-{$lastDay}'";
+                $whereParts[] = "Created BETWEEN '{$params[static::YEAR_FILTER_KEY]}-{$params[static::MONTH_FILTER_KEY]}-01' AND '{$params[static::YEAR_FILTER_KEY]}-{$params[static::MONTH_FILTER_KEY]}-{$lastDay}'";
             } else {
-                $whereParts[] = "{$tableDeletedCustomer}.Created BETWEEN '{$params[static::YEAR_FILTER_KEY]}-01-01' AND '{$params[static::YEAR_FILTER_KEY]}-12-31'";
+                $whereParts[] = "Created BETWEEN '{$params[static::YEAR_FILTER_KEY]}-01-01' AND '{$params[static::YEAR_FILTER_KEY]}-12-31'";
             }
         }
         $where = implode(' AND ', $whereParts);
         if (!empty($where)) {
             $where = "WHERE {$where}";
         }
-        $months = DB::query("SELECT "
-                . "YEAR({$tableDeletedCustomer}.Created) AS CreatedYear, "
-                . "MONTH({$tableDeletedCustomer}.Created) AS CreatedMonth, "
-                . "{$tableDeletedCustomer}.ReasonID, "
-                . "{$tableDeletedCustomerReason}.Reason AS ReasonTitle, "
-                . "COUNT({$tableDeletedCustomer}.ID) AS TotalCount "
-                        . "FROM {$tableDeletedCustomer} "
-                        . "LEFT JOIN {$tableDeletedCustomerReason} ON ({$tableDeletedCustomerReason}.DeletedCustomerReasonID = {$tableDeletedCustomer}.ReasonID)"
-                        . "{$where} "
-                        . "GROUP BY CreatedYear, CreatedMonth, ReasonID, ReasonTitle "
-                        . "ORDER BY CreatedYear DESC, CreatedMonth DESC");
+        $months = DB::query("SELECT YEAR(Created) AS CreatedYear, MONTH(Created) AS CreatedMonth, ReasonID, COUNT(ID) AS TotalCount FROM {$tableDeletedCustomer} {$where} GROUP BY CreatedYear, CreatedMonth, ReasonID ORDER BY CreatedYear DESC, CreatedMonth DESC");
         $output = ArrayList::create();
         foreach ($months as $month) {
             $output->push(ArrayData::create([
-                'Year'        => $month['CreatedYear'],
-                'Month'       => $month['CreatedMonth'],
-                'Reason'      => (int) $month['ReasonID'],
-                'ReasonTitle' => empty($month['ReasonTitle']) ? _t(DeletedCustomerReason::class . '.DifferentReason', 'Different reason') : (string) $month['ReasonTitle'],
-                'Total'       => (int) $month['TotalCount'],
+                'Year'   => $month['CreatedYear'],
+                'Month'  => $month['CreatedMonth'],
+                'Reason' => (int) $month['ReasonID'],
+                'Total'  => (int) $month['TotalCount'],
             ]));
         }
         return $output;
@@ -148,9 +113,7 @@ class DeletedCustomersReport extends Report
                 'title'      => _t(Page::class . '.MONTH', 'Month'),
                 'formatting' => function ($value, $item) use ($report) {
                     Tools::switchLocale(false);
-                    $formatter = new IntlDateFormatter(Tools::current_locale(), IntlDateFormatter::LONG, IntlDateFormatter::NONE);
-                    $formatter->setPattern('MMMM');
-                    $month     = $formatter->format(strtotime(date("Y-{$item->Month}-01")));
+                    $month = strftime('%B', strtotime(date("Y-{$item->Month}-01")));
                     Tools::switchLocale(false);
                     return sprintf(
                         '<a class="grid-field__link" href="%s" title="%s">%s</a>',

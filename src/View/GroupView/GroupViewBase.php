@@ -10,57 +10,62 @@ use SilverStripe\View\ViewableData;
  * Provides the base logic for a group view type.
  *
  * @package SilverCart
- * @subpackage View\GroupView
+ * @subpackage View_GroupView
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 11.10.2017
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class GroupViewBase extends ViewableData
-{
+class GroupViewBase extends ViewableData {
+
     /**
      * Short code to use for the view
      *
      * @var string
      */
-    protected $Code = '';
+    protected $Code;
+    
     /**
      * Image/icon to use for the view
      *
      * @var sring
      */
-    protected $Image = '';
+    protected $Image;
+
     /**
      * indicates whether the view is active
      *
      * @var bool 
      */
     protected $active = null;
+
     /**
      * indicates whether the view is the active one for holders
      *
      * @var bool 
      */
     protected $activeHolder = null;
+
     /**
      * Default preferences
      *
      * @var array 
      */
-    protected $defaultPreferences = [
+    protected $defaultPreferences = array(
         'code' => '',
         'image' => '',
         'image_active' => '',
         'image_inactive' => '',
         'i18n_key' => '',
         'i18n_default' => '',
-    ];
+    );
+    
     /**
      * Extended preferences
      *
      * @var array 
      */
-    protected $preferences = [];
+    protected $preferences = array();
 
     /**
      * default constructor. reads the preferences from extendet group views and
@@ -70,9 +75,13 @@ class GroupViewBase extends ViewableData
      * @param bool  $isSingleton true if this is a singleton() object
      *
      * @return void
+     *
+     * @global string $project the name of the userdefined project
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.02.2011
      */
-    public function  __construct()
-    {
+    public function  __construct() {
         $this->preferences = $this->preferences();
         $this->setCode($this->preferences['code']);
     }
@@ -82,10 +91,11 @@ class GroupViewBase extends ViewableData
      *
      * @return array
      *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.02.2011
      * @see self::$defaultPreferences
      */
-    protected function preferences() : array
-    {
+    protected function preferences() {
         return $this->defaultPreferences;
     }
 
@@ -94,8 +104,7 @@ class GroupViewBase extends ViewableData
      *
      * @return string
      */
-    public function getCode() : string
-    {
+    public function getCode() {
         return $this->Code;
     }
 
@@ -104,22 +113,10 @@ class GroupViewBase extends ViewableData
      *
      * @param string $Code the group views code
      *
-     * @return GroupViewBase
+     * @return void
      */
-    public function setCode(string $Code) : GroupViewBase
-    {
+    public function setCode($Code) {
         $this->Code = $Code;
-        return $this;
-    }
-
-    /**
-     * returns the group views action
-     *
-     * @return string
-     */
-    public function getAction() : string
-    {
-        return "switchGroupView/{$this->getCode()}";
     }
 
     /**
@@ -127,30 +124,33 @@ class GroupViewBase extends ViewableData
      *
      * @return string
      * 
-     * @global string $project the name of the userdefined project
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.02.2011
      */
-    public function Image() : string
-    {
+    public function Image() {
         global $project;
-        if (empty($this->Image)) {
+
+        if (!$this->Image) {
             if ($this->isActive()) {
                 $highlightStatus = 'active';
             } else {
                 $highlightStatus = 'inactive';
             }
+            
             if (is_file(Director::baseFolder() . '/' . $this->preferences['image_' . $highlightStatus])) {
                 $this->preferences['image'] = Director::absoluteBaseURL() . '/' . $this->preferences['image_' . $highlightStatus];
             } elseif (is_file(Director::baseFolder() . '/' . $project . '/img/icons/20x20_group_view_' . $this->preferences['code'] . '_' . $highlightStatus . '.png')) {
                 $this->preferences['image'] = Director::absoluteBaseURL() . $project . '/img/icons/20x20_group_view_' . $this->preferences['code'] . '_' . $highlightStatus . '.png';
-            } elseif (is_file(Director::publicFolder() . '/' . RESOURCES_DIR . '/vendor/silvercart/silvercart/client/img/icons/20x20_group_view_' . $this->preferences['code'] . '_' . $highlightStatus . '.png')) {
-                $this->preferences['image'] = Director::absoluteBaseURL() . '/' . RESOURCES_DIR . '/vendor/silvercart/silvercart/client/img/icons/20x20_group_view_' . $this->preferences['code'] . '_' . $highlightStatus . '.png';
+            } elseif (is_file(Director::publicFolder() . '/resources/vendor/silvercart/silvercart/client/img/icons/20x20_group_view_' . $this->preferences['code'] . '_' . $highlightStatus . '.png')) {
+                $this->preferences['image'] = Director::absoluteBaseURL() . 'resources/vendor/silvercart/silvercart/client/img/icons/20x20_group_view_' . $this->preferences['code'] . '_' . $highlightStatus . '.png';
             } else {
                 $this->preferences['image'] = '';
             }
 
             $this->setImage($this->preferences['image']);
         }
-        return (string) $this->Image;
+        
+        return $this->Image;
     }
 
     /**
@@ -158,12 +158,10 @@ class GroupViewBase extends ViewableData
      *
      * @param string $Image the group views image
      *
-     * @return GroupViewBase
+     * @return void
      */
-    public function setImage(string $Image) : GroupViewBase
-    {
+    public function setImage($Image) {
         $this->Image = $Image;
-        return $this;
     }
 
     /**
@@ -171,9 +169,8 @@ class GroupViewBase extends ViewableData
      *
      * @return string
      */
-    public function getLabel() : string
-    {
-        return _t($this->preferences['i18n_key'], $this->preferences['i18n_default']);
+    public function getLabel() {
+        return _t($this->preferences['i18n_key'], $this->preferences['i18n_default']);;
     }
 
     /**
@@ -181,12 +178,11 @@ class GroupViewBase extends ViewableData
      *
      * @return bool
      */
-    public function getActive() : bool
-    {
+    public function getActive() {
         if (is_null($this->active)) {
             $this->setActive($this->Code == GroupViewHandler::getActiveGroupView());
         }
-        return (bool) $this->active;
+        return $this->active;
     }
 
     /**
@@ -194,12 +190,10 @@ class GroupViewBase extends ViewableData
      *
      * @param bool $active activity of the group view
      *
-     * @return GroupViewBase
+     * @return void
      */
-    public function setActive(bool $active) : GroupViewBase
-    {
+    public function setActive($active) {
         $this->active = $active;
-        return $this;
     }
 
     /**
@@ -207,12 +201,11 @@ class GroupViewBase extends ViewableData
      *
      * @return bool
      */
-    public function getActiveHolder() : bool
-    {
+    public function getActiveHolder() {
         if (is_null($this->activeHolder)) {
             $this->setActiveHolder($this->Code == GroupViewHandler::getActiveGroupHolderView());
         }
-        return (bool) $this->activeHolder;
+        return $this->activeHolder;
     }
 
     /**
@@ -220,21 +213,21 @@ class GroupViewBase extends ViewableData
      *
      * @param bool $activeHolder activity of the group view
      *
-     * @return GroupViewBase
+     * @return void
      */
-    public function setActiveHolder(bool $activeHolder) : GroupViewBase
-    {
+    public function setActiveHolder($activeHolder) {
         $this->activeHolder = $activeHolder;
-        return $this;
     }
 
     /**
      * returns, wether the group view is active or not
      *
      * @return bool
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.02.2011
      */
-    public function isActive() : bool
-    {
+    public function isActive() {
         return $this->getActive();
     }
 
@@ -242,9 +235,12 @@ class GroupViewBase extends ViewableData
      * returns, wether the group view is active or not
      *
      * @return bool
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.02.2011
      */
-    public function isActiveHolder() : bool
-    {
+    public function isActiveHolder() {
         return $this->getActiveHolder();
     }
+
 }

@@ -2,15 +2,14 @@
 
 namespace SilverCart\Forms;
 
+use Heyday\SilverStripe\HoneyPot\HoneyPotField;
 use SilverCart\Dev\Tools;
 use SilverCart\Forms\CustomForm;
-use SilverCart\Forms\Extensions\CloudflareTurnstyleExtension;
 use SilverCart\Forms\FormFields\GoogleRecaptchaField;
 use SilverCart\Forms\FormFields\TextareaField;
 use SilverCart\Forms\FormFields\TextField;
 use SilverCart\Model\ContactMessage;
 use SilverCart\Model\Customer\Customer;
-use SilverCart\Model\Forms\FormField;
 use SilverCart\Model\Forms\FormFieldValue;
 use SilverCart\Model\Pages\ContactFormPage;
 use SilverCart\Model\Pages\Page;
@@ -18,7 +17,6 @@ use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\EmailField;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Security\Member;
-use function _t;
 
 /** 
  * a contact form of the CustomHTMLForms modul.
@@ -29,12 +27,9 @@ use function _t;
  * @since 26.09.2017
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
- * 
- * @mixin CloudflareTurnstyleExtension
  */
 class ContactForm extends CustomForm
 {
-    use HoneyPotable;
     /**
      * Spam check parameter for equal firstname and surname.
      * Contact messages with an equal firstname and surname will be ignored.
@@ -42,14 +37,6 @@ class ContactForm extends CustomForm
      * @var bool
      */
     private static $spam_check_firstname_surname_enabled = true;
-    /**
-     * Extensions.
-     * 
-     * @var string[]
-     */
-    private static $extensions = [
-        CloudflareTurnstyleExtension::class,
-    ];
     /**
      * Custom extra CSS classes.
      *
@@ -85,9 +72,14 @@ class ContactForm extends CustomForm
         'Message' => [
             'isFilledIn'   => true,
             'hasMinLength' => 3,
-            'hasHTML'      => false,
         ],
     ];
+    /**
+     * HoneyPotField
+     * 
+     * @var HoneyPotField|null
+     */
+    protected $honeyPotField = null;
     
     /**
      * Returns the required fields.
@@ -99,7 +91,7 @@ class ContactForm extends CustomForm
         $requiredFields = self::config()->get('requiredFields');
         if ($this->HasCustomFormFields()) {
             foreach ($this->ContactPage()->FormFields() as $dbFormField) {
-                /* @var $dbFormField FormField */
+                /* @var $dbFormField \SilverCart\Model\Forms\FormField */
                 if ($dbFormField->IsRequired) {
                     $requiredFields[] = $dbFormField->Name;
                 }
@@ -155,7 +147,7 @@ class ContactForm extends CustomForm
         $fields = [];
         if ($this->HasCustomFormFields()) {
             foreach ($this->ContactPage()->FormFields() as $dbFormField) {
-                /* @var $dbFormField FormField */
+                /* @var $dbFormField \SilverCart\Model\Forms\FormField */
                 $fields[] = $dbFormField->getFormField();
             }
         }
@@ -172,12 +164,8 @@ class ContactForm extends CustomForm
         $fields   = [];
         $subjects = $this->ContactPage()->Subjects();
         if ($subjects->exists()) {
-            $value = null;
-            if (array_key_exists('SID', $_GET)) {
-                $value = (int) $_GET['SID'];
-            }
             $fields = [
-                DropdownField::create('ContactMessageSubjectID', $this->ContactPage()->fieldLabel('Subject'), $subjects->map('ID', 'Subject')->toArray(), $value),
+                DropdownField::create('ContactMessageSubjectID', $this->ContactPage()->fieldLabel('Subject'), $subjects->map('ID', 'Subject')->toArray()),
             ];
         }
         return $fields;
@@ -195,6 +183,41 @@ class ContactForm extends CustomForm
             $fields[] = GoogleRecaptchaField::create('GoogleRecaptcha', $this->fieldLabel('GoogleRecaptcha'));
         }
         return $fields;
+    }
+    
+    /**
+     * Returns the HoneyPot related form fields.
+     * 
+     * @return array
+     */
+    protected function getHoneyPotFields() : array
+    {
+        $fields = [];
+        if ($this->EnableHoneyPot()) {
+            $fields[] = $this->getHoneyPotField();
+        }
+        return $fields;
+    }
+    
+    /**
+     * Returns the HoneyPot related form fields.
+     * 
+     * @return array
+     */
+    protected function getHoneyPotField() : ?HoneyPotField
+    {
+        if ($this->honeyPotField === null
+         && $this->EnableHoneyPot()
+        ) {
+            $fieldName = 'Website';
+            $index     = 1;
+            while ($this->ContactPage()->FormFields()->filter('Name', $fieldName)->exists()) {
+                $fieldName = "{$fieldName}-{$index}";
+                $index++;
+            }
+            $this->honeyPotField = HoneyPotField::create($fieldName);
+        }
+        return $this->honeyPotField;
     }
     
     /**
@@ -263,7 +286,7 @@ class ContactForm extends CustomForm
         $contactMessage->write();
         if ($this->HasCustomFormFields()) {
             foreach ($this->ContactPage()->FormFields() as $dbFormField) {
-                /* @var $dbFormField FormField */
+                /* @var $dbFormField \SilverCart\Model\Forms\FormField */
                 if (array_key_exists($dbFormField->Name, $data)) {
                     $value = FormFieldValue::create();
                     $value->FieldTitle  = $dbFormField->Title;
@@ -330,6 +353,16 @@ class ContactForm extends CustomForm
     public function EnableGoogleRecaptcha() : bool
     {
         return GoogleRecaptchaField::isEnabled();
+    }
+    
+    /**
+     * Returns whether HoneyPot is enabled.
+     * 
+     * @return bool
+     */
+    public function EnableHoneyPot() : bool
+    {
+        return class_exists(HoneyPotField::class);
     }
     
     /**

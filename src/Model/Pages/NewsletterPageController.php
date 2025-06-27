@@ -8,7 +8,6 @@ use SilverCart\Model\ShopEmail;
 use SilverCart\Model\Newsletter\AnonymousNewsletterRecipient;
 use SilverCart\Model\Pages\MetaNavigationHolderController;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Control\HTTPResponse;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Security\Member;
 
@@ -16,24 +15,25 @@ use SilverStripe\Security\Member;
  * NewsletterPage Controller class.
  *
  * @package SilverCart
- * @subpackage Model\Pages
+ * @subpackage Model_Pages
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 27.09.2017
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class NewsletterPageController extends MetaNavigationHolderController
-{
+class NewsletterPageController extends MetaNavigationHolderController {
+
     /**
      * List of allowed actions.
      *
      * @var array
      */
-    private static $allowed_actions = [
+    private static $allowed_actions = array(
         'NewsletterForm',
         'optin',
         'thanks',
-    ];
+    );
+    
     /**
      * Opt-In message.
      *
@@ -45,10 +45,12 @@ class NewsletterPageController extends MetaNavigationHolderController
      * Returns the NewsletterForm.
      *
      * @return NewsletterForm
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.11.2017
      */
-    public function NewsletterForm() : NewsletterForm
-    {
-        $form = NewsletterForm::create($this);
+    public function NewsletterForm() {
+        $form = new NewsletterForm($this);
         return $form;
     }
     
@@ -57,29 +59,28 @@ class NewsletterPageController extends MetaNavigationHolderController
      * 
      * @param HTTPRequest $request HTTP request
      * 
-     * @return HTTPResponse
+     * @return string
      */
-    public function optin(HTTPRequest $request) : HTTPResponse
-    {
+    public function optin(HTTPRequest $request) {
         $newsletterPage      = $this->data();
         $statusMessage       = $newsletterPage->ConfirmationFailureMessage;
         $isAnonymousCustomer = true;
         $optInHash           = $request->getVar('h');
+
         if (!is_null($optInHash)) {
             $recipient = AnonymousNewsletterRecipient::getByHash($optInHash);
-            if (!($recipient instanceof AnonymousNewsletterRecipient)
-             || !$recipient->exists()
-            ) {
+
+            if (!($recipient instanceof AnonymousNewsletterRecipient) ||
+                !$recipient->exists()) {
                 $recipient = Member::get()->filter('NewsletterConfirmationHash', $optInHash)->first();
-                if ($recipient instanceof Member
-                 && $recipient->exists()
-                ) {
+                if ($recipient instanceof Member &&
+                    $recipient->exists()) {
                     $isAnonymousCustomer = false;
                 }
             }
-            if ($recipient instanceof DataObject
-             && $recipient->exists()
-            ) {
+
+            if ($recipient instanceof DataObject &&
+                $recipient->exists()) {
                 if ($recipient->NewsletterOptInStatus) {
                     $statusMessage = $newsletterPage->AlreadyConfirmedMessage;
                 } else {
@@ -91,18 +92,19 @@ class NewsletterPageController extends MetaNavigationHolderController
                         $recipient->write();
                     }
                     $statusMessage = $newsletterPage->ConfirmationSuccessMessage;
+
                     $this->sendConfirmationMail(
-                        (string) $recipient->Salutation,
-                        (string) $recipient->FirstName,
-                        (string) $recipient->Surname,
-                        (string) $recipient->Email,
-                        $recipient
+                        $recipient->Salutation,
+                        $recipient->FirstName,
+                        $recipient->Surname,
+                        $recipient->Email
                     );
                 }
             }
         }
+
         $this->setOptInMessage(Tools::string2html($statusMessage));
-        return HTTPResponse::create($this->render());
+        return $this->render();
     }
     
     /**
@@ -110,9 +112,8 @@ class NewsletterPageController extends MetaNavigationHolderController
      * 
      * @return string
      */
-    public function getOptInMessage() : string
-    {
-        return (string) $this->optInMessage;
+    public function getOptInMessage() {
+        return $this->optInMessage;
     }
 
     /**
@@ -122,34 +123,34 @@ class NewsletterPageController extends MetaNavigationHolderController
      * 
      * @return void
      */
-    public function setOptInMessage(string $optInMessage) : void
-    {
+    public function setOptInMessage($optInMessage) {
         $this->optInMessage = $optInMessage;
     }
 
     /**
      * Send confirmation mail to customer
      *
-     * @param string                              $salutation Salutation
-     * @param string                              $firstname  Firstname
-     * @param string                              $surname    Surname
-     * @param string                              $email      Email
-     * @param AnonymousNewsletterRecipient|Member $recipient  Recipient
+     * @param string $salutation Salutation
+     * @param string $firstname  Firstname
+     * @param string $surname    Surname
+     * @param string $email      Email
      *
      * @return void
+     *
+     * @author Sascha Koehler <skoehler@pixeltricks.de>
+     * @since 25.10.2010
      */
-    public function sendConfirmationMail(string $salutation, string $firstname, string $surname, string $email, AnonymousNewsletterRecipient|Member $recipient = null) : void
-    {
+    public function sendConfirmationMail($salutation, $firstname, $surname, $email) {
         ShopEmail::send(
             'NewsletterOptInConfirmation',
             $email,
-            [
-                'Member'     => $recipient,
+            array(
                 'Salutation' => $salutation,
                 'FirstName'  => $firstname,
                 'Surname'    => $surname,
                 'Email'      => $email
-            ]
+            )
         );
     }
+    
 }

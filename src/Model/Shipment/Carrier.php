@@ -2,7 +2,6 @@
 
 namespace SilverCart\Model\Shipment;
 
-use SilverCart\Admin\Forms\GridField\GridFieldAddExistingAutocompleter as SilverCartGridFieldAddExistingAutocompleter;
 use SilverCart\Dev\Tools;
 use SilverCart\Model\Pages\Page;
 use SilverCart\Model\Shipment\ShippingMethod;
@@ -10,7 +9,6 @@ use SilverCart\Model\Shipment\CarrierTranslation;
 use SilverCart\Model\Shipment\Zone;
 use SilverCart\ORM\DataObjectExtension;
 use SilverStripe\Assets\Image;
-use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\Filters\ExactMatchFilter;
 use SilverStripe\ORM\Filters\PartialMatchFilter;
@@ -47,7 +45,7 @@ class Carrier extends DataObject
      *
      * @var array
      */
-    private static array $db = [
+    private static $db = [
         'priority'         => 'Int',
         'TrackingLinkBase' => 'Text',
     ];
@@ -56,7 +54,7 @@ class Carrier extends DataObject
      *
      * @var array
      */
-    private static array $has_one = [
+    private static $has_one = [
         'Logo' => Image::class,
     ];
     /**
@@ -64,7 +62,7 @@ class Carrier extends DataObject
      *
      * @var array
      */
-    private static array $has_many = [
+    private static $has_many = [
         'ShippingMethods'     => ShippingMethod::class,
         'CarrierTranslations' => CarrierTranslation::class,
     ];
@@ -73,15 +71,15 @@ class Carrier extends DataObject
      * 
      * @var array
      */
-    private static array $belongs_many_many = [
-        'Zones' => Zone::class . '.Carriers',
+    private static $belongs_many_many = [
+        'Zones' => Zone::class,
     ];
     /**
      * Virtual database fields.
      *
      * @var array
      */
-    private static array $casting = [
+    private static $casting = [
         'AttributedZones'           => 'Varchar(255)',
         'AttributedShippingMethods' => 'Varchar(255)',
         'Title'                     => 'Varchar(25)',
@@ -92,13 +90,13 @@ class Carrier extends DataObject
      *
      * @var string
      */
-    private static string $default_sort = "priority DESC";
+    private static $default_sort = "priority DESC";
     /**
      * DB table name
      *
      * @var string
      */
-    private static string $table_name = 'SilvercartCarrier';
+    private static $table_name = 'SilvercartCarrier';
     
     /**
      * retirieves title from related language class depending on the set locale
@@ -157,15 +155,6 @@ class Carrier extends DataObject
     {
         $this->beforeUpdateCMSFields(function(\SilverStripe\Forms\FieldList $fields) {
             $fields->dataFieldByName('TrackingLinkBase')->setDescription($this->fieldLabel('TrackingLinkBaseDesc'));
-            if ($this->exists()) {
-                $replaceAddExistingAutocompleter = ['ShippingMethods', 'Zones'];
-                foreach ($replaceAddExistingAutocompleter as $fieldName) {
-                    $grid       = $fields->dataFieldByName($fieldName);
-                    $gridConfig = $grid->getConfig();
-                    $gridConfig->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
-                    $gridConfig->addComponent(new SilverCartGridFieldAddExistingAutocompleter('buttons-before-right'));
-                }
-            }
         });
         return DataObjectExtension::getCMSFields($this);
     }

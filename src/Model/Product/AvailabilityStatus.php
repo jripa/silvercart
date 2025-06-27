@@ -37,9 +37,6 @@ class AvailabilityStatus extends DataObject
 {
     use \SilverCart\ORM\ExtensibleDataObject;
     
-    public const STATUS_CODE_AVAILABLE     = 'available';
-    public const STATUS_CODE_NOT_AVAILABLE = 'not-available';
-    
     /**
      * attributes
      *
@@ -100,17 +97,17 @@ class AvailabilityStatus extends DataObject
      * @var array
      */
     public static $default_microdata_codes = [
-        self::STATUS_CODE_AVAILABLE     => 'InStock',
-        self::STATUS_CODE_NOT_AVAILABLE => 'OutOfStock',
-        'Discontinued'                  => 'Discontinued',
-        'InStock'                       => 'InStock',
-        'InStoreOnly'                   => 'InStoreOnly',
-        'LimitedAvailability'           => 'LimitedAvailability',
-        'OnlineOnly'                    => 'OnlineOnly',
-        'OutOfStock'                    => 'OutOfStock',
-        'PreOrder'                      => 'PreOrder',
-        'PreSale'                       => 'PreSale',
-        'SoldOut'                       => 'SoldOut',
+        'available'           => 'InStock',
+        'not-available'       => 'OutOfStock',
+        'Discontinued'        => 'Discontinued',
+        'InStock'             => 'InStock',
+        'InStoreOnly'         => 'InStoreOnly',
+        'LimitedAvailability' => 'LimitedAvailability',
+        'OnlineOnly'          => 'OnlineOnly',
+        'OutOfStock'          => 'OutOfStock',
+        'PreOrder'            => 'PreOrder',
+        'PreSale'             => 'PreSale',
+        'SoldOut'             => 'SoldOut',
     ];
 
     /**
@@ -388,24 +385,12 @@ class AvailabilityStatus extends DataObject
     }
     
     /**
-     * Returns the default AvailabilityStatus
+     * Returns the default tax rate
      * 
-     * @return AvailabilityStatus|null
+     * @return Tax
      */
-    public static function getDefault() : ?AvailabilityStatus
+    public static function getDefault()
     {
         return AvailabilityStatus::get()->filter('IsDefault', true)->first();
-    }
-    
-    /**
-     * Returns the AvailabilityStatus with the given $code.
-     * 
-     * @param string $code Code
-     * 
-     * @return AvailabilityStatus|null
-     */
-    public static function getByCode(string $code) : ?AvailabilityStatus
-    {
-        return AvailabilityStatus::get()->filter('Code', $code)->first();
     }
 }

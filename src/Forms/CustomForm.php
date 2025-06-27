@@ -6,7 +6,6 @@ use ReflectionClass;
 use SilverCart\Dev\Tools;
 use SilverCart\Forms\CustomRequiredFields;
 use SilverStripe\Control\Controller;
-use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Control\RequestHandler;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FileField;
@@ -14,7 +13,6 @@ use SilverStripe\Forms\Form;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\Validator;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\ValidationResult;
 
 /**
  * custom form definition.
@@ -137,19 +135,6 @@ class CustomForm extends Form
         }
         return $this;
     }
-
-    /**
-     * Allows user code to hook into CustomForm::getCustomFields prior to updateCustomFields
-     * being called on extensions
-     *
-     * @param callable $callback The callback to execute
-     * 
-     * @return void
-     */
-    protected function beforeUpdateRequiredFields(callable $callback) : void
-    {
-        $this->beforeExtending('updateRequiredFields', $callback);
-    }
     
     /**
      * Returns the required fields.
@@ -271,7 +256,7 @@ class CustomForm extends Form
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 08.11.2017
      */
-    public function markFieldValidationError($fieldName, $errorMessage, $messageType = ValidationResult::TYPE_ERROR, $messageCast = ValidationResult::CAST_TEXT)
+    protected function markFieldValidationError($fieldName, $errorMessage, $messageType, $messageCast)
     {
         $messageType .= ' error';
         $field = $this->Fields()->dataFieldByName($fieldName);
@@ -306,8 +291,11 @@ class CustomForm extends Form
      * @param callable $callback The callback to execute
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.11.2017
      */
-    protected function beforeUpdateFields(callable $callback) : void
+    protected function beforeUpdateFields($callback)
     {
         $this->beforeExtending('updateFields', $callback);
     }
@@ -338,28 +326,6 @@ class CustomForm extends Form
         }
         return $fields;
     }
-    
-    /**
-     * Fills the form fields with the posted data.
-     * 
-     * @return CustomForm
-     */
-    public function fillWithPostedValues() : CustomForm
-    {
-        $request = $this->getRequest();
-        if ($request->isPOST()) {
-            foreach ($this->Fields() as $field) {
-                /* @var $field \SilverStripe\Forms\FormField */
-                if ($field instanceof \SilverStripe\Forms\PasswordField
-                 || $request->postVar($field->getName()) === null
-                ) {
-                    continue;
-                }
-                $field->setValue($request->postVar($field->getName()));
-            }
-        }
-        return $this;
-    }
 
     /**
      * Allows user code to hook into CustomForm::Actions prior to updateActions
@@ -368,8 +334,11 @@ class CustomForm extends Form
      * @param callable $callback The callback to execute
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.11.2017
      */
-    protected function beforeUpdateActions(callable $callback) : void
+    protected function beforeUpdateActions($callback)
     {
         $this->beforeExtending('updateActions', $callback);
     }
@@ -401,8 +370,11 @@ class CustomForm extends Form
      * @param callable $callback The callback to execute
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.11.2017
      */
-    protected function beforeUpdateCustomFields(callable $callback) : void
+    protected function beforeUpdateCustomFields($callback)
     {
         $this->beforeExtending('updateCustomFields', $callback);
     }
@@ -426,8 +398,11 @@ class CustomForm extends Form
      * @param callable $callback The callback to execute
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.11.2017
      */
-    protected function beforeUpdateCustomActions(callable $callback) : void
+    protected function beforeUpdateCustomActions($callback)
     {
         $this->beforeExtending('updateCustomActions', $callback);
     }
@@ -482,9 +457,12 @@ class CustomForm extends Form
      * @param array      $data Submitted data
      * @param CustomForm $form Form
      * 
-     * @return HTTPResponse
+     * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 16.11.2017
      */
-    public function submit($data, CustomForm $form) : HTTPResponse
+    public function submit($data, CustomForm $form)
     {
         $overwritten = false;
         $this->prepareSubmittedData($data);
@@ -494,10 +472,7 @@ class CustomForm extends Form
             $this->doSubmit($data, $form);
         }
         $this->extend('onAfterSubmit', $data, $form);
-        if ($this->getController()->redirectedTo()) {
-            return $this->getController()->getResponse();
-        }
-        return HTTPResponse::create($this->getController()->render());
+        return $this->getController()->render();
     }
     
     /**
@@ -523,8 +498,11 @@ class CustomForm extends Form
      * @param callable $callback The callback to execute
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 08.11.2017
      */
-    protected function beforeUpdateFieldLabels(callable $callback) : void
+    protected function beforeUpdateFieldLabels($callback)
     {
         $this->beforeExtending('updateFieldLabels', $callback);
     }

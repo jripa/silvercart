@@ -32,16 +32,6 @@ trait PageControllable
     {
         return (string) PageController::singleton()->ContentLocale();
     }
-    
-    /**
-     * Returns the content locale in a two character format.
-     * 
-     * @return string
-     */
-    public function ContentLocaleShort() : string
-    {
-        return (string) substr($this->ContentLocale(), 0, 2);
-    }
 
     /**
      * Returns the SiteConfig.

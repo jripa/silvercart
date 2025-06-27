@@ -2,6 +2,7 @@
 
 namespace SilverCart\Model\Pages;
 
+use SilverCart\Dev\Tools;
 use SilverCart\Model\Customer\DeletedCustomerReason;
 use SilverCart\Model\Pages\MyAccountHolder;
 use SilverStripe\Forms\FieldList;
@@ -15,14 +16,11 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  * Shows customerdata + edit.
  *
  * @package SilverCart
- * @subpackage Model\Pages
+ * @subpackage Model_Pages
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 27.09.2017
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
- * 
- * @property strng $DeleteAccountContent Delete Account Content
- * @property strng $LoginAttemptContent  Login Attempt Content
  */
 class CustomerDataPage extends MyAccountHolder
 {
@@ -48,11 +46,34 @@ class CustomerDataPage extends MyAccountHolder
      */
     private static $can_be_root = false;
     /**
-     * Class attached to page icons in the CMS page tree. Also supports font-icon set.
-     * 
+     * The icon to use for this page in the storeadmin sitetree.
+     *
      * @var string
      */
-    private static $icon_class = 'font-icon-p-post';
+    private static $icon = "silvercart/silvercart:client/img/page_icons/my_account_holder-file.gif";
+    
+    /**
+     * Returns the translated singular name of the object. If no translation exists
+     * the class name will be returned.
+     * 
+     * @return string
+     */
+    public function singular_name() : string
+    {
+        return Tools::singular_name_for($this);
+    }
+
+
+    /**
+     * Returns the translated plural name of the object. If no translation exists
+     * the class name will be returned.
+     * 
+     * @return string
+     */
+    public function plural_name() : string
+    {
+        return Tools::plural_name_for($this); 
+    }
     
     /**
      * Returns the field labels.

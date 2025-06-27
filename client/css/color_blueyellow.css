@@ -1,0 +1,86 @@
+a {
+  color:#F9CF00;
+}
+a:hover, a:active {
+  color:#F9CF00;
+  text-decoration:underline;
+}
+a.highlight:link, a.highlight:visited {
+  color:#666;
+}
+a.highlight:hover, a.highlight:active {
+  color:#F9CF00;
+  text-decoration:none;
+}
+a.active:link, a.active:visited {
+  color:#F9CF00;
+  cursor:default;
+}
+
+.dropdown-menu li > a:hover,
+.dropdown-menu li > a:focus,
+.dropdown-submenu:hover > a {
+  background:#F9CF00;
+  background-color:#F9CF00;
+  filter:#F9CF00;
+}
+.dropdown-menu .active > a,
+.dropdown-menu .active > a:hover {
+  background:#F9CF00;
+  background-color:#F9CF00;
+  filter: #F9CF00;
+}
+
+.navbar .nav > li:hover {
+  background:#0F5AA9;
+}
+
+.navbar .nav .active a,
+.navbar .nav .active a:hover,
+.navbar .nav .active a:focus
+.navbar .nav > .active > a,
+.navbar .nav > .active > a:hover,
+.navbar .nav > .active > a:focus,
+.navbar .nav > .active > a i,
+.navbar .nav > .active > a:focus i,
+.navbar .nav > .active > a:hover i,
+.navbar .nav > .active > a span,
+.navbar .nav > .active > a:focus span,
+.navbar .nav > .active > a:hover span {
+  background: #0F5AA9;
+  background-color: #0F5AA9;
+  filter:#0F5AA9;
+  color: #fff;
+  -webkit-text-shadow:0 1px 0 rgba(0,0,0,.1);
+  -moz-text-shadow:0 1px 0 rgba(0,0,0,.1);
+  text-shadow:0 1px 0 rgba(0,0,0,.1);
+  cursor:default;
+}
+/* nested ul */
+.navbar .nav div {
+  background: #0F5AA9;
+}
+
+
+.btn-primary {
+  border:1px solid #0F5AA9;
+  background: #2989d8;
+  background: -moz-linear-gradient(top, #2989d8 0%, #0F5AA9 100%);
+  background: -webkit-gradient(linear, left top, left bottom, color-stop(0%,#2989d8), color-stop(100%,#0F5AA9));
+  background: -webkit-linear-gradient(top, #2989d8 0%,#0F5AA9 100%);
+  background: -o-linear-gradient(top, #2989d8 0%,#0F5AA9 100%);
+  background: -ms-linear-gradient(top, #2989d8 0%,#0F5AA9 100%);
+  background: linear-gradient(to bottom, #2989d8 0%,#0F5AA9 100%);
+  filter: progid:DXImageTransform.Microsoft.gradient( startColorstr='#2989d8', endColorstr='#0F5AA9',GradientType=0 );
+}
+.btn-primary:hover,
+.btn-primary:active,
+.btn-primary.active,
+.btn-primary.disabled,
+.btn-primary[disabled] {
+  background: #0F5AA9;
+}
+.btn-primary:active,
+.btn-primary.active {
+  background-color: #2989d8;
+}

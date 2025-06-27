@@ -3,10 +3,7 @@
 namespace SilverCart\Model\Pages;
 
 use DateTime;
-use Page;
-use Psr\SimpleCache\CacheInterface;
-use SilverCart\Admin\Model\Config as SilverCartConfig;
-use SilverCart\Dev\CacheTools;
+use SilverCart\Admin\Model\Config;
 use SilverCart\Dev\SeoTools;
 use SilverCart\Dev\Tools;
 use SilverCart\Forms\FormFields\FieldGroup;
@@ -14,48 +11,36 @@ use SilverCart\Model\Pages\ProductGroupHolder;
 use SilverCart\Model\Pages\ProductGroupPageController;
 use SilverCart\Model\Product\Product;
 use SilverCart\Model\Product\ProductTranslation;
-use SilverCart\ORM\ExtensibleDataObject;
 use SilverCart\View\GroupView\GroupViewHandler;
-use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\Image;
+use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
-use SilverStripe\Core\Injector\Injector;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormField;
-use SilverStripe\Forms\GridField\GridField;
-use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\ToggleCompositeField;
-use SilverStripe\i18n\i18n;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
-use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
+use SilverStripe\ORM\PaginatedList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\FieldType\DBText;
-use SilverStripe\ORM\HasManyList;
-use SilverStripe\ORM\ManyManyList;
-use SilverStripe\ORM\PaginatedList;
 use SilverStripe\ORM\Queries\SQLSelect;
-use SilverStripe\ORM\SS_List;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\ArrayData;
-use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 use WidgetSets\Model\WidgetSet;
-use function _t;
-use function mb_strlen;
 
 /**
  * Displays products with similar attributes.
  *
  * @package SilverCart
- * @subpackage Model\Pages
+ * @subpackage Model_Pages
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 28.09.2017
  * @copyright 2017 pixeltricks GmbH
@@ -74,12 +59,12 @@ use function mb_strlen;
  * @property string $ProductsOnPagesString         Products on pages string
  * 
  * @method Image                          GroupPicture()   Returns the related GroupPicture.
- * @method HasManyList  Products()       Returns the related products.
- * @method ManyManyList MirrorProducts() Returns the related products.
+ * @method \SilverStripe\ORM\HasManyList  Products()       Returns the related products.
+ * @method \SilverStripe\ORM\ManyManyList MirrorProducts() Returns the related products.
  */
-class ProductGroupPage extends Page
+class ProductGroupPage extends \Page
 {
-    use ExtensibleDataObject;
+    use \SilverCart\ORM\ExtensibleDataObject;
     const META_TITLE_BEHAVIOR_NONE   = 'none';
     const META_TITLE_BEHAVIOR_PREFIX = 'prefix';
     const META_TITLE_BEHAVIOR_SUFFIX = 'suffix';
@@ -105,11 +90,11 @@ class ProductGroupPage extends Page
      */
     private static $can_be_root = false;
     /**
-     * Class attached to page icons in the CMS page tree. Also supports font-icon set.
+     * The icon for this page type in the backend sitetree.
      * 
      * @var string
      */
-    private static $icon_class = 'font-icon-p-articles';
+    private static $icon = "silvercart/silvercart:client/img/page_icons/product_group-file.gif";
     /**
      * Attributes.
      *
@@ -152,7 +137,7 @@ class ProductGroupPage extends Page
      * @var array
      */
     private static $belongs_many_many = [
-        'MirrorProducts' => Product::class . '.ProductGroupMirrorPages',
+        'MirrorProducts' => Product::class,
     ];
     /**
      * Casting
@@ -160,6 +145,7 @@ class ProductGroupPage extends Page
      * @var array
      */
     private static $casting = [
+        'BreadcrumbTitle'       => 'Text',
         'ProductsOnPagesString' => 'HTMLText',
     ];
     /**
@@ -254,6 +240,28 @@ class ProductGroupPage extends Page
     }
     
     /**
+     * Returns the translated singular name of the object. If no translation exists
+     * the class name will be returned.
+     * 
+     * @return string
+     */
+    public function singular_name() : string
+    {
+        return Tools::singular_name_for($this);
+    }
+    
+    /**
+     * Returns the translated plural name of the object. If no translation exists
+     * the class name will be returned.
+     * 
+     * @return string
+     */
+    public function plural_name() : string
+    {
+        return Tools::plural_name_for($this);
+    }
+    
+    /**
      * Overwrites the function LinkingMode in SiteTree
      * Other than the default behavior current should be returned for the
      * product category defined via session. This is neccessary for products
@@ -289,20 +297,19 @@ class ProductGroupPage extends Page
      * @param string $action Action to call. Will be ignored for product detail views.
      *
      * @return string
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.03.2015
      */
     public function Link($action = null) : string
     {
-        if (Controller::has_curr()) {
-            $controller = Controller::curr();
-            if ($controller->hasMethod('isProductDetailView')
-             && $controller->isProductDetailView()
-             && $controller->data()->ID === $this->ID
-            ) {
-                $product = $controller->getDetailViewProduct();
-                $link    = $product->Link($this->Locale);
-            } else {
-                $link = parent::Link($action);
-            }
+        $controller = Controller::curr();
+        if ($controller->hasMethod('isProductDetailView')
+         && $controller->isProductDetailView()
+         && $controller->data()->ID === $this->ID
+        ) {
+            $product = $controller->getDetailViewProduct();
+            $link    = $product->Link($this->Locale);
         } else {
             $link = parent::Link($action);
         }
@@ -534,8 +541,14 @@ class ProductGroupPage extends Page
             $fields->insertAfter($displaySettingsToggle, 'Content');
 
             if ($this->drawCMSFields()) {
-                $this->getCMSFieldsForProducts($fields);
-                $this->getCMSFieldsForMirrorProducts($fields);
+                $productAdminLink     = Director::baseURL().'admin/silvercart-products';
+                $manageProductsButton = LiteralField::create(
+                    'ManageProductsButton',
+                    "<a href=\"{$productAdminLink}?q[ProductGroup__ID]={$this->ID}\">{$this->fieldLabel('ManageProductsButton')}</a>"
+                );
+                $fields->findOrMakeTab('Root.Products', Product::singleton()->plural_name());
+                $fields->addFieldToTab('Root.Products', $manageProductsButton);
+
                 $imageUploadField = UploadField::create('GroupPicture', $this->fieldLabel('GroupPicture'));
                 $imageUploadField->setFolderName('assets/productgroup-images');
                 $fields->addFieldToTab('Root.Main', $imageUploadField, 'Content');
@@ -571,78 +584,6 @@ class ProductGroupPage extends Page
         });
         $this->getCMSFieldsIsCalled = true;
         return parent::getCMSFields();
-    }
-    
-    /**
-     * Adds the product management fields to the given CMS $fields.
-     * 
-     * @param FieldList $fields CMS field lists to add fields to
-     * 
-     * @return void
-     */
-    public function getCMSFieldsForProducts(FieldList $fields) : void
-    {
-        $name    = 'Products';
-        $tabName = "Root.{$name}";
-        $list    = $this->Products();
-        $grid    = GridField::create($name, $this->fieldLabel($name), $list, GridFieldConfig_RelationEditor::create());
-        $fields->findOrMakeTab($tabName, $this->fieldLabel($name));
-        $fields->addFieldToTab($tabName, $grid);
-        if (class_exists(GridFieldOrderableRows::class)) {
-            $grid->getConfig()->addComponent(GridFieldOrderableRows::create('DefaultSortOrder'));
-        }
-    }
-    
-    /**
-     * Adds the mirror product management fields to the given CMS $fields.
-     * 
-     * @param FieldList $fields CMS field lists to add fields to
-     * 
-     * @return void
-     */
-    public function getCMSFieldsForMirrorProducts(FieldList $fields) : void
-    {
-        $name    = 'MirrorProducts';
-        $tabName = "Root.Products";
-        $list    = $this->MirrorProducts();
-        $grid    = GridField::create($name, $this->fieldLabel($name), $list, GridFieldConfig_RelationEditor::create());
-        $fields->addFieldToTab($tabName, $grid);
-        if (class_exists(GridFieldOrderableRows::class)) {
-            $grid->getConfig()->addComponent(GridFieldOrderableRows::create('DefaultSortOrder'));
-        }
-    }
-
-    /**
-     * Uses the children of MyAccountHolder to render a subnavigation
-     * with the SilverCart/Model/Pages/Includes/SubNavigation.ss template.
-     * 
-     * @param string $identifierCode param only added because it exists on parent::getSubNavigation
-     *                               to avoid strict notice
-     *
-     * @return DBHTMLText
-     */
-    public function getSubNavigation(string $identifierCode = self::IDENTIFIER_PRODUCT_GROUP_HOLDER) : DBHTMLText
-    {
-        $cachekey = "SilverCart_Model_Pages_Includes_SubNavigation{$this->ID}";
-        $cache    = Injector::inst()->get(CacheInterface::class . '.ProductGroupPageController_getSubNavigation');
-        $result   = $cache->get($cachekey);
-        if ($result) {
-            $output = unserialize($result);
-        } else {
-            $menuElements   = $this->getTopProductGroup($this)->Children();
-            $extendedOutput = $this->extend('getSubNavigation', $menuElements);
-            if (empty ($extendedOutput)) {
-                $output = $this->customise([
-                    'SubElements' => $menuElements,
-                ])->renderWith([
-                    'SilverCart/Model/Pages/Includes/SubNavigation',
-                ]);
-            } else {
-                $output = $extendedOutput[0];
-            }
-            $cache->set(serialize($output));
-        }
-        return DBHTMLText::create()->setValue($output);
     }
 
     /**
@@ -747,6 +688,10 @@ class ProductGroupPage extends Page
      * Returns the active products for this page.
      *
      * @return ArrayData
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>,
+     *         Sascha Koehler <skoehler@pixeltricks.de>
+     * @since 27.07.2015
      */
     public function ActiveProducts() : ArrayData
     {
@@ -766,11 +711,9 @@ class ProductGroupPage extends Page
                     );
                 }
             }
-            $filter                 = [''];
-            $productBaseTable       = Product::config()->table_name;
-            $productStageTable      = Product::singleton()->getStageTableName();
-            $productTransStageTable = ProductTranslation::singleton()->getStageTableName();
-            $productGroupBaseTable  = ProductGroupPage::config()->table_name;
+            
+            $filter = [''];
+
             if (!empty($requiredAttributes)) {
                 foreach ($requiredAttributes as $requiredAttribute) {
                     //find out if we are dealing with a real attribute or a multilingual field
@@ -779,7 +722,7 @@ class ProductGroupPage extends Page
                     ) {
                         if ($requiredAttribute == "Price") {
                             // Gross price as default if not defined
-                            if (SilverCartConfig::Pricetype() == "net") {
+                            if (Config::Pricetype() == "net") {
                                 $filter[] = '("PriceNetAmount" != 0.0)';
                             } else {
                                 $filter[] = '("PriceGrossAmount" != 0.0)';
@@ -791,7 +734,8 @@ class ProductGroupPage extends Page
                         $filter[] = 'ProductGroupID > 0';
                     } else {
                         // if its a multilingual attribute it comes from a relational class
-                        $filter[] = "{ProductTranslation::singleton()->getStageTableName()}.{$requiredAttribute} != ''";
+                        $translationTableName = Tools::get_table_name(ProductTranslation::class);
+                        $filter[] = "{$translationTableName}.{$requiredAttribute} != ''";
                     }
 
                 }
@@ -799,15 +743,14 @@ class ProductGroupPage extends Page
             if (count($filter) == 1) {
                 $filter = [];
             }
+            $productTable       = Tools::get_table_name(Product::class);
+            $productGroupTable  = Tools::get_table_name(ProductGroupPage::class);
             $filterList         = implode(' AND ', $filter);
             $productGroupIDList = implode(',', $productGroupIDs);
-            $mirrorQuery        = "SELECT {$productBaseTable}ID FROM {$productBaseTable}_ProductGroupMirrorPages WHERE {$productGroupBaseTable}ID IN ({$productGroupIDList})";
-            $defaultLocale      = SilverCartConfig::Locale();
-            $currentLocale      = i18n::get_locale();
-            $localeList         = $defaultLocale === $currentLocale ? "'{$currentLocale}'" : "'{$currentLocale}','{$defaultLocale}'";
-            $filterString       = "SP.isActive = 1 AND SPT.Locale IN ({$localeList}) AND (SP.ProductGroupID IN ({$productGroupIDList}) OR SP.ID IN ($mirrorQuery)) {$filterList}";
+            $mirrorQuery        = "SELECT {$productTable}ID FROM {$productTable}_ProductGroupMirrorPages WHERE {$productGroupTable}ID IN ({$productGroupIDList})";
+            $filterString       = "isActive = 1 AND (ProductGroupID IN ({$productGroupIDList}) OR ID IN ($mirrorQuery)) {$filterList}";
             $this->extend('updateActiveProductsFilter', $filterString);
-            $records            = DB::query("SELECT DISTINCT(SP.ID) FROM {$productStageTable} SP LEFT JOIN {$productTransStageTable} SPT ON (SP.ID = SPT.ProductID) WHERE SPT.ProductID IS NOT NULL AND {$filterString}");
+            $records            = DB::query("SELECT ID FROM {$productTable} WHERE {$filterString}");
             
             foreach ($records as $record) {
                 $activeProducts[] = $record['ID'];
@@ -902,29 +845,6 @@ class ProductGroupPage extends Page
     }
 
     /**
-     * Returns the number of products per page according to where it is set.
-     * Highest priority has the customer's configuration setting if available.
-     * Next comes the shop owners setting for this page; if that's not
-     * configured we use the global setting from Config.
-     *
-     * @return int
-     */
-    public function getProductsPerPageSetting() : int
-    {
-        return (int) $this->getContextController()->getProductsPerPageSetting();
-    }
-
-    /**
-     * All products filter of this group
-     * 
-     * @return string
-     */
-    public function getProductsFilter() : string
-    {
-        return (string) $this->getContextController()->getProductsFilter();
-    }
-
-    /**
      * All products of this group
      * 
      * @param int    $numberOfProducts The number of products to return
@@ -968,7 +888,7 @@ class ProductGroupPage extends Page
     /**
      * Returns the products of all children (recursively) of the current product group page.
      *
-     * @return SS_List
+     * @return \SilverStripe\ORM\SS_List
      */
     public function getProductsFromChildrenList()
     {
@@ -992,13 +912,11 @@ class ProductGroupPage extends Page
         if (is_array($pageIDsToWorkOn)
          && count($pageIDsToWorkOn) > 0
         ) {
-            $productGroupBaseTable = $this->config()->table_name;
-            $productBaseTable      = Product::config()->table_name;
-            $productStageTable     = Product::singleton()->getStageTableName();
-            $productMirrorTable    = "{$productBaseTable}_ProductGroupMirrorPages";
-            $pageIDsToWorkOnList   = implode(',', $pageIDsToWorkOn);
-            $mirrored              = "SELECT PGMP.{$productBaseTable}ID FROM {$productMirrorTable} AS PGMP WHERE PGMP.{$productGroupBaseTable}ID IN ({$pageIDsToWorkOnList})";
-            $filter                = "{$productStageTable}.ProductGroupID IN ({$pageIDsToWorkOnList}) OR {$productStageTable}.ID IN ({$mirrored})";
+            $productGroupTable   = Tools::get_table_name(self::class);
+            $productTable        = Tools::get_table_name(Product::class);
+            $pageIDsToWorkOnList = implode(',', $pageIDsToWorkOn);
+            $mirrored            = "SELECT PGMP.{$productTable}ID FROM {$productTable}_ProductGroupMirrorPages AS PGMP WHERE PGMP.{$productGroupTable}ID IN ({$pageIDsToWorkOnList})";
+            $filter              = "{$productTable}.ProductGroupID IN ({$pageIDsToWorkOnList}) OR {$productTable}.ID IN ({$mirrored})";
         }
         return $filter;
     }
@@ -1109,9 +1027,10 @@ class ProductGroupPage extends Page
      */
     public function getPreorderableProducts(int $limit = null)
     {
-        $products = $this->getProductsInherited()
-                ->where("ReleaseDate > NOW()")
-                ->sort("ReleaseDate", "ASC");
+        $tableName = Product::config()->table_name;
+        $products  = $this->getProductsInherited()
+                ->where("\"{$tableName}\".ReleaseDate > NOW()")
+                ->sort("\"{$tableName}\".ReleaseDate", "ASC");
         if (!is_null($limit)) {
             $products = $products->limit($limit);
         }
@@ -1163,66 +1082,45 @@ class ProductGroupPage extends Page
      */
     public function getMetaDescription() : string
     {
-        if ($this->getCMSFieldsIsCalled
-         || Tools::isBackendEnvironment()
-        ) {
-            return (string) $this->getField('MetaDescription');
-        }
-        $ctrl            = Controller::curr();
-        $pageStart       = (int) $ctrl->getRequest()->getVar('start');
-        $currOffset      = 0;
-        $sqlOffset       = 0;
-        $isDetailView    = false;
-        if ($ctrl instanceof ProductGroupPageController) {
-            $currOffset      = $ctrl->CurrentOffset();
-            $sqlOffset       = $ctrl->getProductsPerPageSetting();
-            $isDetailView    = $ctrl->isProductDetailView();
-        }
-        $cacheKeyParts   = [
-            $this->ID,
-            $this->Locale,
-            $isDetailView,
-            $pageStart,
-            $currOffset,
-            $sqlOffset,
-        ];
-        $this->extend('updateMetaDescriptionCacheKeyParts', $cacheKeyParts);
-        $cacheKey        = implode('-', $cacheKeyParts);
-        $metaDescription = CacheTools::get($cacheKey);
-        if (!empty($metaDescription)) {
-            return (string) $metaDescription;
-        }
         $metaDescription = $this->getField('MetaDescription');
-        if ($isDetailView) {
-            $metaDescription = $ctrl->getDetailViewProduct()->MetaDescription;
-        } elseif ($ctrl instanceof ProductGroupPageController) {
-            if (empty($metaDescription)
-             || $pageStart > 0
-             || mb_strlen($metaDescription) < SeoTools::$metaDescriptionMaxLength
+        if (!$this->getCMSFieldsIsCalled
+         && !Tools::isBackendEnvironment()
+        ) {
+            $ctrl = Controller::curr();
+            if ($ctrl instanceof ProductGroupPageController
+             && $ctrl->isProductDetailView()
             ) {
-                if ($pageStart <= 0) {
-                    if (empty($metaDescription)) {
-                        $descriptionArray = [$this->Title];
+                $metaDescription = $ctrl->getDetailViewProduct()->MetaDescription;
+            } elseif ($ctrl instanceof ProductGroupPageController) {
+                if (empty($metaDescription)
+                 || (int) $ctrl->getRequest()->getVar('start') > 0
+                 || mb_strlen($metaDescription) < SeoTools::$metaDescriptionMaxLength
+                ) {
+                    if ((int) $ctrl->getRequest()->getVar('start') <= 0) {
+                        if (empty($metaDescription)) {
+                            $descriptionArray = [$this->Title];
+                        } else {
+                            $descriptionArray = [$metaDescription];
+                        }
+                        $children = $this->Children();
+                        if ($children->count() > 0) {
+                            $descriptionArray = array_merge($descriptionArray, $children->map()->toArray());
+                        }
                     } else {
-                        $descriptionArray = [$metaDescription];
+                        $descriptionArray = [$this->Title];
                     }
-                    $children = $this->Children();
-                    if ($children->count() > 0) {
-                        $descriptionArray = array_merge($descriptionArray, $children->map()->toArray());
+                    $products = $this->getProductsToDisplay();
+                    if ($products->count() > 0) {
+                        $currOffset       = $ctrl->CurrentOffset();
+                        $sqlOffset        = $ctrl->getProductsPerPageSetting();
+                        $products         = array_slice($products->map()->toArray(), $currOffset, $sqlOffset);
+                        $descriptionArray = array_merge($descriptionArray, $products);
                     }
-                } else {
-                    $descriptionArray = [$this->Title];
+                    $metaDescription = SeoTools::extractMetaDescriptionOutOfArray($descriptionArray);
                 }
-                $products = $this->getProductsToDisplay();
-                if ($products->count() > 0) {
-                    $products         = $products->limit($sqlOffset, $currOffset)->map()->toArray();
-                    $descriptionArray = array_merge($descriptionArray, $products);
-                }
-                $metaDescription = SeoTools::extractMetaDescriptionOutOfArray($descriptionArray);
             }
+            $this->extend('updateMetaDescription', $metaDescription);
         }
-        $this->extend('updateMetaDescription', $metaDescription);
-        CacheTools::set($cacheKey, (string) $metaDescription);
         return (string) $metaDescription;
     }
     
@@ -1375,17 +1273,17 @@ class ProductGroupPage extends Page
     /**
      * Returns the DoNotShowProducts setting.
      * 
-     * @return bool
+     * @return string
      */
-    public function getDoNotShowProducts() : bool
+    public function getDoNotShowProducts()
     {
-        $doNotShowProducts = (bool) $this->getField('DoNotShowProducts');
+        $doNotShowProducts = $this->getField('DoNotShowProducts');
         if (!$this->getCMSFieldsIsCalled
          && !Tools::isBackendEnvironment()
         ) {
             $this->extend('updateDoNotShowProducts', $doNotShowProducts);
         }
-        return (bool) $doNotShowProducts;
+        return $doNotShowProducts;
     }
     
     /**
@@ -1463,24 +1361,22 @@ class ProductGroupPage extends Page
     /**
      * Returns the title including the parent product group titles.
      * 
-     * @param int         $maxDepth       The maximum depth to traverse.
-     * @param bool|string $stopAtPageType ClassName of a page to stop the upwards traversal.
-     * @param callable    $itemCallback   Callback function to call on the breadcrumb items.
-     * 
      * @return string
      */
-    public function getBreadcrumbTitle(int $maxDepth = 20, bool|string $stopAtPageType = false, callable $itemCallback = null) : string
+    public function getBreadcrumbTitle() : string
     {
-        $stopAtPageType = $stopAtPageType === false ? ProductGroupHolder::class : $stopAtPageType;
-        return parent::getBreadcrumbTitle($maxDepth, $stopAtPageType, function(array &$items) {
-            $ctrl = Controller::curr();
-            /* @var $ctrl ProductGroupPageController */
-            if ($ctrl->hasMethod('isProductDetailView')
-             && $ctrl->isProductDetailView()
-            ) {
-                array_pop($items);
-            }
-        });
+        $group = $this->owner;
+        $ctrl  = Controller::curr();
+        /* @var $group \SilverCart\Model\Pages\ProductGroupPage */
+        /* @var $ctrl \SilverCart\Model\Pages\ProductGroupPageController */
+        $items = $group->getBreadcrumbItems(20, ProductGroupHolder::class);
+        $map   = $items->map('ID', 'Title')->toArray();
+        if ($ctrl->hasMethod('isProductDetailView')
+         && $ctrl->isProductDetailView()
+        ) {
+            array_pop($map);
+        }
+        return (string) implode($group->config()->get('breadcrumb_title_delimiter'), $map);
     }
     
     /**
@@ -1631,28 +1527,6 @@ class ProductGroupPage extends Page
         $items = parent::getBreadcrumbItems($maxDepth, $stopAtPageType, $showHidden);
         $this->extend('updateBreadcrumbParts', $items);
         return $items;
-    }
-
-    /**
-     * Returns a human-readable, flattened representation of the path to the object, using its {@link Title} attribute.
-     *
-     * @param string $separator Separator
-     * 
-     * @return string
-     */
-    public function getProductGroupBreadcrumbs(string $separator = ' &raquo; ') : string
-    {
-        $crumbs = [];
-        $ancestors = array_reverse($this->owner->getAncestors()->toArray());
-        /** @var DataObject $ancestor */
-        foreach ($ancestors as $ancestor) {
-            if (!($ancestor instanceof ProductGroupPage)) {
-                continue;
-            }
-            $crumbs[] = $ancestor->getTitle();
-        }
-        $crumbs[] = $this->owner->getTitle();
-        return implode($separator, $crumbs);
     }
 
     /**

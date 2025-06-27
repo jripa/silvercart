@@ -8,12 +8,13 @@ use SilverCart\Dev\Tools;
 use SilverCart\Forms\LoginForm;
 use SilverCart\Forms\RegisterRegularCustomerForm;
 use SilverCart\Model\Pages\Page as SilverCartPage;
+use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\Control\HTTPResponse;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
+use TractorCow\Fluent\Model\Locale;
 
 /**
  * RegistrationPage Controller class.
@@ -27,6 +28,7 @@ use SilverStripe\Security\Security;
  */
 class RegistrationPageController extends PageController
 {
+    const SESSION_KEY_HTTP_REFERER = 'SilverCart.RegistrationPage.HttpReferer';
     /**
      * List of allowed actions.
      *
@@ -54,6 +56,13 @@ class RegistrationPageController extends PageController
     {
         if (Config::EnableSSL()) {
             Director::forceSSL();
+        }
+        $referer = Tools::Session()->get(self::SESSION_KEY_HTTP_REFERER);
+        if ($referer === null
+         && $this->getReferer() !== null
+        ) {
+            Tools::Session()->set(self::SESSION_KEY_HTTP_REFERER, $this->getReferer());
+            Tools::saveSession();
         }
         parent::init();
     }
@@ -159,11 +168,14 @@ class RegistrationPageController extends PageController
      * 
      * @param HTTPRequest $request Request
      * 
-     * @return HTTPResponse
+     * @return DBHTMLText|null
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.07.2019
      */
-    public function optinfailed(HTTPRequest $request) : HTTPResponse
+    public function optinfailed(HTTPRequest $request) : ?DBHTMLText
     {
-        return $this->defaultOptInHandling($request);
+        return $this->defaultOptInHandling();
     }
     
     /**
@@ -171,11 +183,14 @@ class RegistrationPageController extends PageController
      * 
      * @param HTTPRequest $request Request
      * 
-     * @return HTTPResponse
+     * @return DBHTMLText|null
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.07.2019
      */
-    public function optinpending(HTTPRequest $request) : HTTPResponse
+    public function optinpending(HTTPRequest $request) : ?DBHTMLText
     {
-        return $this->defaultOptInHandling($request);
+        return $this->defaultOptInHandling();
     }
     
     /**
@@ -183,11 +198,14 @@ class RegistrationPageController extends PageController
      * 
      * @param HTTPRequest $request Request
      * 
-     * @return HTTPResponse
+     * @return DBHTMLText|null
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.07.2019
      */
-    public function welcome(HTTPRequest $request) : HTTPResponse
+    public function welcome(HTTPRequest $request) : ?DBHTMLText
     {
-        return $this->defaultOptInHandling($request);
+        return $this->defaultOptInHandling();
     }
     
     /**
@@ -195,23 +213,24 @@ class RegistrationPageController extends PageController
      * 
      * @param HTTPRequest $request Request
      * 
-     * @return HTTPResponse
+     * @return DBHTMLText|null
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.07.2019
      */
-    public function defaultOptInHandling(HTTPRequest $request) : HTTPResponse
+    public function defaultOptInHandling() : ?DBHTMLText
     {
         $customer = Security::getCurrentUser();
         if ($customer instanceof Member
          && $customer->RegistrationOptInConfirmed
         ) {
             $link = Tools::Session()->get(self::SESSION_KEY_HTTP_REFERER);
-            if (empty($link)
-             || Director::absoluteURL($link) === Director::absoluteURL($request->getURL())
-            ) {
+            if (empty($link)) {
                 $link = $this->PageByIdentifierCodeLink(SilverCartPage::IDENTIFIER_MY_ACCOUNT_HOLDER);
             }
-            return $this->redirect($link);
+            $this->redirect($link);
         }
-        return HTTPResponse::create()->setBody($this->render());
+        return $this->render();
     }
     
     /**
@@ -223,7 +242,7 @@ class RegistrationPageController extends PageController
      */
     public function RefererLink() : string
     {
-        $link        = parent::RefererLink();
+        $link        = Tools::Session()->get(self::SESSION_KEY_HTTP_REFERER);
         $refererPage = $this->RefererPage();
         if (empty($link)
          || $refererPage instanceof MyAccountHolder
@@ -231,5 +250,47 @@ class RegistrationPageController extends PageController
             $link = $this->getDefaultHomepage()->Link();
         }
         return (string) $link;
+    }
+    
+    /**
+     * Returns the referer page.
+     * 
+     * @return SiteTree|null
+     */
+    public function RefererPage(string $link = null) : ?SiteTree
+    {
+        if ($link === null) {
+            $link = Tools::Session()->get(self::SESSION_KEY_HTTP_REFERER);
+        }
+        $originalLink = $link;
+        $page         = $this->data();
+        $localeCode   = $page->getSourceQueryParam('Fluent.Locale');
+        if (is_string($localeCode)
+         && !empty($localeCode)
+        ) {
+            $localeObj = Locale::getByLocale($localeCode);
+        }
+        if (!($localeObj instanceof Locale)) {
+            $localeObj = Locale::getCurrentLocale();
+        }
+        if ($localeObj instanceof Locale) {
+            $URLSegment = $localeObj->getURLSegment();
+            if (!empty($URLSegment)) {
+                $relativeLink = Director::makeRelative($link);
+                if (strpos($relativeLink, "{$URLSegment}/") === 0) {
+                    $originalLink = substr($relativeLink, strlen("{$URLSegment}/"));
+                }
+            }
+
+        }
+        do {
+            $refererPage  = SiteTree::get_by_link($originalLink);
+            $parts        = explode('/', $originalLink);
+            array_pop($parts);
+            $originalLink = implode('/', $parts);
+        } while ($refererPage === null
+              && !empty($originalLink)
+        );
+        return $refererPage;
     }
 }

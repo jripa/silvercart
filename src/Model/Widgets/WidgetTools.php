@@ -38,8 +38,6 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  */
 class WidgetTools
 {
-    use \SilverStripe\Core\Extensible;
-    use \SilverStripe\Core\Injector\Injectable;
     
     /**
      * Returns the input fields for this widget.
@@ -73,7 +71,7 @@ class WidgetTools
             $fields->dataFieldByName('numberOfProductsToShow'),
             $fields->dataFieldByName('numberOfProductsToFetch'),
             $fields->dataFieldByName('fetchMethod'),
-            GroupViewHandler::getWidgetGroupViewDropdownField('GroupView', $widget->fieldLabel('GroupView'), $widget->GroupView),
+            GroupViewHandler::getGroupViewDropdownField('GroupView', $widget->fieldLabel('GroupView'), $widget->GroupView),
         ];
         
         $fields->dataFieldByName('fetchMethod')->setSource($fetchMethods);
@@ -534,7 +532,7 @@ class WidgetTools
     {
         $key = '';
         if ($widget->Elements() instanceof SS_List
-         && $widget->Elements()->exists()
+            && $widget->Elements()->exists()
         ) {
             $productMap = $widget->Elements()->map('ID', 'LastEditedForCache');
             if ($productMap instanceof Map) {
@@ -571,10 +569,11 @@ class WidgetTools
                 $widget->LastEdited,
                 Customer::get_group_cache_key()
             ];
-            self::singleton()->extend('updateProductWidgetCacheKey', $keyParts);
+            
             if (Director::isDev()) {
                 $keyParts[] = uniqid();
             }
+
             $key = implode('_', $keyParts);
         }
         

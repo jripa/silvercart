@@ -5,7 +5,7 @@ namespace SilverCart\Forms;
 use SilverCart\Admin\Model\Config;
 use SilverCart\Dev\Tools;
 use SilverCart\Forms\CustomForm;
-use SilverCart\Forms\Extensions\CloudflareTurnstyleExtension;
+use SilverCart\Forms\FormFields\GoogleRecaptchaField;
 use SilverCart\Forms\FormFields\TextField;
 use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Customer\Country;
@@ -21,11 +21,9 @@ use SilverStripe\Forms\EmailField;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\PasswordField;
-use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\MemberAuthenticator\MemberAuthenticator;
 use SilverStripe\Security\Security;
-use function _t;
 
 /**
  * Form for registration of a regular customer.
@@ -36,12 +34,9 @@ use function _t;
  * @since 26.09.2017
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
- * 
- * @mixin CloudflareTurnstyleExtension
  */
 class RegisterRegularCustomerForm extends CustomForm
 {
-    use HoneyPotable;
     /**
      * List of required fields.
      *
@@ -77,14 +72,6 @@ class RegisterRegularCustomerForm extends CustomForm
         'PasswordCheck' => [
             'mustEqual' => 'Password',
         ],
-    ];
-    /**
-     * Extensions.
-     * 
-     * @var string[]
-     */
-    private static $extensions = [
-        CloudflareTurnstyleExtension::class,
     ];
     /**
      * Optional backlink to overwrite the default redirection after a successful submission.
@@ -142,12 +129,6 @@ class RegisterRegularCustomerForm extends CustomForm
             ];
             self::config()->set('requiredFields', $requiredFields);
         }
-        if ($this->EnableHoneyPot()) {
-            $honeyPotField = $this->getHoneyPotField();
-            $requiredFields[$honeyPotField->Name] = [
-                'isFilledIn' => false,
-            ];
-        }
         return parent::getRequiredFields();
     }
 
@@ -174,32 +155,31 @@ class RegisterRegularCustomerForm extends CustomForm
                     'minlength' => $passwordMinlength,
                 ]));
             }
-            $address = Address::singleton();
-            $fields  = array_merge(
+            $fields = array_merge(
                     $fields,
                     $this->getBirthdayFields(),
                     $this->getBusinessFields(),
-                    $this->getHoneyPotFields(),
                     [
-                        DropdownField::create('Salutation',    $address->fieldLabel('Salutation'),    Tools::getSalutationMap()),
-                        TextField::create(    'AcademicTitle', $address->fieldLabel('AcademicTitle'), '', $address->config()->max_length_academic_title),
-                        TextField::create(    'FirstName',     $address->fieldLabel('FirstName'),     '', $address->config()->max_length_first_name),
-                        TextField::create(    'Surname',       $address->fieldLabel('Surname'),       '', $address->config()->max_length_surname),
-                        TextField::create(    'Addition',      $address->fieldLabel('Addition'),      '', $address->config()->max_length_addition),
-                        TextField::create(    'Street',        $address->fieldLabel('Street'),        '', $address->config()->max_length_street),
-                        TextField::create(    'StreetNumber',  $address->fieldLabel('StreetNumber'),  '', $address->config()->max_length_street_number),
-                        TextField::create(    'Postcode',      $address->fieldLabel('Postcode'),      '', $address->config()->max_length_postcode),
-                        TextField::create(    'City',          $address->fieldLabel('City'),          '', $address->config()->max_length_city),
-                        DropdownField::create('Country',       $address->fieldLabel('Country'),       Country::getPrioritiveDropdownMap(true, Tools::field_label('PleaseChoose'))),
-                        TextField::create(    'Phone',         $address->fieldLabel('Phone')),
-                        TextField::create(    'Fax',           $address->fieldLabel('Fax')),
-                        EmailField::create(   'Email',         $address->fieldLabel('Email')),
-                        EmailField::create(   'EmailCheck',    $address->fieldLabel('EmailCheck')),
+                        DropdownField::create('Salutation', Address::singleton()->fieldLabel('Salutation'), Tools::getSalutationMap()),
+                        TextField::create('AcademicTitle', Address::singleton()->fieldLabel('AcademicTitle')),
+                        TextField::create('FirstName', Address::singleton()->fieldLabel('FirstName')),
+                        TextField::create('Surname', Address::singleton()->fieldLabel('Surname')),
+                        TextField::create('Addition', Address::singleton()->fieldLabel('Addition')),
+                        TextField::create('Street', Address::singleton()->fieldLabel('Street')),
+                        TextField::create('StreetNumber', Address::singleton()->fieldLabel('StreetNumber'), '', 10),
+                        TextField::create('Postcode', Address::singleton()->fieldLabel('Postcode'), '', 10),
+                        TextField::create('City', Address::singleton()->fieldLabel('City')),
+                        DropdownField::create('Country', Address::singleton()->fieldLabel('Country'), Country::getPrioritiveDropdownMap(true, Tools::field_label('PleaseChoose'))),
+                        TextField::create('Phone', Address::singleton()->fieldLabel('Phone')),
+                        TextField::create('Fax', Address::singleton()->fieldLabel('Fax')),
+                        EmailField::create('Email', Address::singleton()->fieldLabel('Email')),
+                        EmailField::create('EmailCheck', Address::singleton()->fieldLabel('EmailCheck')),
                         $passwordField,
                         $passwordCheckField,
                         $newsletterField = CheckboxField::create('SubscribedToNewsletter', CheckoutStep::singleton()->fieldLabel('SubscribeNewsletter')),
                         HiddenField::create('backlink', 'backlink', $this->getBackLink()),
-                    ]
+                    ],
+                   $this->getGoogleRecaptchaFields()
             );
             $newsletterField->setDescription(Newsletter::singleton()->fieldLabel('OptInNotFinished'));
         });
@@ -240,14 +220,27 @@ class RegisterRegularCustomerForm extends CustomForm
     {
         $businessFields = [];
         if ($this->EnableBusinessCustomers()) {
-            $address        = Address::singleton();
             $businessFields = [
-                CheckboxField::create('IsBusinessAccount', $address->fieldLabel('IsBusinessAccount')),
-                TextField::create(    'TaxIdNumber',       $address->fieldLabel('TaxIdNumber'),       '', $address->config()->max_length_tax_id_number)->setAttribute('pattern', '[A-Z|0-9]{7,12}'),
-                TextField::create(    'Company',           $address->fieldLabel('Company'),           '', $address->config()->max_length_company),
+                CheckboxField::create('IsBusinessAccount', Member::singleton()->fieldLabel('IsBusinessAccount')),
+                TextField::create('TaxIdNumber', Address::singleton()->fieldLabel('TaxIdNumber'), '', 30),
+                TextField::create('Company', Address::singleton()->fieldLabel('Company'), '', 50),
             ];
         }
         return $businessFields;
+    }
+    
+    /**
+     * Returns the Google reCAPTCHA related form fields.
+     * 
+     * @return array
+     */
+    protected function getGoogleRecaptchaFields() : array
+    {
+        $fields = [];
+        if ($this->EnableGoogleRecaptcha()) {
+            $fields[] = GoogleRecaptchaField::create('GoogleRecaptcha', $this->fieldLabel('GoogleRecaptcha'));
+        }
+        return $fields;
     }
     
     /**
@@ -296,12 +289,21 @@ class RegisterRegularCustomerForm extends CustomForm
         ) {
             $data['Birthday'] = $data['BirthdayYear'] . '-' . $data['BirthdayMonth'] . '-' . $data['BirthdayDay'];
         }
+        if ($this->EnableGoogleRecaptcha()) {
+            $verified = GoogleRecaptchaField::verifyRequest();
+            if (!$verified) {
+                $this->setErrorMessage(_t(GoogleRecaptchaField::class . '.Verify', 'Please verify that you are not a robot.'));
+                $this->setSessionData($this->getData());
+                //var_dump($this->getController()->redirect($this->Link())); exit();
+                $this->getController()->redirectBack();
+                return;
+            }
+        }
 
         // Create new regular customer and perform a log in
         $customer = $this->handleAnonymousCustomer()->castedUpdate($data);
         $customer->write();
-        $customer->skipChangePasswordInfo()
-                 ->changePassword($data['Password']);
+        $customer->changePassword($data['Password']);
         $this->setCustomer($customer);
         Member::password_validator()->checkHistoricalPasswords(0);
 
@@ -341,6 +343,16 @@ class RegisterRegularCustomerForm extends CustomForm
         $authenticator = new MemberAuthenticator();
         $authenticator->getLoginHandler($redirectTo)->performLogin($customer, ['Remember' => false], $this->getRequest());
         $this->getController()->redirect($redirectTo);
+    }
+    
+    /**
+     * Returns whether Google reCAPTCHA is enabled or not.
+     * 
+     * @return bool
+     */
+    public function EnableGoogleRecaptcha() : bool
+    {
+        return GoogleRecaptchaField::isEnabled();
     }
     
     /**
@@ -508,7 +520,7 @@ class RegisterRegularCustomerForm extends CustomForm
      * 
      * @param Member $customer Customer
      * 
-     * @return RegisterRegularCustomerForm
+     * @return \SilverCart\Forms\RegisterRegularCustomerForm
      */
     public function setCustomer(Member $customer) : RegisterRegularCustomerForm
     {

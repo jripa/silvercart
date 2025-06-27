@@ -132,15 +132,11 @@ class CheckoutChooseShippingMethodForm extends CustomForm
     /**
      * Returns the checkouts current shipping address
      * 
-     * @return Address|null
+     * @return \SilverCart\Model\Customer\Address
      */
-    public function getShippingAddress() : ?Address
+    public function getShippingAddress() : Address
     {
-        $shippingAddress = $this->getController()->getShippingAddress();
-        if (!($shippingAddress instanceof Address)) {
-            $shippingAddress = null;
-        }
-        return $shippingAddress;
+        return $this->getController()->getShippingAddress();
     }
 
     /**

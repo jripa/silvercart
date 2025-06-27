@@ -3,10 +3,12 @@
 namespace SilverCart\ORM\Connect;
 
 use SilverStripe\ORM\Connect\MySQLDatabase;
-use SilverStripe\ORM\Connect\PDOConnector as SilverStripePDOConnector;
+//use SilverStripe\ORM\Connect\PDOConnector as SilverStripePDOConnector;
+use SilverStripe\ORM\Connect\MySQLDatabase as SilverStripePDOConnector;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\Core\Environment;
 use PDO;
+
 
 /**
  * PDO driver database connector.

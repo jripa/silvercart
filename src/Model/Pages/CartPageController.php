@@ -8,6 +8,7 @@ use SilverCart\Dev\Tools;
 use SilverCart\Forms\DecrementPositionQuantityForm;
 use SilverCart\Forms\IncrementPositionQuantityForm;
 Use SilverCart\Forms\RemovePositionForm;
+use SilverCart\Forms\Checkout\CheckoutFormStep2;
 use SilverCart\Model\Customer\Customer;
 use SilverCart\Model\Order\ShoppingCartPosition;
 use SilverCart\Model\Pages\Page;
@@ -29,9 +30,7 @@ use SilverStripe\Control\Director;
  */
 class CartPageController extends \PageController
 {
-    public const SESSION_KEY_CONTINUE_SHOPPING_LINK  = 'SilverCart.CartPage.ContinueShoppingLink';
-    public const SESSION_KEY_CONTINUE_SHOPPING_LABEL = 'SilverCart.CartPage.ContinueShoppingLabel';
-    public const SESSION_KEY_SHOPPING_CONTEXT        = 'SilverCart.CartPage.ShoppingContext';
+    const SESSION_KEY_CONTINUE_SHOPPING_LINK = 'SilverCart.CartPage.ContinueShoppingLink';
     /**
      * List of allowed actions.
      *
@@ -43,57 +42,17 @@ class CartPageController extends \PageController
         'RemovePositionForm',
     ];
     /**
+     * Determines whether to show a positions description text in print preview.
+     * 
+     * @var bool
+     */
+    private static $show_description_in_print_preview = false;
+    /**
      * Checkout.
      *
      * @var Checkout
      */
     protected $checkout = null;
-    
-    /**
-     * Adds a Shopping Context $key.
-     * 
-     * @param string $key Context key
-     * 
-     * @return void
-     */
-    public static function addShoppingContext(string $key) : void
-    {
-        $context = (array) Tools::Session()->get(self::SESSION_KEY_SHOPPING_CONTEXT);
-        $context[] = $key;
-        Tools::Session()->set(self::SESSION_KEY_SHOPPING_CONTEXT, array_unique($context));
-        Tools::saveSession();
-    }
-    
-    /**
-     * Returns whether the given Shopping Context $key exists.
-     * 
-     * @param string $key Context key
-     * 
-     * @return bool
-     */
-    public static function hasShoppingContext(string $key) : bool
-    {
-        $context = (array) Tools::Session()->get(self::SESSION_KEY_SHOPPING_CONTEXT);
-        return in_array($key, $context);
-    }
-    
-    /**
-     * Removes a Shopping Context $key.
-     * 
-     * @param string $key Context key
-     * 
-     * @return void
-     */
-    public static function removeShoppingContext(string $key) : void
-    {
-        $context = (array) Tools::Session()->get(self::SESSION_KEY_SHOPPING_CONTEXT);
-        $index   = array_search($key, $context);
-        if ($index !== false) {
-            unset($context[$index]);
-        }
-        Tools::Session()->set(self::SESSION_KEY_SHOPPING_CONTEXT, array_unique($context));
-        Tools::saveSession();
-    }
     
     /**
      * Sets the Continue Shopping Link.
@@ -123,33 +82,6 @@ class CartPageController extends \PageController
             }
         }
         return (string) $link;
-    }
-    
-    /**
-     * Sets the Continue Shopping Label.
-     * 
-     * @param string $label Label
-     * 
-     * @return void
-     */
-    public static function setContinueShoppingLabel(string $label) : void
-    {
-        Tools::Session()->set(self::SESSION_KEY_CONTINUE_SHOPPING_LABEL, $label);
-        Tools::saveSession();
-    }
-    
-    /**
-     * Returns the Continue Shopping Label.
-     * 
-     * @return string
-     */
-    public static function getContinueShoppingLabel() : string
-    {
-        $label = Tools::Session()->get(self::SESSION_KEY_CONTINUE_SHOPPING_LABEL);
-        if ($label === null) {
-            $label = _t(Page::class . '.CONTINUESHOPPING', 'Continue shopping');
-        }
-        return (string) $label;
     }
 
     /**
@@ -200,8 +132,7 @@ class CartPageController extends \PageController
      *
      * @return boolean true
      */
-    public function getEditableShoppingCart() : bool
-    {
+    public function getEditableShoppingCart() {
         return true;
     }
 
@@ -210,8 +141,7 @@ class CartPageController extends \PageController
      * 
      * @return Checkout
      */
-    public function getCheckout() : Checkout
-    {
+    public function getCheckout() {
         if (is_null($this->checkout)) {
             $this->checkout = Checkout::create_from_session($this);
         }
@@ -219,14 +149,26 @@ class CartPageController extends \PageController
     }
     
     /**
+     * Returns an instance of CheckoutFormStep2 to represent a valid 
+     * checkout context.
+     * 
+     * @return CheckoutFormStep2
+     */
+    public function getCheckoutContext() {
+        $checkoutStepPage = Tools::PageByIdentifierCode(Page::IDENTIFIER_CHECKOUT_PAGE);
+        $checkoutStepPageController = ModelAsController::controller_for($checkoutStepPage);
+        $checkoutStepPageController->handleRequest($this->getRequest());
+        return new CheckoutFormStep2($checkoutStepPageController);
+    }
+    
+    /**
      * Returns the shopping cart position by the given ID
      * 
-     * @param int|null $positionID Shopping cart position ID
+     * @param int $positionID Shopping cart position ID
      * 
      * @return ShoppingCartPosition
      */
-    protected function getPositionByID(?int $positionID) : ShoppingCartPosition
-    {
+    protected function getPositionByID($positionID) {
         if (is_null($positionID)) {
             $position = ShoppingCartPosition::singleton();
         } else {
@@ -245,10 +187,13 @@ class CartPageController extends \PageController
      * @var int         $positionID ID of the context shopping cart position.
      *
      * @return IncrementPositionQuantityForm
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 15.11.2017
      */
-    public function IncrementPositionQuantityForm(HTTPRequest $request, int $positionID = null) : IncrementPositionQuantityForm
-    {
-        return IncrementPositionQuantityForm::create($this->getPositionByID($positionID), $this);
+    public function IncrementPositionQuantityForm(HTTPRequest $request, $positionID = null) {
+        $form = new IncrementPositionQuantityForm($this->getPositionByID($positionID), $this);
+        return $form;
     }
 
     /**
@@ -258,10 +203,13 @@ class CartPageController extends \PageController
      * @var int         $positionID ID of the context shopping cart position.
      *
      * @return DecrementPositionQuantityForm
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 15.11.2017
      */
-    public function DecrementPositionQuantityForm(HTTPRequest $request, int $positionID = null) : DecrementPositionQuantityForm
-    {
-        return DecrementPositionQuantityForm::create($this->getPositionByID($positionID), $this);
+    public function DecrementPositionQuantityForm(HTTPRequest $request, $positionID = null) {
+        $form = new DecrementPositionQuantityForm($this->getPositionByID($positionID), $this);
+        return $form;
     }
 
     /**
@@ -271,10 +219,13 @@ class CartPageController extends \PageController
      * @var int         $positionID ID of the context shopping cart position.
      *
      * @return RemovePositionForm
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 15.11.2017
      */
-    public function RemovePositionForm(HTTPRequest $request, int $positionID = null) : RemovePositionForm
-    {
-        return RemovePositionForm::create($this->getPositionByID($positionID), $this);
+    public function RemovePositionForm(HTTPRequest $request, $positionID = null) {
+        $form = new RemovePositionForm($this->getPositionByID($positionID), $this);
+        return $form;
     }
 
     /**
@@ -284,6 +235,6 @@ class CartPageController extends \PageController
      */
     public function ShowDescriptionInPrintPreview() : bool
     {
-        return (bool) Config::getConfig()->useProductDescriptionFieldForCartPrintPreview;
+        return (bool) $this->config()->show_description_in_print_preview;
     }
 }

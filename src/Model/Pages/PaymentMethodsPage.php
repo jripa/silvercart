@@ -8,13 +8,12 @@ use SilverCart\Model\Customer\Customer;
 use SilverCart\Model\Order\ShoppingCart;
 use SilverCart\Model\Pages\MetaNavigationHolder;
 use SilverCart\Model\Payment\PaymentMethod;
-use SilverStripe\ORM\SS_List;
 
 /**
  * Page to display available payment methods.
  *
  * @package SilverCart
- * @subpackage Model\Pages
+ * @subpackage Model_Pages
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 28.09.2017
  * @copyright 2017 pixeltricks GmbH
@@ -35,18 +34,47 @@ class PaymentMethodsPage extends MetaNavigationHolder
      */
     private static $allowed_children = 'none';
     /**
-     * Class attached to page icons in the CMS page tree. Also supports font-icon set.
-     * 
+     * Page type icon
+     *
      * @var string
      */
-    private static $icon_class = 'font-icon-p-posts';
+    private static $icon = "silvercart/silvercart:client/img/page_icons/metanavigation_page-file.gif";
+    
+    /**
+     * i18n singular name of this object
+     *
+     * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.05.2012
+     */
+    public function singular_name()
+    {
+        return Tools::singular_name_for($this);
+    }
+    
+    /**
+     * i18n plural name of this object
+     *
+     * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.05.2012
+     */
+    public function plural_name()
+    {
+        return Tools::plural_name_for($this);
+    }
 
     /**
      * Returns all payment methods
      *
-     * @return DataList|ArrayList
+     * @return DataList
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.05.2012
      */
-    public function PaymentMethods() : SS_List
+    public function PaymentMethods()
     {
         return PaymentMethod::getAllowedPaymentMethodsFor($this->ShippingCountry(), ShoppingCart::singleton(), true);
     }
@@ -55,8 +83,11 @@ class PaymentMethodsPage extends MetaNavigationHolder
      * Returns the current shipping country
      *
      * @return Country
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 15.11.2014
      */
-    public function ShippingCountry() : ?Country
+    public function ShippingCountry()
     {
         $customer        = Customer::currentUser();
         $shippingCountry = null;

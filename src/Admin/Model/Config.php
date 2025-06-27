@@ -598,13 +598,16 @@ class Config
      * Returns the user agent blacklist
      *
      * @return string
+     *
+     * @author Sascha Koehler <skoehler@pixeltricks.de>
+     * @since 2013-01-04
      */
-    public static function UserAgentBlacklist() : string
+    public static function UserAgentBlacklist()
     {
         if (is_null(self::$userAgentBlacklist)) {
             self::$userAgentBlacklist = self::getConfig()->userAgentBlacklist;
         }
-        return (string) self::$userAgentBlacklist;
+        return self::$userAgentBlacklist;
     }
 
     /**

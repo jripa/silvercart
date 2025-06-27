@@ -31,12 +31,6 @@ class GroupViewHandler {
      * @var array
      */
     protected static $groupHolderViews = array();
-    /**
-     * a list of possible group view types
-     *
-     * @var array
-     */
-    protected static $widgetGroupViews = [];
 
     /**
      * a list of removed group view types. It is implemented to provide the
@@ -53,13 +47,6 @@ class GroupViewHandler {
      * @var array
      */
     protected static $removedGroupHolderViews = array();
-    /**
-     * a list of removed group view types. It is implemented to provide the
-     * configuration example in _config.php of silvercart.
-     *
-     * @var array
-     */
-    protected static $removedWidgetGroupViews = [];
 
     /**
      * the code of the group view which is choosen by default
@@ -114,23 +101,6 @@ class GroupViewHandler {
             self::$groupHolderViews[$gv->getCode()] = $groupHolderView;
         }
     }
-    
-    /**
-     * adds a new group view type for widgets to the handler.
-     *
-     * @param string $groupView the class name of the group view to add
-     *
-     * @return void
-     */
-    public static function addWidgetGroupView($groupView) {
-        if (in_array($groupView, self::$removedWidgetGroupViews)) {
-            return;
-        }
-        if (class_exists($groupView)) {
-            $gv = new $groupView();
-            self::$widgetGroupViews[$gv->getCode()] = $groupView;
-        }
-    }
 
     /**
      * removes a group view for product lists from the handler
@@ -175,27 +145,6 @@ class GroupViewHandler {
             foreach (self::$groupHolderViews as $index => $value) {
                 if ($groupHolderView == $value) {
                     unset (self::$groupHolderViews[$index]);
-                }
-            }
-        }
-    }
-
-    /**
-     * removes a group view for widgets from the handler
-     *
-     * @param string $groupView the class name of the group view to remove
-     *
-     * @return void
-     */
-    public static function removeWidgetGroupView($groupView) {
-        if (in_array($groupView, self::$removedWidgetGroupViews)) {
-            return;
-        }
-        self::$removedWidgetGroupViews[] = $groupView;
-        if (in_array($groupView, self::$widgetGroupViews)) {
-            foreach (self::$widgetGroupViews as $index => $value) {
-                if ($groupView == $value) {
-                    unset (self::$widgetGroupViews[$index]);
                 }
             }
         }
@@ -338,15 +287,6 @@ class GroupViewHandler {
     }
 
     /**
-     * returns all widget group views
-     *
-     * @return string
-     */
-    public static function getWidgetGroupViews() {
-        return self::$widgetGroupViews;
-    }
-
-    /**
      * returns the class name of a group view by its code
      *
      * @param string $code the code of the group view
@@ -459,30 +399,6 @@ class GroupViewHandler {
             $defaultGroupviewSource[$code] = $gv->getLabel();
         }
         return new DropdownField($name, $title, $defaultGroupviewSource);
-    }
-    
-    /**
-     * Creates and returns a dropdown field to choose an available GroupView
-     * for widgets
-     *
-     * @param string $name        Name of the field
-     * @param string $title       Title of the field
-     * @param string $value       Value of the field
-     * @param string $emptyString String to use for the empty value
-     * 
-     * @return DropdownField 
-     */
-    public static function getWidgetGroupViewDropdownField($name, $title, $value = '', $emptyString = null) {
-        $defaultGroupViewSource = [];
-        $groupViews             = self::getWidgetGroupViews();
-        if (!is_null($emptyString)) {
-            $defaultGroupViewSource[''] = $emptyString;
-        }
-        foreach ($groupViews as $code => $classname) {
-            $gv = new $classname();
-            $defaultGroupViewSource[$code] = $gv->getLabel();
-        }
-        return DropdownField::create($name, $title, $defaultGroupViewSource);
     }
 
     /**

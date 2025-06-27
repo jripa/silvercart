@@ -12,7 +12,6 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Extension;
 use SilverStripe\i18n\i18n;
-use SilverStripe\Security\Member;
 
 /**
  * Extension for the Security controller.
@@ -47,7 +46,7 @@ class SecurityExtension extends Extension
     {
         Tools::initSession();
         
-        i18n::config()->merge('default_locale', Tools::current_locale());
+        i18n::config()->merge('default_locale', ['value' => Tools::current_locale()]);
         i18n::set_locale(Tools::current_locale());
         
         $controllerParams  = Controller::curr()->getURLParams();
@@ -70,10 +69,7 @@ class SecurityExtension extends Extension
         $member  = $this->owner->getCurrentUser();
         $request = $this->owner->getRequest();
         $action  = $request->param('Action');
-        if ($action === 'login'
-         && $member instanceof Member
-         && $member->exists()
-        ) {
+        if ($action === 'login') {
             $backURL = $request->getVar('BackURL');
             if (!empty($backURL)) {
                 if (strpos($backURL, 'admin') !== 0
@@ -84,28 +80,6 @@ class SecurityExtension extends Extension
             }
         }
 
-    }
-    
-    /**
-     * Returns whether the current view is the lostpassword view.
-     * 
-     * @return bool
-     */
-    public function IsLostPasswordView() : bool
-    {
-        return $this->owner->getRequest()->param('Action') === 'lostpassword'
-            && $this->owner->getRequest()->param('ID') !== 'passwordsent';
-    }
-    
-    /**
-     * Returns whether the current view is the passwordsent view.
-     * 
-     * @return bool
-     */
-    public function IsPasswordSentView() : bool
-    {
-        return $this->owner->getRequest()->param('Action') === 'lostpassword'
-            && $this->owner->getRequest()->param('ID') === 'passwordsent';
     }
     
     /**

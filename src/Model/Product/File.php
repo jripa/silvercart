@@ -51,14 +51,6 @@ class File extends DataObject
         'Thumbnail'    => SilverstripeImage::class,
     ];
     /**
-     * Owned relationships.
-     *
-     * @var array
-     */
-    private static $owns = [
-        'File',
-    ];
-    /**
      * Castings
      *
      * @var array

@@ -2,6 +2,7 @@
 
 namespace SilverCart\Model\Forms;
 
+
 use ReflectionClass;
 use SilverCart\Dev\Tools;
 use SilverCart\Model\Customer\Address;
@@ -9,7 +10,6 @@ use SilverCart\Model\Customer\Customer;
 use SilverCart\Model\Order\Order;
 use SilverCart\Model\Pages\ContactFormPage;
 use SilverCart\Model\Translation\TranslatableDataObjectExtension;
-use SilverCart\ORM\ExtensibleDataObject;
 use SilverCart\Security\FormFieldValidator;
 use SilverStripe\Control\Controller;
 use SilverStripe\Core\Convert;
@@ -20,24 +20,18 @@ use SilverStripe\Forms\DatetimeField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormField as SilverStripeFormField;
+use SilverStripe\Forms\GroupedDropdownField;
+use SilverStripe\Forms\OptionsetField;
+use SilverStripe\Forms\TextField;
+use SilverStripe\Forms\TextareaField;
+use SilverStripe\Forms\TimeField;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
-use SilverStripe\Forms\GroupedDropdownField;
-use SilverStripe\Forms\HiddenField;
-use SilverStripe\Forms\LiteralField;
-use SilverStripe\Forms\NumericField;
-use SilverStripe\Forms\OptionsetField;
-use SilverStripe\Forms\TextareaField;
-use SilverStripe\Forms\TextField;
-use SilverStripe\Forms\TimeField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\HasManyList;
 use SilverStripe\ORM\SS_List;
 use SilverStripe\Security\Member;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
-use function _t;
-use function singleton;
 
 /**
  * Custom form field.
@@ -59,33 +53,25 @@ use function singleton;
  * @property string $PresetWith   Preset With
  * @property int    $Sort         Sort order
  * 
- * @method FormFieldOption ParentOption() Returns the related ParentOption.
  * @method ContactFormPage ContactFormPage() Returns the related ContactFormPage.
  * 
- * @method HasManyList FormFieldOptions()      Return the related FormFieldOptions.
- * @method HasManyList FormFieldTranslations() Return the related FormFieldTranslations.
+ * @method \SilverStripe\ORM\HasManyList FormFieldOptions()      Return the related FormFieldOptions.
+ * @method \SilverStripe\ORM\HasManyList FormFieldTranslations() Return the related FormFieldTranslations.
  */
 class FormField extends DataObject
 {
-    use ExtensibleDataObject;
+    use \SilverCart\ORM\ExtensibleDataObject;
     
-    public const PRESET_WITH_GENERAL_DATA             = 'GeneralData';
-    public const PRESET_WITH_GENERAL_DATA_DATE_TIME   = self::PRESET_WITH_GENERAL_DATA . '.DateTime';
-    public const PRESET_WITH_GENERAL_DATA_IP_ADDRESS  = self::PRESET_WITH_GENERAL_DATA . '.IPAddress';
-    public const PRESET_WITH_GENERAL_DATA_IP_LOCATION = self::PRESET_WITH_GENERAL_DATA . '.IPLocation';
-
     /**
      * Sets the custom form data.
      * 
-     * @param array $data           Data
-     * @param bool  $excludePresets Set to true to exclude all fields with a PresetWith option
+     * @param array $data Data
      * 
      * @return void
      */
-    public static function setCustomFormData(array $data, bool $excludePresets = false) : void
+    public static function setCustomFormData(array $data) : void
     {
-        self::$customFormData               = $data;
-        self::$customFormDataExcludePresets = $excludePresets;
+        self::$customFormData = $data;
     }
     
     /**
@@ -103,27 +89,19 @@ class FormField extends DataObject
      * 
      * @param FieldList $fields     CMS fields to add blacklis entry fields to
      * @param SS_List   $formFields FormFields
-     * @param string    $name       Field name
-     * @param string    $tabName    Tab name
+     * @param string    $name       Field / tab name
      * 
      * @return void
      */
-    public static function getFormFieldCMSFields(FieldList $fields, SS_List $formFields = null, string $name = 'FormFields', string $tabName = '') : void
+    public static function getFormFieldCMSFields(FieldList $fields, SS_List $formFields = null, string $name = 'FormFields') : void
     {
         if ($formFields === null) {
             $formFields = self::get();
         }
-        $tabTitle = '';
-        if ($tabName === '') {
-            $tabName  = "Root.{$name}";
-            $tabTitle = self::singleton()->i18n_plural_name();
-        }
         $grid       = GridField::create($name, self::singleton()->i18n_plural_name(), $formFields, GridFieldConfig_RecordEditor::create());
-        $subjectTab = $fields->findOrMakeTab($tabName, self::singleton()->i18n_plural_name());
-        if (!empty($tabTitle)) {
-            $subjectTab->setTitle($tabTitle);
-        }
-        $fields->addFieldToTab($tabName, $grid);
+        $subjectTab = $fields->findOrMakeTab("Root.{$name}", self::singleton()->i18n_plural_name());
+        $subjectTab->setTitle(self::singleton()->i18n_plural_name());
+        $fields->addFieldToTab("Root.{$name}", $grid);
         if (class_exists(GridFieldOrderableRows::class)) {
             $grid->getConfig()->addComponent(GridFieldOrderableRows::create('Sort'));
         }
@@ -164,7 +142,6 @@ class FormField extends DataObject
      * @var string[]
      */
     private static $has_one = [
-        'ParentOption'    => FormFieldOption::class,
         'ContactFormPage' => ContactFormPage::class,
     ];
     /**
@@ -175,15 +152,6 @@ class FormField extends DataObject
     private static $has_many = [
         'FormFieldOptions'      => FormFieldOption::class,
         'FormFieldTranslations' => FormFieldTranslation::class,
-    ];
-    /**
-     * Owned relations.
-     *
-     * @var string[]
-     */
-    private static $owns = [
-        'FormFieldOptions',
-        'FormFieldTranslations',
     ];
     /**
      * Default sort
@@ -201,33 +169,6 @@ class FormField extends DataObject
         'Description',
         'IsRequired',
         'TypeLabel',
-    ];
-    /**
-     * Field types.
-     *
-     * @var string[]
-     */
-    private static $field_types = [
-        CheckboxField::class,
-        DateField::class,
-        DatetimeField::class,
-        DropdownField::class,
-        HiddenField::class,
-        LiteralField::class,
-        NumericField::class,
-        OptionsetField::class,
-        TextField::class,
-        TextareaField::class,
-        TimeField::class,
-    ];
-    /**
-     * Field types with options.
-     *
-     * @var string[]
-     */
-    private static $field_types_with_options = [
-        DropdownField::class,
-        OptionsetField::class,
     ];
     /**
      * Extensions.
@@ -255,12 +196,6 @@ class FormField extends DataObject
      * @var array
      */
     protected static $customFormData = [];
-    /**
-     * Custom form data exclude presets.
-     * 
-     * @var bool
-     */
-    protected static $customFormDataExcludePresets = false;
     
     /**
      * Returns the translated singular name.
@@ -315,14 +250,14 @@ class FormField extends DataObject
                 $reflection   = new ReflectionClass($type);
                 $types[$type] = $this->fieldLabel("Type_{$reflection->getShortName()}");
             }
-            asort($types);
             $fields->removeByName('Type');
             $fields->insertAfter('IsRequired', DropdownField::create('Type', $this->fieldLabel('Type'), $types, $this->Type));
+            $typesWithOptions = [
+                DropdownField::class,
+                OptionsetField::class,
+            ];
             $fields->removeByName('FormFieldOptions');
-            if (!$this->ParentOption()->exists()) {
-                $fields->removeByName('ParentOptionID');
-            }
-            if (in_array($this->Type, $this->config()->field_types_with_options)) {
+            if (in_array($this->Type, $typesWithOptions)) {
                 FormFieldOption::getFormFieldOptionCMSFields($fields, $this->FormFieldOptions());
             }
             $fields->removeByName('PresetWith');
@@ -384,7 +319,16 @@ class FormField extends DataObject
      */
     public function getAllowedFormFieldTypes() : array
     {
-        $types = $this->config()->field_types;
+        $types = [
+            CheckboxField::class,
+            DateField::class,
+            DatetimeField::class,
+            DropdownField::class,
+            OptionsetField::class,
+            TextField::class,
+            TextareaField::class,
+            TimeField::class,
+        ];
         $this->extend('updateAllowedFormFieldTypes', $types);
         return $types;
     }
@@ -410,28 +354,12 @@ class FormField extends DataObject
     {
         $value      = '';
         $customData = self::getCustomFormData();
-        if (!empty($this->PresetWith)
-         && self::$customFormDataExcludePresets
-        ) {
-            foreach ($customData as $fieldName => $fieldValue) {
-                if ($fieldName !== $this->Name) {
-                    continue;
-                }
-                unset($customData[$fieldName]);
-            }
-        }
         if (array_key_exists($this->Name, $_POST)) {
             $value = $_POST[$this->Name];
         } elseif (array_key_exists($this->Name, $customData)) {
             $value = $customData[$this->Name];
         } elseif (!empty($this->DefaultValue)) {
             $value = $this->DefaultValue;
-            if (in_array($this->Type, $this->config()->field_types_with_options)) {
-                $option = $this->FormFieldOptions()->filter('Title', $value)->first();
-                if ($option instanceof FormFieldOption) {
-                    $value = $option->ID;
-                }
-            }
         } elseif (!empty($this->PresetWith)) {
             $ctrl         = Controller::curr();
             $object       = null;
@@ -440,9 +368,6 @@ class FormField extends DataObject
             $relationName = '';
             $property     = array_shift($parts);
             switch ($className) {
-                case self::PRESET_WITH_GENERAL_DATA:
-                    $value = $this->presetWithGeneralData($property, $parts);
-                    break;
                 case Member::class:
                     $object = Customer::currentUser();
                     break;
@@ -470,7 +395,11 @@ class FormField extends DataObject
                     $property     = array_shift($parts);
                     $value        = $object->{$relationName}()->{$property};
                 }
-                if (in_array($this->Type, $this->config()->field_types_with_options)) {
+                $typesWithOptions = [
+                    DropdownField::class,
+                    OptionsetField::class,
+                ];
+                if (in_array($this->Type, $typesWithOptions)) {
                     $source = $this->FormFieldOptions()->map('ID', 'Title')->toArray();
                     $key    = array_search($value, $source);
                     if (is_numeric($key)) {
@@ -479,72 +408,6 @@ class FormField extends DataObject
                 }
             }
         }
-        return $value;
-    }
-    
-    /**
-     * Returns the POST value based option title or the plain value if this is 
-     * no option field.
-     * 
-     * @return string
-     */
-    public function getFormFieldValueNice() : string
-    {
-        $value = '';
-        $customData = self::getCustomFormData();
-        if (array_key_exists($this->Name, $_POST)) {
-            $value = $_POST[$this->Name];
-        } elseif (array_key_exists($this->Name, $customData)) {
-            $value = $customData[$this->Name];
-        }
-        if (!empty($value)) {
-            if (in_array($this->Type, $this->config()->field_types_with_options)) {
-                $option = $this->FormFieldOptions()->byID($value);
-                if ($option instanceof FormFieldOption) {
-                    $value = $option->Title;
-                }
-            }
-        }
-        return (string) $value;
-    }
-    
-    /**
-     * Returns the geneal data preset value.
-     * 
-     * @param array $parts Parts
-     * 
-     * @return string
-     */
-    public function presetWithGeneralData(string $property, array $parts) : string
-    {
-        $value = '';
-        if (count($parts) === 0) {
-            switch ($property) {
-                case 'IPAddress':
-                    if (array_key_exists('HTTP_X_REAL_IP', $_SERVER)) {
-                        $value = $_SERVER['HTTP_X_REAL_IP'];
-                    } elseif (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
-                        $value = $_SERVER['HTTP_X_FORWARDED_FOR'];
-                    } elseif (array_key_exists('REMOTE_ADDR', $_SERVER)) {
-                        $value = $_SERVER['REMOTE_ADDR'];
-                    }
-                    break;
-                case 'IPLocation':
-                    if (array_key_exists('HTTP_X_REAL_IP', $_SERVER)) {
-                        $ip = $_SERVER['HTTP_X_REAL_IP'];
-                    } elseif (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
-                        $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-                    } elseif (array_key_exists('REMOTE_ADDR', $_SERVER)) {
-                        $ip = $_SERVER['REMOTE_ADDR'];
-                    }
-                    $value = Tools::IPLocation($ip);
-                    break;
-                case 'DateTime':
-                    $value = date('Y-m-d H:i:s');
-                    break;
-            }
-        }
-        $this->extend('presetWithGeneralData', $value, $property, $parts);
         return $value;
     }
     
@@ -569,21 +432,17 @@ class FormField extends DataObject
             'CustomerNumber',
             'FirstName',
             'Surname',
-            'Name',
             // Address
             'Company',
             'Salutation',
             'AcademicTitle',
             'FirstName',
             'Surname',
-            'FullName',
             'Addition',
             'Street',
             'StreetNumber',
-            'StreetWithNumber',
             'Postcode',
             'City',
-            'PostcodeWithCity',
             'Phone',
             'Fax',
             'State',
@@ -595,21 +454,11 @@ class FormField extends DataObject
             'TrackingCode',
             'TrackingLink',
         ];
-        $generalData = [
-            self::PRESET_WITH_GENERAL_DATA_IP_ADDRESS  => _t(self::class . '.GeneralData_IPAddress', 'Customer IP Address'),
-            self::PRESET_WITH_GENERAL_DATA_IP_LOCATION => _t(self::class . '.GeneralData_IPLocation', 'Customer IP based Location'),
-            self::PRESET_WITH_GENERAL_DATA_DATE_TIME   => _t(self::class . '.GeneralData_DateTime', 'Date and Time'),
-        ];
-        $this->extend('updatePresetWithSourceGeneralData', $generalData);
         $this->extend('updatePresetWithSourceWhitelist', $whitelist);
-        $source[_t(self::class . '.GeneralData', 'General Data')] = $generalData;
         foreach ($contextObjectNames as $contextObjectName) {
             $contextObject = singleton($contextObjectName);
-            /* @var $contextObject DataObject */
-            $contextSource = array_merge(
-                    $contextObject->config()->db,
-                    $contextObject->config()->casting,
-            );
+            /* @var $contextObject \SilverStripe\ORM\DataObject */
+            $contextSource = $contextObject->config()->db;
             if ($contextObject->hasExtension(TranslatableDataObjectExtension::class)) {
                 $languageContextObject = singleton("{$contextObjectName}Translation");
                 $contextSource = array_merge(
@@ -638,14 +487,6 @@ class FormField extends DataObject
                     $contextSource["{$contextObjectName}.{$relationName}.Title"] = "{$contextObject->fieldLabel($relationName)} ({$singlton->fieldLabel('Title')})";
                 }
             }
-            foreach ($whitelist as $whitelistEntry) {
-                if (array_key_exists("{$contextObjectName}.{$whitelistEntry}.ID", $contextSource)) {
-                    continue;
-                }
-                if ($contextObject->hasMethod("get{$whitelistEntry}")) {
-                    $contextSource["{$contextObjectName}.{$whitelistEntry}"] = $contextObject->fieldLabel($whitelistEntry);
-                }
-            }
             $source[$contextObject->i18n_singular_name()] = $contextSource;
         }
         return $source;
@@ -659,7 +500,7 @@ class FormField extends DataObject
     public function getTypeLabel() : string
     {
         $label = '';
-        if (class_exists((string) $this->Type)) {
+        if (class_exists($this->Type)) {
             $reflection = new ReflectionClass($this->Type);
             $label = $this->fieldLabel("Type_{$reflection->getShortName()}");
         }
@@ -673,17 +514,16 @@ class FormField extends DataObject
      */
     public function getFormField() : SilverStripeFormField
     {
-        if (in_array($this->Type, $this->config()->field_types_with_options)) {
+        $typesWithOptions = [
+            DropdownField::class,
+            OptionsetField::class,
+        ];
+        if (in_array($this->Type, $typesWithOptions)) {
             $args = [
                 $this->Name,
                 $this->Title,
                 $this->FormFieldOptions()->map('ID', 'Title')->toArray(),
                 $this->getFormFieldValue(),
-            ];
-        } elseif ($this->Type === LiteralField::class) {
-            $args = [
-                $this->Name,
-                DBHTMLText::create()->setProcessShortcodes(true)->setValue($this->Description),
             ];
         } else {
             $args = [

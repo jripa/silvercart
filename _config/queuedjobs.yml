@@ -1,8 +1,0 @@
----
-Name: silvercart-queuedjobs
-Only:
-  moduleexists: 'symbiote/silverstripe-queuedjobs'
----
-Symbiote\QueuedJobs\DataObjects\QueuedJobDescriptor:
-  extensions:
-    - 'SilverCart\Extensions\Jobs\QueuedJobDescriptorExtension'

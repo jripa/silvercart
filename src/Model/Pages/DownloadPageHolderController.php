@@ -2,10 +2,11 @@
 
 namespace SilverCart\Model\Pages;
 
-use PageController;
 use SilverCart\Forms\DownloadSearchForm;
+use SilverCart\Model\Pages\Page as SilverCartPage;
+use SilverStripe\CMS\Controllers\ModelAsController;
 use SilverStripe\Control\HTTPRequest;
-use SilverStripe\ORM\DataList;
+use SilverStripe\ORM\FieldType\DBHTMLText;
 
 /**
  * DownloadPageHolder Controller class.
@@ -17,7 +18,7 @@ use SilverStripe\ORM\DataList;
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class DownloadPageHolderController extends PageController
+class DownloadPageHolderController extends \PageController
 {
     /**
      * Allowed actions
@@ -65,7 +66,7 @@ class DownloadPageHolderController extends PageController
      * Returns the search results-
      * Alias for self::getSearchResults().
      * 
-     * @return DataList
+     * @return \SilverStripe\ORM\DataList
      */
     public function getFiles()
     {
@@ -75,7 +76,7 @@ class DownloadPageHolderController extends PageController
     /**
      * Returns the search results
      * 
-     * @return DataList
+     * @return \SilverStripe\ORM\DataList
      */
     public function getSearchResults()
     {
@@ -106,6 +107,34 @@ class DownloadPageHolderController extends PageController
     public function getSearchQuery() : string
     {
         return (string) DownloadSearchForm::get_current_query();
+    }
+    
+    /**
+     * Uses the children of MetaNavigationHolder to render a subnavigation
+     * with the SilverCart/Model/Pages/Includes/SubNavigation.ss template.
+     * 
+     * @param string $identifierCode param only added because it exists on parent::getSubNavigation
+     *                               to avoid strict notice
+     *
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
+     */
+    public function getSubNavigation($identifierCode = SilverCartPage::IDENTIFIER_PRODUCT_GROUP_HOLDER) : DBHTMLText
+    {
+        $subNavigation = null;
+        $parent        = $this->data()->Parent();
+        while (is_null($subNavigation)
+             && $parent->exists()
+        ) {
+            if ($parent instanceof MyAccountHolder) {
+                $ctrl          = ModelAsController::controller_for($parent);
+                $subNavigation = $ctrl->getSubNavigation($identifierCode);
+            }
+            $parent = $parent->Parent();
+        }
+        if (is_null($subNavigation)) {
+            $subNavigation = parent::getSubNavigation($identifierCode);
+        }
+        return $subNavigation;
     }
     
     /**

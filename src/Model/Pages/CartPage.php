@@ -2,95 +2,58 @@
 
 namespace SilverCart\Model\Pages;
 
-use Page;
-use SilverCart\Model\Customer\Customer;
-use SilverCart\Model\Order\ShoppingCart;
-use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\Security\Member;
+use SilverCart\Dev\Tools;
 
 /**
  * represents a shopping cart. Every customer has one initially.
  *
  * @package SilverCart
- * @subpackage Model\Pages
+ * @subpackage Model_Pages
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 27.09.2017
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class CartPage extends Page
-{
+class CartPage extends \Page {
+
     /**
      * DB table name
      *
      * @var string
      */
     private static $table_name = 'SilvercartCartPage';
+    
     /**
-     * Class attached to page icons in the CMS page tree. Also supports font-icon set.
-     * 
-     * @var string
+     * icon for site tree
+     *
+     * @var array
      */
-    private static $icon_class = 'font-icon-p-cart';
+    private static $icon = "silvercart/silvercart:client/img/page_icons/cart-file.gif";
+    
     /**
-     * Shopping cart.
+     * Returns the translated singular name of the object. If no translation exists
+     * the class name will be returned.
      * 
-     * @var ShoppingCart|null
+     * @return string The objects singular name 
+     * 
+     * @author Roland Lehmann <rlehmann@pixeltricks.de>
+     * @since 13.07.2012
      */
-    protected $cart = null;
+    public function singular_name() {
+        return Tools::singular_name_for($this);
+    }
 
     /**
-     * Returns the shopping cart.
+     * Returns the translated plural name of the object. If no translation exists
+     * the class name will be returned.
      * 
-     * @return ShoppingCart|null
-     */
-    public function getCart() : ShoppingCart|null
-    {
-        if ($this->cart === null) {
-            $customer = Customer::currentUser();
-            if ($customer instanceof Member) {
-                $this->cart = $customer->getCart();
-            }
-        }
-        return $this->cart;
-    }
-    
-    /**
-     * Returns some additional content to insert before the ShoppingCartFull
-     * template.
+     * @return string the objects plural name
      * 
-     * @return DBHTMLText
+     * @author Roland Lehmann <rlehmann@pixeltricks.de>
+     * @since 13.07.2012
      */
-    public function BeforeShoppingCartFull() : DBHTMLText
-    {
-        $content = '';
-        $this->extend('updateBeforeShoppingCartFull', $content);
-        return DBHTMLText::create()->setValue($content);
+    public function plural_name() {
+        return Tools::plural_name_for($this); 
     }
-    
-    /**
-     * Returns some additional content to insert before the ShoppingCartFull
-     * template.
-     * 
-     * @return DBHTMLText
-     */
-    public function AfterShoppingCartFull() : DBHTMLText
-    {
-        $content = '';
-        $this->extend('updateAfterShoppingCartFull', $content);
-        return DBHTMLText::create()->setValue($content);
-    }
-    
-    /**
-     * Returns some additional content to insert before the ShoppingCartFull
-     * template.
-     * 
-     * @return DBHTMLText
-     */
-    public function BeforeCheckoutCartFull() : DBHTMLText
-    {
-        $content = '';
-        $this->extend('updateBeforeCheckoutCartFull', $content);
-        return DBHTMLText::create()->setValue($content);
-    }
+
 }

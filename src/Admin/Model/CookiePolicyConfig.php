@@ -77,7 +77,7 @@ class CookiePolicyConfig extends DataExtension
             if (class_exists(GridFieldOrderableRows::class)) {
                 $grid = $fields->dataFieldByName('Cookies');
                 /* @var $grid \SilverStripe\Forms\GridField\GridField */
-                if ($grid !== null) {
+                if ($grid !== null && $grid->getList() instanceof DataList) {
                     $grid->getConfig()->addComponent(GridFieldOrderableRows::create('Sort'));
                 }
             }

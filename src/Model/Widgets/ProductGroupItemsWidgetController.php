@@ -6,9 +6,9 @@ use SilverCart\Model\Pages\ProductGroupPage;
 use SilverCart\Model\Product\Product;
 use SilverCart\Model\Widgets\ProductGroupItemsWidget;
 use SilverCart\Model\Widgets\ProductSliderWidgetController;
-use SilverCart\Model\Widgets\Widget;
 use SilverCart\Model\Widgets\WidgetController;
 use SilverCart\Model\Widgets\WidgetTools;
+use SilverCart\Model\Widgets\Widget;
 use SilverStripe\CMS\Controllers\ModelAsController;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
@@ -33,6 +33,9 @@ class ProductGroupItemsWidgetController extends WidgetController
      * Register forms for the contained products.
      * 
      * @return void
+     * 
+     * @author Sascha Koehler <skoehler@pixeltricks.de>, Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 28.03.2012
      */
     protected function init() : void
     {
@@ -44,6 +47,10 @@ class ProductGroupItemsWidgetController extends WidgetController
      * Returns a number of products from the chosen productgroup.
      * 
      * @return ArrayList
+     * 
+     * @author Sascha Koehler <skoehler@pixeltricks.de>,
+     *         Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 29.08.2013
      */
     public function ProductPages()
     {
@@ -141,10 +148,12 @@ class ProductGroupItemsWidgetController extends WidgetController
      * Returns the elements for the static slider view.
      * 
      * @return ArrayList
+     *
+     * @author Sascha Koehler <skoehler@pixeltricks.de>, Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 21.02.2013
      */
     public function Elements() : ArrayList
     {
-        Product::setLinkBehavior($this->getWidget()->LinkBehaviorEmpty() ? $this->getWidget()->LinkBehaviorDefault() : $this->getWidget()->LinkBehavior);
         if (is_null($this->elements)) {
             switch ($this->useSelectionMethod) {
                 case 'products':
@@ -164,6 +173,9 @@ class ProductGroupItemsWidgetController extends WidgetController
      * Creates the cache key for this widget.
      *
      * @return string
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>, Sascha Koehler <skoehler@pixeltricks.de>
+     * @since 02.07.2012
      */
     public function WidgetCacheKey() : string
     {
@@ -174,6 +186,9 @@ class ProductGroupItemsWidgetController extends WidgetController
      * Returns the content for non slider widgets
      *
      * @return DBHTMLText
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 30.05.2012
      */
     public function ElementsContent() : DBHTMLText
     {
@@ -236,6 +251,9 @@ class ProductGroupItemsWidgetController extends WidgetController
      * Returns the title of the product group that items are shown.
      *
      * @return string
+     * 
+     * @author Sascha Koehler <skoehler@pixeltricks.de>
+     * @since 15.04.2011
      */
     public function ProductGroupTitle() : string
     {

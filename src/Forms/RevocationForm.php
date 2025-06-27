@@ -139,15 +139,17 @@ class RevocationForm extends CustomForm
      * @param CustomForm $form Form
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 08.11.2017
      */
-    public function doSubmit($data, CustomForm $form) : void
+    public function doSubmit($data, CustomForm $form)
     {
         $data['RevocationOrderData'] = str_replace('\r\n', "\n", $data['RevocationOrderData']);
-        $customer  = Customer::currentRegisteredCustomer();
+
         $config    = Config::getConfig();
         $country   = Country::get()->byID($data['Country']);
         $variables = [
-            'Customer'            => $customer,
             'Email'               => $data['Email'],
             'Salutation'          => $data['Salutation'],
             'FirstName'           => $data['FirstName'],
@@ -170,6 +172,8 @@ class RevocationForm extends CustomForm
             'ShopCountry'         => $config->getShopCountry(),
         ];
         
+        
+        if ($this->getOrderByRequest()){
         ShopEmail::send(
                 'RevocationNotification',
                 Config::DefaultMailOrderNotificationRecipient(),
@@ -185,8 +189,9 @@ class RevocationForm extends CustomForm
         
         $revocationPage = RevocationFormPage::get()->first();
         $this->getController()->redirect($revocationPage->Link('success'));
+        }
     }
-    
+      
     /**
      * Returns the context order based on submitted request data.
      * 
@@ -196,6 +201,7 @@ class RevocationForm extends CustomForm
     {
         $order    = null;
         $customer = Customer::currentRegisteredCustomer();
+        if ($customer instanceof Member) {
         $request  = $this->getRequest();
         $orderID  = $request->postVar('ExistingOrder');
         if (empty($orderID)) {
@@ -208,6 +214,7 @@ class RevocationForm extends CustomForm
             $order = $customer->Orders()->byID($orderID);
         }
         return $order;
+        }
     }
     
     /**
@@ -228,5 +235,26 @@ class RevocationForm extends CustomForm
     public function getCustomer()
     {
         return Customer::currentRegisteredCustomer();
+    }
+    
+    
+           /**
+     * template function: returns customers orders
+     * 
+     * @param int $limit Limit
+     *
+     * @return DataList|null
+     */
+    public function CurrentCustomerOrders($limit = 1)
+    {
+        $customer = $this->getCustomer();
+        if ($customer instanceof Member) {
+            if ($limit) {
+                $orders = Order::get()->filter('MemberID', $customer->ID)->limit($limit);
+            } else {
+                $orders = Order::get()->filter('MemberID', $customer->ID);
+            } 
+            return $orders;
+        }
     }
 }

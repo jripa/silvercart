@@ -2,7 +2,6 @@
 
 namespace SilverCart\ORM;
 
-use SilverCart\Model\Translation\TranslationExtension;
 use SilverStripe\Core\Config\Config as SilverStripeConfig;
 use SilverStripe\Forms\FormField;
 
@@ -18,12 +17,6 @@ use SilverStripe\Forms\FormField;
  */
 trait ExtensibleDataObject
 {
-    /**
-     * Cached field labels.
-     *
-     * @var array
-     */
-    protected static $_cache_field_labels = [];
     /**
      * Default field labels.
      *
@@ -96,19 +89,6 @@ trait ExtensibleDataObject
     }
     
     /**
-     * Allows user code to hook into DataObject::searchableFields() prior to 
-     * updateSearchableFields being called on extensions.
-     *
-     * @param callable $callback The callback to execute
-     * 
-     * @return void
-     */
-    protected function beforeUpdateSearchableFields($callback) : void
-    {
-        $this->beforeExtending('updateSearchableFields', $callback);
-    }
-    
-    /**
      * Returns the default field labels.
      * 
      * @param bool  $includerelations Include relations?
@@ -124,13 +104,6 @@ trait ExtensibleDataObject
                 $labels = array_merge(
                         $labels,
                         $this->scaffoldFieldLabels(),
-                        [
-                            'Created'         => _t('SilverCart.Created', 'Created'),
-                            'Created.Date'    => _t('SilverCart.Created', 'Created'),
-                            'Created.Nice'    => _t('SilverCart.Created', 'Created'),
-                            'LastEdited'      => _t('SilverCart.LastEdited', 'Last edited'),
-                            'LastEdited.Date' => _t('SilverCart.LastEdited', 'Last edited'),
-                        ],
                         $additionalLabels
                 );
             });
@@ -170,7 +143,7 @@ trait ExtensibleDataObject
          || empty($this->defaultFieldLabels[$objectName])
         ) {
             $fieldLabels = [];
-            $params      = ['db', 'casting', 'has_one', 'has_many', 'many_many', 'belongs_many_many', 'summary_fields'];
+            $params      = ['db', 'casting', 'has_one', 'has_many', 'many_many', 'belongs_many_many'];
             foreach ($params as $param) {
                 if (method_exists($objectName, 'config')) {
                     $source = $objectName::config()->uninherited($param);
@@ -178,34 +151,15 @@ trait ExtensibleDataObject
                     $source = SilverStripeConfig::inst()->get($objectName, $param);
                 }
                 if (is_array($source)) {
-                    if ($param === 'summary_fields') {
-                        $fieldNames = $source;
-                    } else {
-                        $fieldNames = array_keys($source);
-                    }
-                    foreach ($fieldNames as $key => $fieldname) {
-                        if (empty($fieldname)) {
-                            continue;
-                        }
-                        if (!is_numeric($key)) {
-                            $fieldname = $key;
-                        }
+                    foreach (array_keys($source) as $fieldname) {
                         $fieldLabels[$fieldname]               = _t("{$objectName}.{$fieldname}", $fieldname);
                         $fieldLabels["{$fieldname}Desc"]       = _t("{$objectName}.{$fieldname}Desc", FormField::name_to_label("{$fieldname}Desc"));
                         $fieldLabels["{$fieldname}Default"]    = _t("{$objectName}.{$fieldname}Default", FormField::name_to_label("{$fieldname}Default"));
                         $fieldLabels["{$fieldname}RightTitle"] = _t("{$objectName}.{$fieldname}RightTitle", FormField::name_to_label("{$fieldname}RightTitle"));
                         if ($fieldLabels[$fieldname] === $fieldname) {
-                            if ($param === 'db'
-                             && $this->hasExtension(TranslationExtension::class)
-                            ) {
-                                $className = $this->getRelationClassName();
-                                $fieldLabels[$fieldname]               = _t("{$className}.{$fieldname}", $fieldname);
-                                $fieldLabels["{$fieldname}Desc"]       = _t("{$className}.{$fieldname}Desc", FormField::name_to_label("{$fieldname}Desc"));
-                                $fieldLabels["{$fieldname}Default"]    = _t("{$className}.{$fieldname}Default", FormField::name_to_label("{$fieldname}Default"));
-                                $fieldLabels["{$fieldname}RightTitle"] = _t("{$className}.{$fieldname}RightTitle", FormField::name_to_label("{$fieldname}RightTitle"));
-                            } elseif ($param === 'has_one') {
+                            if ($param === 'has_one') {
                                 $className = $source[$fieldname];
-                                $fieldLabels[$fieldname] = $className::singleton()->i18n_singular_name();
+                                $fieldLabels[$fieldname] = $className::singleton()->singular_name();
                             } elseif ($param === 'has_many'
                                    || $param === 'many_many'
                                    || $param === 'belongs_many_many'
@@ -215,7 +169,7 @@ trait ExtensibleDataObject
                                     $parts = explode('.', $className);
                                     $className = array_shift($parts);
                                 }
-                                $fieldLabels[$fieldname] = $className::singleton()->i18n_plural_name();
+                                $fieldLabels[$fieldname] = $className::singleton()->plural_name();
                             }
                         }
                     }

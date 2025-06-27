@@ -3,25 +3,21 @@
 namespace SilverCart\Model\Pages;
 
 use SilverCart\Admin\Model\Config;
-use SilverCart\Dev\SeoTools;
 use SilverCart\Dev\Tools;
-use SilverCart\Extensions\Model\LinkBehaviorExtension;
+use SilverCart\Dev\SeoTools;
 use SilverCart\Forms\CustomRequiredFields;
 use SilverCart\Forms\RegisterRegularCustomerForm;
 use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Customer\Customer;
 use SilverCart\Model\Translation\TranslationTools;
-use SilverCart\ORM\ExtensibleDataObject;
 use SilverStripe\Assets\Image;
 use SilverStripe\CMS\Controllers\RootURLController;
-use SilverStripe\CMS\Model\RedirectorPage;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Convert;
 use SilverStripe\Forms\CheckboxField;
-use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\i18n\i18n;
@@ -29,18 +25,13 @@ use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBDatetime;
-use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\FieldType\DBText;
 use SilverStripe\Security\Permission;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\HTML;
-use SilverStripe\View\Parsers\ShortcodeParser;
 use TractorCow\Fluent\Extension\FluentDirectorExtension;
-use TractorCow\Fluent\Extension\FluentExtension;
 use TractorCow\Fluent\State\FluentState;
-use function _t;
 
 /**
  * Standard Page.
@@ -52,38 +43,36 @@ use function _t;
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  * 
- * @property bool   $DisplayBreadcrumbs         Determines whether to display the breadcrumbs
  * @property bool   $UseAsRootForMainNavigation Determines whether to use this page as root page for the main navigation
  * @property string $IdentifierCode             Page identifier code
- * @property string $BreadcrumbTitle            Breadcrumb Title
  */
 class Page extends SiteTree
 {
-    use ExtensibleDataObject;
+    use \SilverCart\ORM\ExtensibleDataObject;
     
-    public const IDENTIFIER_ADDRESS_HOLDER              = 'SilvercartAddressHolder';
-    public const IDENTIFIER_CART_PAGE                   = 'SilvercartCartPage';
-    public const IDENTIFIER_CHECKOUT_PAGE               = 'SilvercartCheckoutStep';
-    public const IDENTIFIER_CONTACT_FORM_PAGE           = 'SilvercartContactFormPage';
-    public const IDENTIFIER_CUSTOMER_DATA_PAGE          = 'SilvercartCustomerDataPage';
-    public const IDENTIFIER_DATA_PRIVACY_PAGE           = 'DataPrivacyStatementPage';
-    public const IDENTIFIER_FRONT_PAGE                  = 'SilvercartFrontPage';
-    public const IDENTIFIER_IMPRINT_PAGE                = 'ImprintPage';
-    public const IDENTIFIER_META_ABOUT_HOLDER           = 'SilvercartMetaNavigationHolderAbout';
-    public const IDENTIFIER_META_LEGAL_HOLDER           = 'SilvercartMetaNavigationHolderLegal';
-    public const IDENTIFIER_META_SERVICE_HOLDER         = 'SilvercartMetaNavigationHolderService';
-    public const IDENTIFIER_META_SHOP_HOLDER            = 'SilvercartMetaNavigationHolderShop';
-    public const IDENTIFIER_MY_ACCOUNT_HOLDER           = 'SilvercartMyAccountHolder';
-    public const IDENTIFIER_NEWSLETTER_PAGE             = 'SilvercartNewsletterPage';
-    public const IDENTIFIER_ORDER_HOLDER                = 'SilvercartOrderHolder';
-    public const IDENTIFIER_PAYMENT_METHODS_PAGE        = 'SilvercartPaymentMethodsPage';
-    public const IDENTIFIER_PRODUCT_GROUP_HOLDER        = 'SilvercartProductGroupHolder';
-    public const IDENTIFIER_REGISTRATION_PAGE           = 'SilvercartRegistrationPage';
-    public const IDENTIFIER_REVOCATION_FORM_PAGE        = 'SilvercartRevocationFormPage';
-    public const IDENTIFIER_REVOCATION_INSTRUCTION_PAGE = 'SilvercartRevocationInstructionPage';
-    public const IDENTIFIER_SEARCH_RESULTS_PAGE         = 'SilvercartSearchResultsPage';
-    public const IDENTIFIER_SHIPPING_FEES_PAGE          = 'SilvercartShippingFeesPage';
-    public const IDENTIFIER_TERMS_OF_SERVICE_PAGE       = 'TermsOfServicePage';
+    const IDENTIFIER_ADDRESS_HOLDER              = 'SilvercartAddressHolder';
+    const IDENTIFIER_CART_PAGE                   = 'SilvercartCartPage';
+    const IDENTIFIER_CHECKOUT_PAGE               = 'SilvercartCheckoutStep';
+    const IDENTIFIER_CONTACT_FORM_PAGE           = 'SilvercartContactFormPage';
+    const IDENTIFIER_CUSTOMER_DATA_PAGE          = 'SilvercartCustomerDataPage';
+    const IDENTIFIER_DATA_PRIVACY_PAGE           = 'DataPrivacyStatementPage';
+    const IDENTIFIER_FRONT_PAGE                  = 'SilvercartFrontPage';
+    const IDENTIFIER_IMPRINT_PAGE                = 'ImprintPage';
+    const IDENTIFIER_META_ABOUT_HOLDER           = 'SilvercartMetaNavigationHolderAbout';
+    const IDENTIFIER_META_LEGAL_HOLDER           = 'SilvercartMetaNavigationHolderLegal';
+    const IDENTIFIER_META_SERVICE_HOLDER         = 'SilvercartMetaNavigationHolderService';
+    const IDENTIFIER_META_SHOP_HOLDER            = 'SilvercartMetaNavigationHolderShop';
+    const IDENTIFIER_MY_ACCOUNT_HOLDER           = 'SilvercartMyAccountHolder';
+    const IDENTIFIER_NEWSLETTER_PAGE             = 'SilvercartNewsletterPage';
+    const IDENTIFIER_ORDER_HOLDER                = 'SilvercartOrderHolder';
+    const IDENTIFIER_PAYMENT_METHODS_PAGE        = 'SilvercartPaymentMethodsPage';
+    const IDENTIFIER_PRODUCT_GROUP_HOLDER        = 'SilvercartProductGroupHolder';
+    const IDENTIFIER_REGISTRATION_PAGE           = 'SilvercartRegistrationPage';
+    const IDENTIFIER_REVOCATION_FORM_PAGE        = 'SilvercartRevocationFormPage';
+    const IDENTIFIER_REVOCATION_INSTRUCTION_PAGE = 'SilvercartRevocationInstructionPage';
+    const IDENTIFIER_SEARCH_RESULTS_PAGE         = 'SilvercartSearchResultsPage';
+    const IDENTIFIER_SHIPPING_FEES_PAGE          = 'SilvercartShippingFeesPage';
+    const IDENTIFIER_TERMS_OF_SERVICE_PAGE       = 'TermsOfServicePage';
     
     /**
      * The robots tag content for dev mode or sensible content.
@@ -103,17 +92,8 @@ class Page extends SiteTree
      * @var array
      */
     private static $db = [
-        'DisplayBreadcrumbs'         => 'Boolean(1)',
         'UseAsRootForMainNavigation' => 'Boolean(0)',
         'IdentifierCode'             => 'Varchar(50)',
-    ];
-    /**
-     * Casting
-     *
-     * @var array
-     */
-    private static $casting = [
-        'BreadcrumbTitle' => 'Text',
     ];
     /**
      * Define indexes.
@@ -129,12 +109,6 @@ class Page extends SiteTree
      * @var string
      */
     private static $table_name = 'SilvercartPage';
-    /**
-     * Delimiter character(s) to use as product group breadcrumb title separation.
-     *
-     * @var string
-     */
-    private static $breadcrumb_title_delimiter = ' > ';
     /**
      * Indicator to check whether getCMSFields is called
      *
@@ -154,31 +128,6 @@ class Page extends SiteTree
             $robotsTag = self::config()->robots_tag_index;
         }
         return $robotsTag;
-    }
-
-    /**
-     * returns a single page by IdentifierCode
-     * used to retrieve links dynamically
-     *
-     * @param string $identifierCode the classes name
-     * 
-     * @return SiteTree|null
-     */
-    public static function PageByIdentifierCode(string $identifierCode = self::IDENTIFIER_FRONT_PAGE) : ?SiteTree
-    {
-        return Tools::PageByIdentifierCode($identifierCode);
-    }
-
-    /**
-     * returns a page link by IdentifierCode
-     *
-     * @param string $identifierCode the DataObjects IdentifierCode
-     *
-     * @return string
-     */
-    public static function PageByIdentifierCodeLink(string $identifierCode = self::IDENTIFIER_FRONT_PAGE) : string
-    {
-        return Tools::PageByIdentifierCodeLink($identifierCode);
     }
     
     /**
@@ -208,7 +157,7 @@ class Page extends SiteTree
      *
      * @return bool
      */
-    public function canTranslate() : bool
+    public function canTranslate()
     {
         return true;
     }
@@ -220,7 +169,7 @@ class Page extends SiteTree
      */
     public function getCMSFields()
     {
-        $this->beforeUpdateCMSFields(function(FieldList $fields) {
+        $this->beforeUpdateCMSFields(function($fields) {
             if (Permission::check('ADMIN')) {
                 $fields->addFieldToTab('Root.Main', TextField::create('IdentifierCode', 'IdentifierCode'));
                 $fields->dataFieldByName('IdentifierCode')->setRightTitle($this->fieldLabel('DoNotEdit'));
@@ -232,29 +181,6 @@ class Page extends SiteTree
         $this->getCMSFieldsIsCalled = true;
         return parent::getCMSFields();
     }
-    
-    /**
-     * Returns the setting fields for CMS.
-     * 
-     * @return FieldList
-     */
-    public function getSettingsFields()
-    {
-        $this->beforeExtending('updateSettingsFields', function(FieldList $fields) {
-            $fields->insertAfter('ShowInSearch', CheckboxField::create("DisplayBreadcrumbs", $this->fieldLabel('DisplayBreadcrumbs')));
-        });
-        return parent::getSettingsFields();
-    }
-    
-    /**
-     * Returns the getCMSFieldsIsCalled property.
-     * 
-     * @return bool
-     */
-    public function getCMSFieldsIsCalled() : bool
-    {
-        return (bool) $this->getCMSFieldsIsCalled;
-    }
 
     /**
      * Field labels for display in tables.
@@ -262,6 +188,9 @@ class Page extends SiteTree
      * @param boolean $includerelations A boolean value to indicate if the labels returned include relation fields
      *
      * @return array
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 26.09.2018
      */
     public function fieldLabels($includerelations = true)
     {
@@ -326,6 +255,9 @@ class Page extends SiteTree
      * Handles the UseAsRootForMainNavigation property on before write.
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 07.10.2014
      */
     protected function onBeforeWrite()
     {
@@ -356,13 +288,13 @@ class Page extends SiteTree
      * 
      * @return string
      */
-    public function getTitle() : string
+    public function getTitle()
     {
         $title = $this->getField('Title');
         if (!$this->getCMSFieldsIsCalled) {
             $this->extend('updateTitle', $title);
         }
-        return (string) $title;
+        return $title;
     }
 
     /**
@@ -376,90 +308,14 @@ class Page extends SiteTree
     }
     
     /**
-     * Returns the title including the parent titles.
-     * 
-     * Example $itemCallback:
-     * <code>
-     *  function(array &$items) {
-     *      if ($foo === $bar) {
-     *          array_pop($items);
-     *      }
-     *  }
-     * </code>
-     * 
-     * @param int         $maxDepth       The maximum depth to traverse.
-     * @param bool|string $stopAtPageType ClassName of a page to stop the upwards traversal.
-     * @param callable    $itemCallback   Callback function to call on the breadcrumb items.
-     * 
-     * @return string
-     */
-    public function getBreadcrumbTitle(int $maxDepth = 20, bool|string $stopAtPageType = false, callable $itemCallback = null) : string
-    {
-        $items = $this->getBreadcrumbItems($maxDepth, $stopAtPageType);
-        $map   = $items->map('ID', 'Title')->toArray();
-        if (is_callable($itemCallback)) {
-            $itemCallback($map);
-        }
-        return (string) implode($this->config()->breadcrumb_title_delimiter, $map);
-    }
-
-    /**
-     * Uses the children of the page with the given $identifierCode to render a 
-     * subnavigation with the SilverCart/Model/Pages/Includes/SubNavigation.ss 
-     * template. This is the default sub navigation.
-     * If the current page is a child of a MetaNavigationHolder, the navigation 
-     * will be build with all siblings and first level children of 
-     * MetaNavigationHolders.
-     *
-     * @param string $identifierCode The code of the parent page.
-     *
-     * @return DBHTMLText
-     */
-    public function getSubNavigation(string $identifierCode = self::IDENTIFIER_PRODUCT_GROUP_HOLDER) : DBHTMLText
-    {
-        $output = '';
-        $this->extend('overwriteSubNavigation', $output);
-        if (empty($output)) {
-            $isInformationPage = false;
-            $page              = $this;
-            do {
-                if ($page instanceof MetaNavigationHolder) {
-                    $isInformationPage = true;
-                } else {
-                    $page = $page->Parent();
-                }
-            } while ($page->Parent()->exists()
-                  && !$isInformationPage);
-            if ($isInformationPage) {
-                $output = (string) $page->getSubNavigation();
-            } else {
-                $items            = [];
-                $productGroupPage = Tools::PageByIdentifierCode($identifierCode);
-                if ($productGroupPage) {
-                    foreach ($productGroupPage->Children() as $child) {
-                        if ($child->hasmethod('hasProductsOrChildren')
-                         && $child->hasProductsOrChildren()
-                        ) {
-                            $items[] = $child;
-                        }
-                    }
-                    $elements = [
-                        'SubElements' => ArrayList::create($items),
-                    ];
-                    $this->extend('updateSubNavigation', $elements);
-                    $output = $this->customise($elements)->renderWith('SilverCart/Model/Pages/Includes/SubNavigation');
-                }
-            }
-        }
-        return DBHTMLText::create()->setValue($output);
-    }
-    
-    /**
      * Returns the main navigation root page (set in backend).
      * 
-     * @return Page|null
+     * @return Page
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 06.10.2014
      */
-    public function MainNavigationRootPage() : Page|null
+    public function MainNavigationRootPage()
     {
         $mainNavigationRootPage = null;
         $this->extend('alterMainNavigationRootPage', $mainNavigationRootPage);
@@ -497,8 +353,11 @@ class Page extends SiteTree
      * Returns the main navigation cache key.
      * 
      * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 07.10.2014
      */
-    public function MainNavigationCacheKey() : string
+    public function MainNavigationCacheKey()
     {
         $cacheKeyParts = [
             'Navigation',
@@ -515,7 +374,7 @@ class Page extends SiteTree
      *
      * @return string
      */
-    public function MemberGroupCacheKey() : string
+    public function MemberGroupCacheKey()
     {
         $cacheKey = i18n::get_locale() . '_' . Customer::get_group_cache_key();
         if (Director::isDev()) {
@@ -527,9 +386,12 @@ class Page extends SiteTree
     /**
      * Dummy to provide enhanced product group functions.
      * 
-     * @return bool
+     * @return boolean
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 07.10.2014
      */
-    public function hasProductsOrChildren() : bool
+    public function hasProductsOrChildren()
     {
         return true;
     }
@@ -539,6 +401,9 @@ class Page extends SiteTree
      * defined, boolean false is returned.
      *
      * @return mixed Image|bool false
+     * 
+     * @author Sascha koehler <skoehler@pixeltricks.de>
+     * @since 27.06.2011
      */
     public function SilvercartNoImage()
     {
@@ -557,9 +422,38 @@ class Page extends SiteTree
      *
      * @return string
      */
-    public function getSection() : string
+    public function getSection()
     {
         return Address::class;
+    }
+
+    /**
+     * getTreeTitle will return three <span> html DOM elements, an empty <span> with
+     * the class 'jstree-pageicon' in front, following by a <span> wrapping around its
+     * MenutTitle, then following by a <span> indicating its publication status. 
+     *
+     * @return string a html string ready to be directly used in a template
+     */
+    public function getTreeTitle()
+    {
+        $flags = $this->getStatusFlags();
+        $treeTitle = sprintf(
+            "<span class=\"jstree-pageicon\"></span>%s",
+            Convert::raw2xml(str_replace(["\n","\r"],"",$this->MenuTitle))
+        );
+        foreach ($flags as $class => $data) {
+            if (is_string($data)) {
+                $data = ['text' => $data];
+            }
+            $treeTitle .= sprintf(
+                "<span class=\"badge %s\"%s>%s</span>",
+                'status-' . Convert::raw2xml($class),
+                (isset($data['title'])) ? sprintf(' title="%s"', Convert::raw2xml($data['title'])) : '',
+                Convert::raw2xml($data['text'])
+            );
+        }
+
+        return $treeTitle;
     }
     
     /**
@@ -568,6 +462,9 @@ class Page extends SiteTree
      * @param bool $includeTitle Show default <title>-tag, set to false for custom templating
      * 
      * @return string The XHTML metatags
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 23.06.2017
      */
     public function MetaTags($includeTitle = true)
     {
@@ -584,33 +481,7 @@ class Page extends SiteTree
         $tags        .= $this->OpenGraphMetaTags();
         return $tags;
     }
-
-    /**
-     * Returns the linking target for foreign links on this page.
-     * 
-     * @param bool $plain Plain target value or as HTMNL attribute (default)
-     * 
-     * @return string
-     */
-    public function ForeignLinkTarget(bool $plain = false) : string
-    {
-        return LinkBehaviorExtension::ForeignLinkTarget($this, $plain);
-    }
     
-    /**
-     * Returns the admin link.
-     * 
-     * @return string
-     */
-    public function AdminLink() : string
-    {
-        $link = '';
-        if ($this->canEdit()) {
-            $link = Director::makeRelative("/admin/pages/edit/show/{$this->ID}");
-        }
-        return $link;
-    }
-
     /**
      * Takes a relativelink and returns an absolute link.
      * Meant to use in a template.
@@ -619,7 +490,7 @@ class Page extends SiteTree
      * 
      * @return string
      */
-    public function MakeAbsoluteLink(string $link) : string
+    public function MakeAbsoluteLink($link)
     {
         return Director::absoluteURL($link);
     }
@@ -628,8 +499,11 @@ class Page extends SiteTree
      * Returns the absolute canonical link.
      * 
      * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 23.06.2017
      */
-    public function AbsoluteCanonicalLink() : string
+    public function AbsoluteCanonicalLink()
     {
         return Director::absoluteURL($this->CanonicalLink());
     }
@@ -638,8 +512,11 @@ class Page extends SiteTree
      * Returns the relative canonical link.
      * 
      * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 23.06.2017
      */
-    public function CanonicalLink() : string
+    public function CanonicalLink()
     {
         return $this->Link();
     }
@@ -652,12 +529,11 @@ class Page extends SiteTree
      * @return string
      * 
      * @see self::Link()
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 26.04.2018
      */
-    public function OriginalLink(string $action = null) : string
+    public function OriginalLink($action = null)
     {
-        if ($this instanceof RedirectorPage) {
-            return parent::Link($action);
-        }
         return $this->Link($action);
     }
 
@@ -671,9 +547,11 @@ class Page extends SiteTree
      * 
      * @return string
      * 
-     * @see FluentExtension::LocaleLink()
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 26.04.2018
+     * @see \TractorCow\Fluent\Extension\FluentExtension::LocaleLink()
      */
-    public function LocaleOriginalLink(string $locale) : string
+    public function LocaleOriginalLink($locale)
     {
         // Skip dataobjects that do not have the Link method
         if (!$this->hasMethod('OriginalLink')) {
@@ -711,7 +589,7 @@ class Page extends SiteTree
      *
      * @return ArrayList 
      */
-    public function getAllTranslations() : ArrayList
+    public function getAllTranslations()
     {
         $currentLocale      = Tools::current_locale();
         $translations       = Tools::get_translations($this);
@@ -762,7 +640,7 @@ class Page extends SiteTree
      * 
      * @return string
      */
-    public function getIso2(string $locale) : string
+    public function getIso2($locale)
     {
         $parts = explode('_', $locale);
         return strtolower($parts[1]);
@@ -775,7 +653,7 @@ class Page extends SiteTree
      * 
      * @return string
      */
-    public function getLangCode(string $locale) : string
+    public function getLangCode($locale)
     {
         $parts = explode('_', $locale);
         return strtolower($parts[0]);
@@ -784,21 +662,21 @@ class Page extends SiteTree
     /**
      * Adds a decorator hook and returns the Content.
      * 
-     * @return DBHTMLText
+     * @return string
      */
-    public function getContent() : DBHTMLText
+    public function getContent()
     {
         $content = $this->getField('Content');
         if (!$this->getCMSFieldsIsCalled) {
             $this->extend('updateContent', $content);
         }
-        return DBHTMLText::create()->setValue($content)->setProcessShortcodes(true);
+        return $content;
     }
     
     /**
      * Adds a decorator hook and returns the MetaDescription.
      * 
-     * @return DBText
+     * @return string
      */
     public function getMetaDescription()
     {
@@ -809,7 +687,7 @@ class Page extends SiteTree
             }
             $this->extend('updateMetaDescription', $metaDescription);
         }
-        return  DBText::create()->setValue($metaDescription);
+        return $metaDescription;
     }
     
     /**
@@ -818,8 +696,11 @@ class Page extends SiteTree
      * @param string $string String to convert
      * 
      * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 05.07.2017
      */
-    public function String2urlSegment(string $string) : string
+    public function String2urlSegment($string)
     {
         return Tools::string2urlSegment($string);
     }
@@ -831,7 +712,7 @@ class Page extends SiteTree
      * 
      * @return bool
      */
-    public function isStartPage(string $link = '') : bool
+    public function isStartPage($link = '')
     {
         if (empty($link)) {
             $link = $this->Link();
@@ -851,6 +732,9 @@ class Page extends SiteTree
      * @param string $delimiter      Delimiter to use
      *
      * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 26.04.2018
      */
     public function Breadcrumbs($maxDepth = 20, $unlinked = false, $stopAtPageType = false, $showHidden = false, $delimiter = '&raquo;')
     {
@@ -869,8 +753,11 @@ class Page extends SiteTree
      * @param callable $callback The callback to execute
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 29.09.2018
      */
-    public function beforeUpdateBreadcrumbItems(callable $callback) : void
+    public function beforeUpdateBreadcrumbItems($callback)
     {
         $this->beforeExtending('updateBreadcrumbItems', $callback);
     }
@@ -896,9 +783,12 @@ class Page extends SiteTree
      * Returns some additional content to insert to the header navigation right 
      * before the translation select item is rendered.
      * 
-     * @return DBHTMLText
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 29.08.2018
      */
-    public function HeaderNavBeforeTranslationSelectContent() : DBHTMLText
+    public function HeaderNavBeforeTranslationSelectContent()
     {
         $content = '';
         $this->extend('updateHeaderNavBeforeTranslationSelectContent', $content);
@@ -909,9 +799,12 @@ class Page extends SiteTree
      * Returns some additional content to insert to the header navigation right 
      * before the account select item is rendered.
      * 
-     * @return DBHTMLText
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 29.08.2018
      */
-    public function HeaderNavBeforeAccountSelectContent() : DBHTMLText
+    public function HeaderNavBeforeAccountSelectContent()
     {
         $content = '';
         $this->extend('updateHeaderNavBeforeAccountSelectContent', $content);
@@ -922,61 +815,16 @@ class Page extends SiteTree
      * Returns some additional content to insert to the header navigation right 
      * before the cart select item is rendered.
      * 
-     * @return DBHTMLText
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 29.08.2018
      */
-    public function HeaderNavBeforeCartSelectContent() : DBHTMLText
+    public function HeaderNavBeforeCartSelectContent()
     {
         $content = '';
         $this->extend('updateHeaderNavBeforeCartSelectContent', $content);
         return Tools::string2html($content);
-    }
-    
-    /**
-     * Returns some additional content to insert before the header.
-     * 
-     * @return DBHTMLText
-     */
-    public function BeforeHeaderContent() : DBHTMLText
-    {
-        $content = '';
-        $this->extend('updateBeforeHeaderContent', $content);
-        return DBHTMLText::create()->setValue($content);
-    }
-    
-    /**
-     * Returns some additional content to insert after the header.
-     * 
-     * @return DBHTMLText
-     */
-    public function AfterHeaderContent() : DBHTMLText
-    {
-        $content = '';
-        $this->extend('updateAfterHeaderContent', $content);
-        return DBHTMLText::create()->setValue($content);
-    }
-    
-    /**
-     * Returns some additional content to insert before the breadcrumnbs.
-     * 
-     * @return DBHTMLText
-     */
-    public function BeforeBreadcrumbsContent() : DBHTMLText
-    {
-        $content = '';
-        $this->extend('updateBeforeBreadcrumbsContent', $content);
-        return DBHTMLText::create()->setValue($content);
-    }
-    
-    /**
-     * Returns some additional content to insert after the breadcrumnbs.
-     * 
-     * @return DBHTMLText
-     */
-    public function AfterBreadcrumbsContent() : DBHTMLText
-    {
-        $content = '';
-        $this->extend('updateAfterBreadcrumbsContent', $content);
-        return DBHTMLText::create()->setValue($content);
     }
 
     /**
@@ -987,9 +835,12 @@ class Page extends SiteTree
      * @param string          $content   Content
      * @param ShortcodeParser $parser    Parser
      * 
-     * @return string|null
+     * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 19.10.2018
      */
-    public static function link_shortcode_handler($arguments, $content = null, $parser = null) : string|null
+    public static function link_shortcode_handler($arguments, $content = null, $parser = null)
     {
         if (!isset($arguments['id'])
          || !is_numeric($arguments['id'])
@@ -1041,6 +892,9 @@ class Page extends SiteTree
      * Meta Tags for Social Sharing Pages and Products
      * 
      * @return string
+     * 
+     * @author Jiri Ripa <jripa@pixeltricks.de>
+     * @since 08.05.2020
      */
     public function OpenGraphMetaTags() : string
     {
@@ -1095,16 +949,10 @@ class Page extends SiteTree
         if ($image instanceof Image 
          && $image->exists()
         ) {
-            $padded = $image->Pad(250,250);
-            /** @var Image $padded */
-            if (is_object($padded)
-             && $padded->hasMethod('getAbsoluteURL')
-            ) {
-                $tags  .= HTML::createTag('meta', [
-                    'property' => 'og:image',
-                    'content'  => $image->Pad(250,250)->getAbsoluteURL(),
-                ]) . PHP_EOL;
-            }
+            $tags  .= HTML::createTag('meta', [
+                'property' => 'og:image',
+                'content'  => $image->Pad(250,250)->getAbsoluteURL(),
+            ]) . PHP_EOL;
         }
             $tags  .= HTML::createTag('meta', [
                 'property' => 'og:type',
@@ -1118,7 +966,7 @@ class Page extends SiteTree
      * 
      * @return string
      */
-    public function getCurrentDate() : string
+    public function getCurrentDate()
     {
         $date = DBDatetime::create();
         $date->setValue(date('Y-m-d H:i:s'));

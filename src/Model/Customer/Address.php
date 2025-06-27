@@ -3,6 +3,7 @@
 namespace SilverCart\Model\Customer;
 
 use SilverCart\Dev\Tools;
+use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Customer\Country;
 use SilverCart\Model\Customer\Customer;
 use SilverCart\Model\Order\Order;
@@ -54,17 +55,6 @@ use SilverStripe\Security\PermissionProvider;
  * @property int    $MemberID      Member ID
  * @property int    $CountryID     Country ID
  * 
- * @property string $FullName         Full Name
- * @property string $CountryISO2      Country ISO2
- * @property string $CountryISO3      Country ISO3
- * @property string $CountryISON      Country ISON
- * @property string $CountryFIPS      Country FIPS
- * @property string $PostcodeWithCity Postcode With City
- * @property string $SalutationText   Salutation Text
- * @property string $StreetWithNumber Street With Number
- * @property string $Summary          Summary
- * @property string $SummaryHTML      Summary HTML
- * 
  * @method Member  Member()  Returns the related Member.
  * @method Country Country() Returns the related Country.
  */
@@ -115,16 +105,13 @@ class Address extends DataObject implements PermissionProvider
      * @var array
      */
     private static $casting = [
-        'CountryISO2'      => 'Text',
-        'CountryISO3'      => 'Text',
-        'CountryISON'      => 'Text',
-        'CountryFIPS'      => 'Text',
-        'FullName'         => 'Text',
-        'PostcodeWithCity' => 'Text',
-        'SalutationText'   => 'Varchar',
-        'StreetWithNumber' => 'Text',
-        'Summary'          => 'Text',
-        'SummaryHTML'      => 'HTMLText',
+        'FullName'       => 'Text',
+        'SalutationText' => 'Varchar',
+        'Summary'        => 'Text',
+        'CountryISO2'    => 'Text',
+        'CountryISO3'    => 'Text',
+        'CountryISON'    => 'Text',
+        'CountryFIPS'    => 'Text',
     ];
     /**
      * Defaults for attributes.
@@ -163,66 +150,6 @@ class Address extends DataObject implements PermissionProvider
      * @var bool
      */
     private static $invoice_address_is_readonly = false;
-    /**
-     * Maximum character length of Company
-     * 
-     * @var int
-     */
-    private static $max_length_company = 50;
-    /**
-     * Maximum character length of TaxIdNumber
-     * 
-     * @var int
-     */
-    private static $max_length_tax_id_number = 30;
-    /**
-     * Maximum character length of AcademicTitle
-     * 
-     * @var int
-     */
-    private static $max_length_academic_title = 50;
-    /**
-     * Maximum character length of FirstName
-     * 
-     * @var int
-     */
-    private static $max_length_first_name = 50;
-    /**
-     * Maximum character length of Surname
-     * 
-     * @var int
-     */
-    private static $max_length_surname = 50;
-    /**
-     * Maximum character length of Addition
-     * 
-     * @var int
-     */
-    private static $max_length_addition = 255;
-    /**
-     * Maximum character length of Street
-     * 
-     * @var int
-     */
-    private static $max_length_street = 255;
-    /**
-     * Maximum character length of StreetNumber
-     * 
-     * @var int
-     */
-    private static $max_length_street_number = 10;
-    /**
-     * Maximum character length of Postcode
-     * 
-     * @var int
-     */
-    private static $max_length_postcode = 10;
-    /**
-     * Maximum character length of City
-     * 
-     * @var int
-     */
-    private static $max_length_city = 100;
     /**
      * Property to indicate whether this is an anonymous address
      *
@@ -801,7 +728,6 @@ class Address extends DataObject implements PermissionProvider
             'FirstName'          => _t(Address::class . '.FIRSTNAME', 'Firstname'),
             'Surname'            => _t(Address::class . '.SURNAME', 'Surname'),
             'TaxIdNumber'        => _t(Address::class . '.TAXIDNUMBER', 'Tax ID number'),
-            'TaxIdNumberShort'   => _t(Address::class . '.TaxIdNumberShort', 'Tax ID'),
             'Company'            => _t(Address::class . '.COMPANY', 'Company'),
             'IsBusinessAccount'  => _t(Address::class . '.ISBUSINESSACCOUNT', 'Is business address'),
             'Name'               => _t(Address::class . '.NAME', 'Name'),
@@ -922,23 +848,6 @@ class Address extends DataObject implements PermissionProvider
         $summary .= $this->Postcode . ' ' . $this->City;
         $this->extend('updateSummary', $summary);
         return $summary;
-    }
-
-    /**
-     * Returns an address summary as HTML.
-     * 
-     * @return DBHTMLText
-     */
-    public function getSummaryHTML() : DBHTMLText
-    {
-        $summary = ""
-                . (empty($this->Company) ? '' : "{$this->Company}<br/>" . PHP_EOL)
-                . "{$this->FirstName} {$this->Surname}<br/>" . PHP_EOL
-                . "{$this->Street} {$this->StreetNumber}<br/>" . PHP_EOL
-                . (empty($this->Addition) ? '' : "{$this->Addition}<br/>" . PHP_EOL)
-                . "{$this->Country()->ISO2}-{$this->Postcode} {$this->City}<br/>" . PHP_EOL;
-        $this->extend('updateSummaryHTML', $summary);
-        return DBHTMLText::create()->setValue($summary );
     }
     
     /**
@@ -1133,26 +1042,6 @@ class Address extends DataObject implements PermissionProvider
     public function getFullName() : string
     {
         return "{$this->FirstName} {$this->Surname}";
-    }
-
-    /**
-     * Returns the Street with StreetNumber.
-     * 
-     * @return string
-     */
-    public function getStreetWithNumber() : string
-    {
-        return "{$this->Street} {$this->StreetNumber}";
-    }
-
-    /**
-     * Returns the Postcode with City.
-     * 
-     * @return string
-     */
-    public function getPostcodeWithCity() : string
-    {
-        return "{$this->Postcode} {$this->City}";
     }
 
     /**

@@ -14,7 +14,7 @@ use SilverStripe\View\ArrayData;
  * ModelAdmin for ContactMessages
  * 
  * @package SilverCart
- * @subpackage Admin\Controllers
+ * @subpackage Admin_Controllers
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @copyright 2017 pixeltricks GmbH
  * @since 22.09.2017
@@ -50,18 +50,6 @@ class ContactMessageAdmin extends ModelAdmin
      */
     private static $menu_title = 'Contact Messages';
     /**
-     * Menu icon
-     * 
-     * @var string
-     */
-    private static $menu_icon = null;
-    /**
-     * Menu icon CSS class
-     * 
-     * @var string
-     */
-    private static $menu_icon_class = 'font-icon-comment';
-    /**
      * Managed models
      *
      * @var array
@@ -85,7 +73,7 @@ class ContactMessageAdmin extends ModelAdmin
      */
     public function getList() : DataList
     {
-        return $this->getTabbedList((string) $this->getCurrentTab());
+        return $this->getTabbedList($this->getCurrentTab());
     }
     
     /**
@@ -98,10 +86,10 @@ class ContactMessageAdmin extends ModelAdmin
      * 
      * 
      */
-    protected function getTabbedList(string $tab, string $modelClass = null) : DataList
+    protected function getTabbedList(string $tab, string $modelClass = '') : DataList
     {
-        $restoreModelClass = null;
-        if (class_exists((string) $modelClass)) {
+        $restoreModelClass = '';
+        if (class_exists($modelClass)) {
             $restoreModelClass = $this->modelClass;
             $this->modelClass  = $modelClass;
         }
@@ -110,7 +98,7 @@ class ContactMessageAdmin extends ModelAdmin
         } else {
             $list = parent::getList();
         }
-        if (class_exists((string) $restoreModelClass)) {
+        if (class_exists($restoreModelClass)) {
             $this->modelClass  = $restoreModelClass;
         }
         return $list;

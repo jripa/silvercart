@@ -60,38 +60,21 @@ class DateRangeSearchFilter extends SearchFilter
      * Initializes the min and max value.
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 25.06.2014
      */
     public function initValue() : void
     {
-        $min_val = $this->getValue();
+        $value   = $this->getValue();
         $max_val = null;
-        if (array_key_exists('filter', $_POST)) {
-            foreach ($_POST['filter'] as $grid => $fields) {
-                if (array_key_exists("{$this->getName()}__End", $fields)) {
-                    $max_val = $fields["{$this->getName()}__End"];
-                }
-            }
-        }
-        if ($max_val === null) {
-            $state   = null;
-            foreach ($_GET as $name => $value) {
-                if (strpos($name, 'gridState-') === 0) {
-                    $state = json_decode($value);
-                    break;
-                }
-            }
-            if (is_object($state)
-            && property_exists($state, 'GridFieldFilterHeader')
-            ) {
-                $filter = $state->GridFieldFilterHeader;
-                if (is_object($filter)
-                && property_exists($filter, 'Columns')
-                ) {
-                    $columns = (array) $filter->Columns;
-                    if (array_key_exists("{$this->getName()}__End", $columns)) {
-                        $max_val = $columns["{$this->getName()}__End"];
-                    }
-                }
+        if (strpos($value, '-') === false) {
+            $min_val = $value;
+        } else {
+            preg_match('/([^\s]*)(\s-\s(.*))?/i', $value, $matches);
+            $min_val = (isset($matches[1])) ? $matches[1] : null;
+            if (isset($matches[3])) {
+                $max_val = $matches[3];
             }
         }
         if ($min_val
@@ -113,6 +96,9 @@ class DateRangeSearchFilter extends SearchFilter
      * @param DataQuery $query The query object
      *
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 11.09.2020
      */
     public function apply(DataQuery $query) : void
     {
@@ -123,10 +109,9 @@ class DateRangeSearchFilter extends SearchFilter
         if ($this->min
          && $this->max
         ) {
-            $query->where("{$tableName}.Created BETWEEN '{$min}' AND '{$max}'");
+            $query->where("{$tableName}.Created >= STR_TO_DATE('{$min}', '%d.%m.%Y') AND {$tableName}.Created <= STR_TO_DATE('{$max}', '%d.%m.%Y %H:%i:%s')");
         } elseif ($this->min) {
-            $max = Convert::raw2sql($this->min) . ' 23:59:59';
-            $query->where("{$tableName}.Created BETWEEN '{$min}' AND '{$max}'");
+            $query->where("DATEDIFF({$tableName}.Created, STR_TO_DATE('{$min}', '%d.%m.%Y')) = 0");
         }
     }
     
@@ -135,7 +120,10 @@ class DateRangeSearchFilter extends SearchFilter
      * 
      * @param DataQuery $query The query object
      *
-     * @return void
+     * @return void 
+     * 
+     * @author Roland Lehmann <rlehmann@pixeltricks.de>
+     * @since 04.01.2013
      */
     public function applyOne(DataQuery $query) : void
     {
@@ -147,7 +135,10 @@ class DateRangeSearchFilter extends SearchFilter
      * 
      * @param DataQuery $query The query object
      *
-     * @return void
+     * @return void 
+     * 
+     * @author Roland Lehmann <rlehmann@pixeltricks.de>
+     * @since 04.01.2013
      */
     public function excludeOne(DataQuery $query) : void
     {

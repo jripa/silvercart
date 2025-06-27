@@ -3,45 +3,35 @@
 namespace SilverCart\Admin\Model;
 
 use SilverCart\Admin\Dev\Install\RequireDefaultRecords;
-use SilverCart\Admin\Forms\AlertInfoField;
 use SilverCart\Admin\Model\Config;
 use SilverCart\Dev\Tools;
-use SilverCart\Forms\FormFields\MoneyField;
 use SilverCart\Forms\FormFields\TextField;
 use SilverCart\Forms\FormFields\TextareaField;
-use SilverCart\Model\Content\BrandNavigationItem;
-use SilverCart\Model\Content\LinkableItem;
 use SilverCart\Model\CookieConsent\ExternalResource;
 use SilverCart\Model\Customer\Country;
 use SilverCart\Model\Customer\Customer;
 use SilverCart\Model\Product\Product;
 use SilverCart\Model\Product\ProductCondition;
 use SilverCart\Model\Translation\TranslationTools;
-use SilverCart\ORM\Connect\DBMigration;
-use SilverCart\ORM\FieldType\DBMoney as SilverCartDBMoney;
 use SilverStripe\AssetAdmin\Forms\UploadField;
 use SilverStripe\Assets\Image;
+use SilverCart\Forms\FormFields\MoneyField;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Forms\CheckboxField;
-use SilverStripe\Forms\DatetimeField;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
-use SilverStripe\Forms\GridField\GridFieldConfig_RelationEditor;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataExtension;
-use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DB;
-use SilverStripe\Security\Member;
-use SilverStripe\Security\Security;
-use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\View\ArrayData;
+use SilverStripe\SiteConfig\SiteConfig;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
@@ -65,67 +55,72 @@ class SiteConfigExtension extends DataExtension
      * @var array
      */
     private static $db = [
-        'ShopName'                                      => 'Varchar(256)',
-        'ShopStreet'                                    => 'Varchar(256)',
-        'ShopStreetNumber'                              => 'Varchar(6)',
-        'ShopPostcode'                                  => 'Varchar(32)',
-        'ShopCity'                                      => 'Varchar(256)',
-        'ShopPhone'                                     => 'Varchar(256)',
-        'ShopEmail'                                     => 'Varchar(256)',
-        'ShopOpeningHours'                              => 'Text',
-        'ShopAdditionalInfo'                            => 'Text',
-        'ShopAdditionalInfo2'                           => 'Text',
-        'SilvercartVersion'                             => 'Varchar(16)',
-        'SilvercartMinorVersion'                        => 'Varchar(16)',
-        'DefaultCurrency'                               => 'Varchar(16)',
-        'DefaultPriceType'                              => 'Enum("gross,net","gross")',
-        'EmailSenderName'                               => 'Varchar(255)',
-        'EmailSender'                                   => 'Varchar(255)',
-        'GlobalEmailRecipient'                          => 'Varchar(255)',
-        'DefaultMailRecipient'                          => 'Varchar(255)',
-        'DefaultMailOrderNotificationRecipient'         => 'Varchar(255)',
-        'DefaultMailRevocationRecipient'                => 'Varchar(255)',
-        'DefaultMailRegistrationRecipient'              => 'Varchar(255)',
-        'DefaultContactMessageRecipient'                => 'Varchar(255)',
-        'enableSSL'                                     => 'Boolean(0)',
-        'productsPerPage'                               => 'Int',
-        'productGroupsPerPage'                          => 'Int',
-        'displayedPaginationPages'                      => 'Int',
-        'minimumOrderValue'                             => SilverCartDBMoney::class,
-        'useMinimumOrderValue'                          => 'Boolean(0)',
-        'freeOfShippingCostsFrom'                       => SilverCartDBMoney::class,
-        'useFreeOfShippingCostsFrom'                    => 'Boolean(0)',
-        'enableBusinessCustomers'                       => 'Boolean(0)',
-        'enablePackstation'                             => 'Boolean(0)',
-        'enableStockManagement'                         => 'Boolean(0)',
-        'isStockManagementOverbookable'                 => 'Boolean(0)',
-        'SkipPaymentStepIfUnique'                       => 'Boolean(0)',
-        'SkipShippingStepIfUnique'                      => 'Boolean(0)',
-        'InvoiceAddressIsAlwaysShippingAddress'         => 'Boolean(0)',
-        'redirectToCartAfterAddToCart'                  => 'Boolean(0)',
-        'redirectToCheckoutWhenInCart'                  => 'Boolean(0)',
-        'WeightUnit'                                    => Config::ENUMERATION_WEIGHT_UNIT,
-        'DimensionUnit'                                 => Config::ENUMERATION_DIMENSION_UNIT,
-        'DisplayWeightsInKilogram'                      => 'Boolean(1)',
-        'demandBirthdayDateOnRegistration'              => 'Boolean(0)',
-        'UseMinimumAgeToOrder'                          => 'Boolean(0)',
-        'MinimumAgeToOrder'                             => 'Varchar(3)',
-        'addToCartMaxQuantity'                          => 'Int(999)',
-        'DefaultLocale'                                 => 'DBLocale',
-        'useDefaultLanguageAsFallback'                  => 'Boolean(1)',
-        'ShowTaxAndDutyHint'                            => 'Boolean(0)',
-        'productDescriptionFieldForCart'                => 'Enum("ShortDescription,LongDescription","ShortDescription")',
-        'useProductDescriptionFieldForCart'             => 'Boolean(1)',
-        'useProductDescriptionFieldForCartPrintPreview' => 'Boolean(1)',
-        'DisableProductLinkInCart'                      => 'Boolean(0)',
-        'useStrictSearchRelevance'                      => 'Boolean(0)',
-        'ShowPaymentMethodsInFooter'                    => 'Boolean(1)',
-        'ShowShippingMethodsInFooter'                   => 'Boolean(1)',
-        'userAgentBlacklist'                            => 'Text',
-        'ColorScheme'                                   => 'Varchar(256)',
-        'MaintenanceMode'                               => 'Boolean(0)',
-        'MaintenanceStart'                              => 'Datetime',
-        'MaintenanceEnd'                                => 'Datetime',
+        'ShopName'         => 'Varchar(256)',
+        'ShopStreet'       => 'Varchar(256)',
+        'ShopStreetNumber' => 'Varchar(6)',
+        'ShopPostcode'     => 'Varchar(32)',
+        'ShopCity'         => 'Varchar(256)',
+        'ShopPhone'        => 'Varchar(256)',
+        'ShopEmail'        => 'Varchar(256)',
+        'ShopOpeningHours' => 'Text',
+        'ShopAdditionalInfo'                    => 'Text',
+        'ShopAdditionalInfo2'                   => 'Text',
+        'SilvercartVersion'                     => 'Varchar(16)',
+        'SilvercartMinorVersion'                => 'Varchar(16)',
+        'DefaultCurrency'                       => 'Varchar(16)',
+        'DefaultPriceType'                      => 'Enum("gross,net","gross")',
+        'EmailSenderName'                       => 'Varchar(255)',
+        'EmailSender'                           => 'Varchar(255)',
+        'GlobalEmailRecipient'                  => 'Varchar(255)',
+        'DefaultMailRecipient'                  => 'Varchar(255)',
+        'DefaultMailOrderNotificationRecipient' => 'Varchar(255)',
+        'DefaultMailRevocationRecipient'        => 'Varchar(255)',
+        'DefaultMailRegistrationRecipient'      => 'Varchar(255)',
+        'DefaultContactMessageRecipient'        => 'Varchar(255)',
+        'enableSSL'                             => 'Boolean(0)',
+        'productsPerPage'                       => 'Int',
+        'productGroupsPerPage'                  => 'Int',
+        'displayedPaginationPages'              => 'Int',
+        'minimumOrderValue'                     => \SilverCart\ORM\FieldType\DBMoney::class,
+        'useMinimumOrderValue'                  => 'Boolean(0)',
+        'freeOfShippingCostsFrom'               => \SilverCart\ORM\FieldType\DBMoney::class,
+        'useFreeOfShippingCostsFrom'            => 'Boolean(0)',
+        'enableBusinessCustomers'               => 'Boolean(0)',
+        'enablePackstation'                     => 'Boolean(0)',
+        'enableStockManagement'                 => 'Boolean(0)',
+        'isStockManagementOverbookable'         => 'Boolean(0)',
+        'SkipPaymentStepIfUnique'               => 'Boolean(0)',
+        'SkipShippingStepIfUnique'              => 'Boolean(0)',
+        'InvoiceAddressIsAlwaysShippingAddress' => 'Boolean(0)',
+        'redirectToCartAfterAddToCart'          => 'Boolean(0)',
+        'redirectToCheckoutWhenInCart'          => 'Boolean(0)',
+        'WeightUnit'                            => Config::ENUMERATION_WEIGHT_UNIT,
+        'DimensionUnit'                         => Config::ENUMERATION_DIMENSION_UNIT,
+        'DisplayWeightsInKilogram'              => 'Boolean(1)',
+        'demandBirthdayDateOnRegistration'      => 'Boolean(0)',
+        'UseMinimumAgeToOrder'                  => 'Boolean(0)',
+        'MinimumAgeToOrder'                     => 'Varchar(3)',
+        'addToCartMaxQuantity'                  => 'Int(999)',
+        'DefaultLocale'                         => 'DBLocale',
+        'useDefaultLanguageAsFallback'          => 'Boolean(1)',
+        'ShowTaxAndDutyHint'                    => 'Boolean(0)',
+        'productDescriptionFieldForCart'        => 'Enum("ShortDescription,LongDescription","ShortDescription")',
+        'useProductDescriptionFieldForCart'     => 'Boolean(1)',
+        'DisableProductLinkInCart'              => 'Boolean(0)',
+        'useStrictSearchRelevance'              => 'Boolean(0)',
+        'userAgentBlacklist'                    => 'Text',
+        'ColorScheme'                           => 'Varchar(256)',
+        'GoogleplusLink'                => 'Text',
+        'FacebookLink'                  => 'Text',
+        'TwitterLink'                   => 'Text',
+        'XingLink'                      => 'Text',
+        'InstagramLink'                 => 'Text',
+        'BloglovinLink'                 => 'Text',
+        'PinterestLink'                 => 'Text',
+        'YouTubeLink'                   => 'Text',
+        'TumblrLink'                    => 'Text',
+        'RSSLink'                       => 'Text',
+        'EmailLink'                     => 'Text',
     ];
     /**
      * Has-one relationships.
@@ -139,15 +134,6 @@ class SiteConfigExtension extends DataExtension
         'MobileTouchIcon'           => Image::class,
         'StandardProductCondition'  => ProductCondition::class,
         'ShopCountry'               => Country::class,
-    ];
-    /**
-     * Has many relations.
-     *
-     * @var string[]
-     */
-    private static $has_many = [
-        'BrandNavigation'   => BrandNavigationItem::class,
-        'ExternalLinks'     => LinkableItem::class,
     ];
     /**
      * Defaults for empty fields.
@@ -165,8 +151,6 @@ class SiteConfigExtension extends DataExtension
         'DefaultLocale'                 => 'de_DE',
         'userAgentBlacklist'            => 'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1)',
         'ColorScheme'                   => 'blue',
-        'ShowPaymentMethodsInFooter'    => true,
-        'ShowShippingMethodsInFooter'   => true,
     ];
     /**
      * Indicator to check whether getCMSFields is called
@@ -180,12 +164,6 @@ class SiteConfigExtension extends DataExtension
      * @var string
      */
     private static $duplicate_config_locale = null;
-    /**
-     * Disables the maintenance mode
-     * 
-     * @var bool
-     */
-    protected static $maintenanceModeIsDisabled = false;
     
     /**
      * Workaround to add a custom callback method for ShopState if possible.
@@ -270,7 +248,7 @@ class SiteConfigExtension extends DataExtension
                     'ShopOpeningHours'                      => _t(Config::class . '.ShopOpeningHours', 'Opening hours'),
                     'ShopAdditionalInfo'                    => _t(Config::class . '.ShopAdditionalInfo', 'Additional Information'),
                     'ShopAdditionalInfoDesc'                => _t(Config::class . '.ShopAdditionalInfoDesc', 'Additional Information'),
-                    'ShopAdditionalInfo2'                   => _t(Config::class . '.ShopAdditional2Info', 'Additional Information 2'),
+                    'ShopAdditionalInfo2'                   => _t(Config::class . '.ShopAdditionalInfo2', 'Additional Information 2'),
                     'ShopAdditionalInfo2Desc'               => _t(Config::class . '.ShopAdditionalInfo2Desc', 'Additional Information 2'),
                     'addToCartMaxQuantity'                  => _t(Config::class . '.ADDTOCARTMAXQUANTITY', 'Maximum allowed quantity of a single product in the shopping cart'),
                     'DefaultCurrency'                       => _t(Config::class . '.DEFAULTCURRENCY', 'Default currency'),
@@ -320,8 +298,6 @@ class SiteConfigExtension extends DataExtension
                     'CheckoutConfiguration'                 => _t(Config::class . '.CheckoutConfiguration', 'Checkout Configuration'),
                     'ShopDataConfiguration'                 => _t(Config::class . '.ShopData', 'Shop Data Configuration'),
                     'SecurityConfiguration'                 => _t(Config::class . '.SecurityConfiguration', 'Security Configuration'),
-                    'MaintenanceConfiguration'              => _t(self::class . '.MaintenanceConfiguration', 'Maintenance Configuration'),
-                    'MaintenanceInfo'                       => _t(self::class . '.MaintenanceInfo', 'To run the maintenance mode, the creation of a status 503 error page in CMS is required.'),
                     'SkipPaymentStepIfUnique'               => _t(Config::class . '.SKIP_PAYMENT_STEP_IF_UNIQUE', 'Skip payment step if there is only one selection.'),
                     'SkipShippingStepIfUnique'              => _t(Config::class . '.SKIP_SHIPPING_STEP_IF_UNIQUE', 'Skip shipping step if there is only one selection.'),
                     'InvoiceAddressIsAlwaysShippingAddress' => _t(Config::class . '.InvoiceAddressIsAlwaysShippingAddress', 'Invoice address is always shipping address'),
@@ -348,6 +324,7 @@ class SiteConfigExtension extends DataExtension
                     'RSSLink'                       => _t(SiteConfigExtension::class . '.RSSLink', 'RSS Link'),
                     'EmailLink'                     => _t(SiteConfigExtension::class . '.EmailLink', 'Contact Email Address'),
                     'SeoTab'                        => _t(Config::class . '.SEO', 'SEO'),
+                    'SocialMediaTab'                => _t(Config::class . '.SOCIALMEDIA', 'Social Media'),
                     'TranslationsTab'               => _t(TranslationTools::class . '.TRANSLATIONS', 'Translations'),
                     'CreateTransHeader'             => _t(TranslationTools::class . '.CREATE', 'Create new translation'),
                     'CreateTransDescription'        => _t(TranslationTools::class . '.CREATE_TRANSLATION_DESC', 'New translations will be created for all pages of the SiteTree (unpublished). Every page will be created as a translation template and will be filled with the chosen languages default content (if exists). If no default content is available for the chosen language, the content of the current language will be preset.'),
@@ -365,8 +342,6 @@ class SiteConfigExtension extends DataExtension
                     'ColorScheme'              => _t(Config::class . '.ColorScheme', 'Color scheme'),
                     'ColorSchemeTab'           => _t(Config::class . '.ColorSchemeTab', 'Color scheme'),
                     'ColorSchemeConfiguration' => _t(Config::class . '.ColorSchemeConfiguration', 'Title & color scheme'),
-                    'ShowPaymentMethodsInFooter'  => _t(Config::class . '.ShowPaymentMethodsInFooter', 'Show payment methods (logos) in footer'),
-                    'ShowShippingMethodsInFooter' => _t(Config::class . '.ShowShippingMethodsInFooter', 'Show shipping methods (logos) in footer'),
                 ]
         );
     }
@@ -377,43 +352,43 @@ class SiteConfigExtension extends DataExtension
      * @param FieldList $fields The FieldList
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 04.04.2013
      */
     public function updateCMSFields(FieldList $fields) : void
     {
         $this->getCMSFieldsIsCalled = true;
-        $gridExternalLinks = GridField::create('ExternalLinks', $this->owner->fieldLabel('ExternalLinks'), $this->owner->ExternalLinks(), GridFieldConfig_RelationEditor::create());
-        if (class_exists(GridFieldOrderableRows::class)) {
-            $gridExternalLinks->getConfig()->addComponent(GridFieldOrderableRows::create('Sort'));
-        }
-        $fields->findOrMakeTab('Root.ExternalLinks')->setTitle($this->owner->fieldLabel('ExternalLinks'));
-        $fields->addFieldToTab('Root.ExternalLinks', $gridExternalLinks);
-
-        $gridBrandNavigation = GridField::create('BrandNavigation', $this->owner->fieldLabel('BrandNavigation'), $this->owner->BrandNavigation(), GridFieldConfig_RelationEditor::create());
-        if (class_exists(GridFieldOrderableRows::class)) {
-            $gridBrandNavigation->getConfig()->addComponent(GridFieldOrderableRows::create('Sort'));
-        }
-        $fields->findOrMakeTab('Root.BrandNavigation')->setTitle($this->owner->fieldLabel('BrandNavigation'));
-        $fields->addFieldToTab('Root.BrandNavigation', $gridBrandNavigation);
+        $fields->findOrMakeTab('Root.SocialMedia')->setTitle($this->owner->fieldLabel('SocialMediaTab'));
+        
+        $facebookLinkField   = TextField::create('FacebookLink',   $this->owner->fieldLabel('FacebookLink'));
+        $twitterLinkField    = TextField::create('TwitterLink',    $this->owner->fieldLabel('TwitterLink'));
+        $googleplusLinkField = TextField::create('GoogleplusLink', $this->owner->fieldLabel('GoogleplusLink'));
+        $xingLinkField       = TextField::create('XingLink',       $this->owner->fieldLabel('XingLink'));
+        $instagramLinkField  = TextField::create('InstagramLink',  $this->owner->fieldLabel('InstagramLink'));
+        $bloglovinLinkField  = TextField::create('BloglovinLink',  $this->owner->fieldLabel('BloglovinLink'));
+        $pinterestLinkField  = TextField::create('PinterestLink',  $this->owner->fieldLabel('PinterestLink'));
+        $youTubeLinkField    = TextField::create('YouTubeLink',    $this->owner->fieldLabel('YouTubeLink'));
+        $tumblrLinkField     = TextField::create('TumblrLink',     $this->owner->fieldLabel('TumblrLink'));
+        $rssLinkField        = TextField::create('RSSLink',        $this->owner->fieldLabel('RSSLink'));
+        $emailLinkField      = TextField::create('EmailLink',      $this->owner->fieldLabel('EmailLink'));
+        
+        $fields->addFieldToTab('Root.SocialMedia', $facebookLinkField);
+        $fields->addFieldToTab('Root.SocialMedia', $twitterLinkField);
+        $fields->addFieldToTab('Root.SocialMedia', $googleplusLinkField);
+        $fields->addFieldToTab('Root.SocialMedia', $xingLinkField);
+        $fields->addFieldToTab('Root.SocialMedia', $instagramLinkField);
+        $fields->addFieldToTab('Root.SocialMedia', $bloglovinLinkField);
+        $fields->addFieldToTab('Root.SocialMedia', $pinterestLinkField);
+        $fields->addFieldToTab('Root.SocialMedia', $youTubeLinkField);
+        $fields->addFieldToTab('Root.SocialMedia', $tumblrLinkField);
+        $fields->addFieldToTab('Root.SocialMedia', $rssLinkField);
+        $fields->addFieldToTab('Root.SocialMedia', $emailLinkField);
         
         $fields->findOrMakeTab('Root.ExternalResources', ExternalResource::singleton()->i18n_plural_name());
         $fields->addFieldToTab('Root.ExternalResources', GridField::create('ExternalResources', ExternalResource::singleton()->i18n_plural_name(), ExternalResource::get(), GridFieldConfig_RecordEditor::create()));
         
         $this->getCMSFieldsForSilvercart($fields);
-    }
-    
-    /**
-     * Returns the ExternalLinks with icons.
-     * 
-     * @return \SilverStripe\ORM\DataList
-     */
-    public function ExternalLinksWithIcon() : DataList
-    {
-        $links = $this->owner->ExternalLinks()->exclude([
-            'CustomIconHTML'  => ['', null],
-            'FontAwesomeIcon' => ['', null],
-        ]);
-        $this->owner->extend('updateExternalLinksWithIcon', $links);
-        return $links;
     }
     
     /**
@@ -437,7 +412,6 @@ class SiteConfigExtension extends DataExtension
                     DropdownField::create('DefaultPriceType',             $this->owner->fieldLabel('DefaultPriceType')),
                 ]
         )->setHeadingLevel(4)->setStartClosed(false);
-        $this->owner->extend('updateCMSFieldsGeneralConfiguration', $generalConfigurationField);
 
         // Build email toggle group
         $emailConfigurationField = ToggleCompositeField::create(
@@ -454,7 +428,6 @@ class SiteConfigExtension extends DataExtension
                     TextField::create('DefaultContactMessageRecipient',        $this->owner->fieldLabel('DefaultContactMessageRecipient'))
                 ]
         )->setHeadingLevel(4);
-        $this->owner->extend('updateCMSFieldsEmailConfiguration', $emailConfigurationField);
 
         // Build customer toggle group
         $customerConfigurationField = ToggleCompositeField::create(
@@ -466,7 +439,6 @@ class SiteConfigExtension extends DataExtension
                     CheckboxField::create('demandBirthdayDateOnRegistration', $this->owner->fieldLabel('demandBirthdayDateOnRegistration')),
                 ]
         )->setHeadingLevel(4);
-        $this->owner->extend('updateCMSFieldsCustomerConfiguration', $customerConfigurationField);
 
         // Build product toggle group
         $productConfigurationField = ToggleCompositeField::create(
@@ -483,36 +455,33 @@ class SiteConfigExtension extends DataExtension
                     DropdownField::create('StandardProductConditionID',    $this->owner->fieldLabel('StandardProductConditionID')),
                 ]
         )->setHeadingLevel(4);
-        $this->owner->extend('updateCMSFieldsProductConfiguration', $productConfigurationField);
 
         // Build checkout toggle group
         $checkoutConfigurationField = ToggleCompositeField::create(
                 'CheckoutConfiguration',
                 $this->owner->fieldLabel('CheckoutConfiguration'),
                 [
-                    CheckboxField::create('enableSSL',                                     $this->owner->fieldLabel('enableSSL')),
-                    CheckboxField::create('redirectToCartAfterAddToCart',                  $this->owner->fieldLabel('redirectToCartAfterAddToCart')),
-                    CheckboxField::create('redirectToCheckoutWhenInCart',                  $this->owner->fieldLabel('redirectToCheckoutWhenInCart')),
-                    CheckboxField::create('DisableProductLinkInCart',                      $this->owner->fieldLabel('DisableProductLinkInCart')),
-                    CheckboxField::create('useProductDescriptionFieldForCart',             $this->owner->fieldLabel('useProductDescriptionFieldForCart')),
-                    CheckboxField::create('useProductDescriptionFieldForCartPrintPreview', $this->owner->fieldLabel('useProductDescriptionFieldForCartPrintPreview')),
-                    DropdownField::create('productDescriptionFieldForCart',                $this->owner->fieldLabel('productDescriptionFieldForCart')),
-                    TextField::create('addToCartMaxQuantity',                              $this->owner->fieldLabel('addToCartMaxQuantity')),
-                    CheckboxField::create('useMinimumOrderValue',                          $this->owner->fieldLabel('useMinimumOrderValue')),
-                    MoneyField::create('minimumOrderValue',                                $this->owner->fieldLabel('minimumOrderValue')),
-                    CheckboxField::create('useFreeOfShippingCostsFrom',                    $this->owner->fieldLabel('useFreeOfShippingCostsFrom')),
-                    MoneyField::create('freeOfShippingCostsFrom',                          $this->owner->fieldLabel('freeOfShippingCostsFrom')),
-                    CheckboxField::create('SkipShippingStepIfUnique',                      $this->owner->fieldLabel('SkipShippingStepIfUnique')),
-                    CheckboxField::create('SkipPaymentStepIfUnique',                       $this->owner->fieldLabel('SkipPaymentStepIfUnique')),
-                    CheckboxField::create('DisplayWeightsInKilogram',                      $this->owner->fieldLabel('DisplayWeightsInKilogram')),
-                    DropdownField::create('WeightUnit',                                    $this->owner->fieldLabel('WeightUnit')),
-                    DropdownField::create('DimensionUnit',                                 $this->owner->fieldLabel('DimensionUnit')),
-                    CheckboxField::create('ShowTaxAndDutyHint',                            $this->owner->fieldLabel('ShowTaxAndDutyHint')),
-                    CheckboxField::create('InvoiceAddressIsAlwaysShippingAddress',         $this->owner->fieldLabel('InvoiceAddressIsAlwaysShippingAddress')),
+                    CheckboxField::create('enableSSL',                             $this->owner->fieldLabel('enableSSL')),
+                    CheckboxField::create('redirectToCartAfterAddToCart',          $this->owner->fieldLabel('redirectToCartAfterAddToCart')),
+                    CheckboxField::create('redirectToCheckoutWhenInCart',          $this->owner->fieldLabel('redirectToCheckoutWhenInCart')),
+                    CheckboxField::create('DisableProductLinkInCart',              $this->owner->fieldLabel('DisableProductLinkInCart')),
+                    CheckboxField::create('useProductDescriptionFieldForCart',     $this->owner->fieldLabel('useProductDescriptionFieldForCart')),
+                    DropdownField::create('productDescriptionFieldForCart',        $this->owner->fieldLabel('productDescriptionFieldForCart')),
+                    TextField::create('addToCartMaxQuantity',                      $this->owner->fieldLabel('addToCartMaxQuantity')),
+                    CheckboxField::create('useMinimumOrderValue',                  $this->owner->fieldLabel('useMinimumOrderValue')),
+                    MoneyField::create('minimumOrderValue',                        $this->owner->fieldLabel('minimumOrderValue')),
+                    CheckboxField::create('useFreeOfShippingCostsFrom',            $this->owner->fieldLabel('useFreeOfShippingCostsFrom')),
+                    MoneyField::create('freeOfShippingCostsFrom',                  $this->owner->fieldLabel('freeOfShippingCostsFrom')),
+                    CheckboxField::create('SkipShippingStepIfUnique',              $this->owner->fieldLabel('SkipShippingStepIfUnique')),
+                    CheckboxField::create('SkipPaymentStepIfUnique',               $this->owner->fieldLabel('SkipPaymentStepIfUnique')),
+                    CheckboxField::create('DisplayWeightsInKilogram',              $this->owner->fieldLabel('DisplayWeightsInKilogram')),
+                    DropdownField::create('WeightUnit',                            $this->owner->fieldLabel('WeightUnit')),
+                    DropdownField::create('DimensionUnit',                         $this->owner->fieldLabel('DimensionUnit')),
+                    CheckboxField::create('ShowTaxAndDutyHint',                    $this->owner->fieldLabel('ShowTaxAndDutyHint')),
+                    CheckboxField::create('InvoiceAddressIsAlwaysShippingAddress', $this->owner->fieldLabel('InvoiceAddressIsAlwaysShippingAddress')),
                 ]
         )->setHeadingLevel(4);
-        $this->owner->extend('updateCMSFieldsCheckoutConfiguration', $checkoutConfigurationField);
-        
+
         // Build shop data toggle group
         $shopDataConfigurationField = ToggleCompositeField::create(
                 'ShopDataConfiguration',
@@ -531,7 +500,6 @@ class SiteConfigExtension extends DataExtension
                     TextareaField::create('ShopAdditionalInfo2', $this->owner->fieldLabel('ShopAdditionalInfo2')),
                 ]
         )->setHeadingLevel(4);
-        $this->owner->extend('updateCMSFieldsShopDataConfiguration', $shopDataConfigurationField);
 
         // Build security toggle group
         $securityConfigurationField = ToggleCompositeField::create(
@@ -541,20 +509,6 @@ class SiteConfigExtension extends DataExtension
                     TextareaField::create('userAgentBlacklist', $this->owner->fieldLabel('userAgentBlacklist')),
                 ]
         )->setHeadingLevel(4);
-        $this->owner->extend('updateCMSFieldsSecurityConfiguration', $securityConfigurationField);
-        
-        // Build maintenance toggle group
-        $maintenanceConfigurationField = ToggleCompositeField::create(
-                'MaintenanceConfiguration',
-                $this->owner->fieldLabel('MaintenanceConfiguration'),
-                [
-                    AlertInfoField::create('MaintenanceInfo', $this->owner->fieldLabel('MaintenanceInfo')),//503
-                    CheckboxField::create('MaintenanceMode', $this->owner->fieldLabel('MaintenanceMode'))->setDescription($this->owner->fieldLabel('MaintenanceModeDesc')),
-                    DatetimeField::create('MaintenanceStart', $this->owner->fieldLabel('MaintenanceStart'))->setDescription($this->owner->fieldLabel('MaintenanceStartDesc')),
-                    DatetimeField::create('MaintenanceEnd', $this->owner->fieldLabel('MaintenanceEnd'))->setDescription($this->owner->fieldLabel('MaintenanceEndDesc')),
-                ]
-        )->setHeadingLevel(4);
-        $this->owner->extend('updateCMSFieldsMaintenanceConfiguration', $maintenanceConfigurationField);
 
         // Build example data toggle group
         $addExampleDataButton   = FormAction::create('add_example_data',   $this->owner->fieldLabel('addExampleData'));
@@ -567,7 +521,6 @@ class SiteConfigExtension extends DataExtension
                     $addExampleConfigButton,
                 ]
         )->setHeadingLevel(4);
-        $this->owner->extend('updateCMSFieldsExampleData', $exampleDataField);
         
         $addExampleDataButton->setRightTitle($this->owner->fieldLabel('addExampleDataDesc'));
         $addExampleDataButton->setAttribute('data-icon', 'addpage');
@@ -582,7 +535,6 @@ class SiteConfigExtension extends DataExtension
         $fields->addFieldToTab('Root.Main', $checkoutConfigurationField);
         $fields->addFieldToTab('Root.Main', $shopDataConfigurationField);
         $fields->addFieldToTab('Root.Main', $securityConfigurationField);
-        $fields->addFieldToTab('Root.Main', $maintenanceConfigurationField);
         $fields->addFieldToTab('Root.Main', $exampleDataField);
 
         // Modify field data
@@ -627,7 +579,6 @@ class SiteConfigExtension extends DataExtension
 
         $this->getCMSFieldsForColorScheme($fields);
         
-        $this->owner->extend('updateSilverCartCMSFields', $fields);
         return $fields;
     }
     
@@ -643,7 +594,7 @@ class SiteConfigExtension extends DataExtension
      */
     public function getCMSFieldsForColorScheme(FieldList $fields)
     {
-        $colorSchemePath = Director::publicFolder() . '/' . RESOURCES_DIR . '/vendor/silvercart/silvercart/client/css';
+        $colorSchemePath = Director::publicFolder() . '/_resources/vendor/silvercart/silvercart/client/css';
         if (is_dir($colorSchemePath)) {
             if ($handle = opendir($colorSchemePath)) {
                 $colorSchemes = ArrayList::create();
@@ -680,13 +631,14 @@ class SiteConfigExtension extends DataExtension
                 }
                 closedir($handle);
             }
+            
             $colorSchemes->sort('Title');
+
             $fields->removeByName('ColorScheme');
-            $showPaymentMethodsInFooterField  = CheckboxField::create('ShowPaymentMethodsInFooter', $this->owner->fieldLabel('ShowPaymentMethodsInFooter'));
-            $showShippingMethodsInFooterField = CheckboxField::create('ShowShippingMethodsInFooter', $this->owner->fieldLabel('ShowShippingMethodsInFooter'));
-            $logoField                        = UploadField::create('ShopLogo',        $this->owner->fieldLabel('ShopLogo'));
-            $faviconField                     = UploadField::create('Favicon',         $this->owner->fieldLabel('Favicon'));
-            $touchIconField                   = UploadField::create('MobileTouchIcon', $this->owner->fieldLabel('MobileTouchIcon'));
+            
+            $logoField      = UploadField::create('ShopLogo',        $this->owner->fieldLabel('ShopLogo'));
+            $faviconField   = UploadField::create('Favicon',         $this->owner->fieldLabel('Favicon'));
+            $touchIconField = UploadField::create('MobileTouchIcon', $this->owner->fieldLabel('MobileTouchIcon'));
             $logoField->setDescription($this->owner->fieldLabel('ShopLogoDesc'));
             $faviconField->setDescription($this->owner->fieldLabel('FaviconDesc'));
             $touchIconField->setDescription($this->owner->fieldLabel('MobileTouchIconDesc'));
@@ -697,15 +649,12 @@ class SiteConfigExtension extends DataExtension
                     [
                         $fields->dataFieldByName('Title'),
                         $fields->dataFieldByName('Tagline'),
-                        $showPaymentMethodsInFooterField,
-                        $showShippingMethodsInFooterField,
                         $logoField,
                         $faviconField,
                         $touchIconField,
                         LiteralField::create('ColorScheme', $this->owner->customise(['ColorSchemes' => $colorSchemes])->renderWith('SilverCart/Admin/Forms/ColorSchemeField'))
                     ]
             )->setHeadingLevel(4)->setStartClosed(true);
-            $this->owner->extend('updateCMSFieldsColorSchemeConfiguration', $colorSchemeConfigurationField);
             
             $fields->removeByName('Title');
             $fields->removeByName('Tagline');
@@ -773,10 +722,10 @@ class SiteConfigExtension extends DataExtension
      */
     public function requireDefaultRecords()
     {
-        $config = Config::getConfig();
         RequireDefaultRecords::require_default_records();
         $result = DB::query('SHOW TABLES LIKE \'SilvercartConfig\'');
         if ($result->numRecords() > 0) {
+            $config           = Config::getConfig();
             $skipFields       = ['ID', 'ClassName', 'Created', 'LastEdited'];
             $silvercartConfig = DB::query('SELECT * FROM SilvercartConfig;');
             foreach ($silvercartConfig as $row) {
@@ -793,76 +742,7 @@ class SiteConfigExtension extends DataExtension
             }
             DB::query('DROP TABLE SilvercartConfig');
         }
-        // Remove deprecated social media fields and add ExternalItems instead.
-        $externalLinkFields = [
-            'GoogleplusLink',
-            'FacebookLink',
-            'TwitterLink',
-            'XingLink',
-            'InstagramLink',
-            'BloglovinLink',
-            'PinterestLink',
-            'YouTubeLink',
-            'TumblrLink',
-            'RSSLink',
-            'EmailLink',
-        ];
-        $sort = 0;
-        foreach ($externalLinkFields as $externalLinkField) {
-            $externalLink = DBMigration::get_field_value_and_remove_field($config, $externalLinkField);
-            if (empty($externalLink)) {
-                continue;
-            }
-            $item               = LinkableItem::create();
-            $item->Title        = $config->fieldLabel($externalLinkField);
-            $item->Sort         = $sort++;
-            $item->SiteConfigID = $config->ID;
-            if ($externalLinkField === 'EmailLink') {
-                $item->addEmailLink($externalLink);
-            } else {
-                $item->addExternalLink($externalLink);
-            }
-        }
-    }
-
-    /**
-     * Returns whether the maintenance mode is enabled.
-     * 
-     * @param bool $disable Disable maintenance  mode flag to prevent infinite loops when triggering the HTTP error?
-     * 
-     * @return bool
-     */
-    public function MaintenanceModeIsEnabled(bool $disable = false) : bool
-    {
-        if (Controller::curr() instanceof Security) {
-            return false;
-        }
-        $customer = Security::getCurrentUser();
-        if ($customer instanceof Member
-         && $customer->isAdmin()
-        ) {
-            return false;
-        }
-        if (self::$maintenanceModeIsDisabled) {
-            return false;
-        }
-        if ($disable) {
-            self::$maintenanceModeIsDisabled = true;
-        }
-        $enabled = false;
-        if ($this->owner->MaintenanceMode) {
-            if ($this->owner->MaintenanceStart === null
-             || strtotime($this->owner->MaintenanceStart) < time()
-            ) {
-                $enabled = true;
-            }
-            if ($this->owner->MaintenanceEnd !== null
-             && strtotime($this->owner->MaintenanceEnd) < time()
-            ) {
-                $enabled = false;
-            }
-        }
-        return $enabled;
+        
     }
     
     /**

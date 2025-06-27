@@ -5,7 +5,6 @@ namespace SilverCart\Extensions\Forms\FormFields;
 use SilverStripe\Core\Extension;
 use SilverStripe\Forms\Form;
 use SilverStripe\Forms\FormField;
-use SilverStripe\ORM\ValidationResult;
 use SilverStripe\View\SSViewer;
 
 /** 
@@ -34,18 +33,6 @@ class FormFieldExtension extends Extension
      * @var bool[]
      */
     protected $requiredForced = [];
-    /**
-     * Form field extra CSS classes.
-     *
-     * @var string[][]
-     */
-    protected $formFieldExtraClasses = [];
-    /**
-     * Holder extra CSS classes.
-     *
-     * @var string[][]
-     */
-    protected $holderExtraClasses = [];
     
     /**
      * Returns the placeholder
@@ -77,9 +64,6 @@ class FormFieldExtension extends Extension
      */
     public function getValidationFailed() : bool
     {
-        if (!property_exists($this->owner, 'validationFailed')) {
-            $this->owner->validationFailed = false;
-        }
         return (bool) $this->owner->validationFailed;
     }
 
@@ -142,7 +126,10 @@ class FormFieldExtension extends Extension
      */
     public function addErrorClass(string $class) : FormField
     {
-        if ($this->owner->getMessageType() === ValidationResult::TYPE_ERROR) {
+        $form = $this->owner->getForm();
+        if ($form instanceof Form
+         && $form->getMessageType() == 'error'
+        ) {
             $this->owner->addExtraClass($class);
         }
         return $this->owner;
@@ -154,14 +141,12 @@ class FormFieldExtension extends Extension
      * @param array &$attributes Attributes to update.
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 13.07.2018
      */
     public function updateAttributes(array &$attributes) : void
     {
-        if (array_key_exists('class', $attributes)) {
-            $attributes['class'] .= " {$this->formFieldExtraClass()}";
-        } else {
-            $attributes['class'] = $this->formFieldExtraClass();
-        }
         if ($this->getRequiredForced()) {
             return;
         }
@@ -173,114 +158,6 @@ class FormFieldExtension extends Extension
                 unset($attributes['aria-required']);
             }
         }
-    }
-
-    /**
-     * Compiles all form field CSS-classes.
-     *
-     * @return string
-     */
-    public function formFieldExtraClass() : string
-    {
-        $classes = [];
-        if (array_key_exists($this->owner->ID, $this->formFieldExtraClasses)) {
-            $classes = array_values($this->formFieldExtraClasses[$this->owner->ID]);
-        }
-        return implode(' ', $classes);
-    }
-
-    /**
-     * Add one or more CSS-classes to the FormField container.
-     *
-     * Multiple class names should be space delimited.
-     *
-     * @param string $class
-     *
-     * @return $this
-     */
-    public function addFormFieldExtraClass(string $class) : FormField
-    {
-        if (!array_key_exists($this->owner->ID, $this->formFieldExtraClasses)) {
-            $this->formFieldExtraClasses[$this->owner->ID] = [];
-        }
-        $classes = preg_split('/\s+/', $class);
-        foreach ($classes as $class) {
-            $this->formFieldExtraClasses[$this->owner->ID][$class] = $class;
-        }
-        return $this->owner;
-    }
-
-    /**
-     * Remove one or more form field CSS-classes from the FormField container.
-     *
-     * @param string $class
-     *
-     * @return $this
-     */
-    public function removeFormFieldExtraClass(string $class) : FormField
-    {
-        if (!array_key_exists($this->owner->ID, $this->formFieldExtraClasses)) {
-            return $this->owner;
-        }
-        $classes = preg_split('/\s+/', $class);
-        foreach ($classes as $class) {
-            unset($this->formFieldExtraClasses[$this->owner->ID][$class]);
-        }
-        return $this->owner;
-    }
-
-    /**
-     * Compiles all form field CSS-classes.
-     *
-     * @return string
-     */
-    public function holderExtraClass() : string
-    {
-        $classes = [];
-        if (array_key_exists($this->owner->ID, $this->holderExtraClasses)) {
-            $classes = array_values($this->holderExtraClasses[$this->owner->ID]);
-        }
-        return implode(' ', $classes);
-    }
-
-    /**
-     * Add one or more CSS-classes to the FormField holder container.
-     *
-     * Multiple class names should be space delimited.
-     *
-     * @param string $class
-     *
-     * @return $this
-     */
-    public function addHolderExtraClass(string $class) : FormField
-    {
-        if (!array_key_exists($this->owner->ID, $this->holderExtraClasses)) {
-            $this->holderExtraClasses[$this->owner->ID] = [];
-        }
-        $classes = preg_split('/\s+/', $class);
-        foreach ($classes as $class) {
-            $this->holderExtraClasses[$this->owner->ID][$class] = $class;
-        }
-        return $this->owner;
-    }
-
-    /**
-     * Remove one or more form field CSS-classes from the FormField holder container.
-     *
-     * @param string $class CSS class
-     *
-     * @return $this
-     */
-    public function removeHolderExtraClass(string $class) : FormField
-    {
-        if (!array_key_exists($this->owner->ID, $this->holderExtraClasses)) {
-            return $this->owner;
-        }
-        $classes = preg_split('/\s+/', $class);
-        foreach ($classes as $class) {
-            unset($this->holderExtraClasses[$this->owner->ID][$class]);
-        }
-        return $this->owner;
     }
     
     /**

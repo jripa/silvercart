@@ -26,6 +26,7 @@ use SilverStripe\i18n\i18n;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\MemberAuthenticator\MemberAuthenticator;
+use TractorCow\Fluent\State\FluentState;
 
 /**
  * Central handler for form actions.
@@ -39,7 +40,6 @@ use SilverStripe\Security\MemberAuthenticator\MemberAuthenticator;
  */
 class ActionHandler extends Controller
 {
-    use \SilverCart\View\MessageProvider;
     /**
      * Allowed actions
      *
@@ -112,8 +112,6 @@ class ActionHandler extends Controller
         $productID      = $params['ID'];
         $quantity       = $params['OtherID'];
         $position       = null;
-        $clearCheckout  = !($request->getVar('cc') === '0'
-                         || $request->postVar('cc') === '0');
         $redirectToCart = $request->postVar('redirect-to-cart');
         if ($redirectToCart === null) {
             $redirectToCart = $request->getVar('redirect-to-cart');
@@ -134,15 +132,10 @@ class ActionHandler extends Controller
         if ($isValidRequest) {
             $postVars['productID']       = $productID;
             $postVars['productQuantity'] = $quantity;
-            ShoppingCart::setClearCheckoutAfterWrite($clearCheckout);
             if ($quantity == 0) {
                 ShoppingCart::removeProduct($postVars, $position);
             } else {
-                $increment = (bool) ShoppingCart::config()->increment_add_product;
-                if (array_key_exists('Increment', $postVars)) {
-                    $increment = $postVars['Increment'] === '1';
-                }
-                $position = ShoppingCart::addProduct($postVars, $increment);
+                $position = ShoppingCart::addProduct($postVars);
             }
             if (Config::getRedirectToCartAfterAddToCartAction()
              || $redirectToCart
@@ -179,7 +172,6 @@ class ActionHandler extends Controller
                 'HTMLDropdown'         => $htmlDropdown,
                 'HTMLModal'            => $htmlModal,
                 'Redirect'             => $this->redirectedTo() ? $this->getResponse()->getHeader('Location') : '',
-                'ErrorMessage'         => (string) $this->getErrorMessage(),
             ];
             print json_encode($json);
             exit();
@@ -284,7 +276,7 @@ class ActionHandler extends Controller
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 18.03.2013
      */
-    public function redirectBack(string $backLink = null, string $anchor = '') : ?HTTPResponse
+    public function redirectBack(string $backLink = null, string $anchor = '') : HTTPResponse
     {
         $postVars = $this->getRequest()->postVars();
         if (is_null($backLink)
@@ -421,12 +413,11 @@ class ActionHandler extends Controller
                 $authenticator->getLoginHandler($postVars['redirect_to'])->performLogin($customer, $loginData, $this->getRequest());
             } else {
                 if ($member->isLockedOut()) {
-                    $minutes = $member->LockedOutUntilMinutes();
                     $loginForm->setErrorMessage(_t(
                         Member::class . '.ERRORLOCKEDOUT2',
                         'Your account has been temporarily disabled because of too many failed attempts at ' . 'logging in. Please try again in {count} minutes.',
                         null,
-                        ['count' => $minutes > 1 ? $minutes : 2]
+                        ['count' => Member::config()->get('lock_out_delay_mins')]
                     ));
                     $this->redirectBack($postVars['redirect_to']);
                     return;
@@ -467,16 +458,32 @@ class ActionHandler extends Controller
      * 
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 07.08.2019
+     * 
+     * @todo looking why FluentState::singleton()->getLocale() not give current locale
      */
-    public function loadSubNavigation(HTTPRequest $request) : DBHTMLText
+    public function loadSubNavigation(HTTPRequest $request): DBHTMLText
     {
         $productGroupID = (int) $request->param('ID');
-        $productGroup   = ProductGroupPage::get()->byID($productGroupID);
-        return $this->renderWith(self::class . '_loadSubNavigation', [
-            'ProductGroup' => $productGroup,
-        ]);
+        $productGroup   = SiteTree::get()->byID($productGroupID);
+        $locale = $request->getVar('locale');
+        if (!$productGroup) {
+            return DBHTMLText::create()->setValue('');
+        }
+
+        //$currentLocal = FluentState::singleton()->getLocale();
+        $currentLocale = $locale;
+        i18n::set_locale($currentLocale);
+        return FluentState::singleton()->withState(function (FluentState $state) use ($productGroup, $currentLocale) {
+                $state->setLocale($currentLocale);
+                 
+                return $this->renderWith(self::class . '_loadSubNavigation', [
+                    'ProductGroup' => $productGroup,
+                ]);
+            });
     }
     
+    
+
     /**
      * Loads the cookie manager template requested by an AJAX call.
      * 
@@ -486,10 +493,7 @@ class ActionHandler extends Controller
      */
     public function cookieManager(HTTPRequest $request) : HTTPResponse
     {
-        $cookiePolicyPage = CookiePolicyPage::instance();
-        if ($cookiePolicyPage === null) {
-            $this->httpError(404);
-        }
+        $cookiePolicyPage           = CookiePolicyPage::instance();
         $cookiePolicyPageController = ModelAsController::controller_for($cookiePolicyPage);
         /* @var $cookiePolicyPageController \Broarm\CookieConsent\Control\CookiePolicyPageController */
         return HTTPResponse::create($cookiePolicyPageController->renderWith(CookiePolicyPage::class . '_ajax', $cookiePolicyPageController->index($request)));

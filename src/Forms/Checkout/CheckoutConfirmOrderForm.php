@@ -2,6 +2,7 @@
 
 namespace SilverCart\Forms\Checkout;
 
+use SilverCart\Dev\Tools;
 use SilverCart\Forms\CustomForm;
 use SilverCart\Forms\FormFields\TextareaField;
 use SilverCart\Model\Customer\Customer;
@@ -10,7 +11,6 @@ use SilverCart\Model\Pages\Page;
 use SilverCart\Model\Payment\PaymentMethod;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\CheckboxField;
-use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Security\Member;
 
 /**
@@ -46,26 +46,10 @@ class CheckoutConfirmOrderForm extends CustomForm
                 $notesField = TextareaField::create('Note', ''),
                 CheckboxField::create('SubscribedToNewsletter', CheckoutStep::singleton()->fieldLabel('SubscribeNewsletter')),
             ];
-            if ($this->getController()->EnableTermsAndConditionsCheckbox) {
-                $fields[] = CheckboxField::create('AcceptTermsAndConditions', $this->getController()->data()->AcceptTermsAndConditionsText);
-            }
+            
             $notesField->setPlaceholder(Page::singleton()->fieldLabel('YourRemarks') . '...');
         });
         return parent::getCustomFields();
-    }
-
-    /**
-     * Returns the required fields.
-     * 
-     * @return array
-     */
-    public function getRequiredFields()
-    {
-        $requiredFields = parent::getRequiredFields();
-        if ($this->getController()->EnableTermsAndConditionsCheckbox) {
-            $requiredFields[] = 'AcceptTermsAndConditions';
-        }
-        return $requiredFields;
     }
     
     /**
@@ -127,23 +111,21 @@ class CheckoutConfirmOrderForm extends CustomForm
      * The newsletter checkbox should not be shown if a registered customer has
      * already subscribed to the newsletter.
      * 
-     * @return bool
+     * @return boolean answer 
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>,
+     *         Roland Lehmann <rlehmann@pixeltricks.de>
+     * @since 12.04.2018
      */
-    public function ShowNewsletterCheckbox() : bool
+    public function ShowNewsletterCheckbox()
     {
-        $show           = true;
-        $newsletterPage = Page::PageByIdentifierCode(Page::IDENTIFIER_NEWSLETTER_PAGE);
-        if (!($newsletterPage instanceof Page)) {
-            $show = false;
-        } else {
-            $customer = Customer::currentRegisteredCustomer();
-            if ($customer instanceof Member
-             && $customer->SubscribedToNewsletter == 1
-            ) {
-                $show = false;
-            }
+        $customer = Customer::currentRegisteredCustomer();
+        if ($customer instanceof Member
+         && $customer->SubscribedToNewsletter == 1
+        ) {
+            return false;
         }
-        return $show;
+        return true;
     }
     
     /**
@@ -158,65 +140,5 @@ class CheckoutConfirmOrderForm extends CustomForm
             $checkoutStep = CheckoutStep::get()->first();
         }
         return $checkoutStep->TermsAndConditionsText;
-    }
-    
-    /**
-     * Executed an extension hook to add some HTML content after the invoice
-     * address field.
-     * 
-     * @return DBHTMLText
-     */
-    public function AfterInvoiceAddressContent() : DBHTMLText
-    {
-        $contentParts = $this->extend('updateAfterInvoiceAddressContent');
-        return DBHTMLText::create()->setValue(implode(PHP_EOL, $contentParts));
-    }
-    
-    /**
-     * Executed an extension hook to add some HTML content after the invoice
-     * address field.
-     * 
-     * @return DBHTMLText
-     */
-    public function BeforeInvoiceAddressContent() : DBHTMLText
-    {
-        $contentParts = $this->extend('updateBeforeInvoiceAddressContent');
-        return DBHTMLText::create()->setValue(implode(PHP_EOL, $contentParts));
-    }
-    
-    /**
-     * Executed an extension hook to add some HTML content after the shipping
-     * address field.
-     * 
-     * @return DBHTMLText
-     */
-    public function AfterShippingAddressContent() : DBHTMLText
-    {
-        $contentParts = $this->extend('updateAfterShippingAddressContent');
-        return DBHTMLText::create()->setValue(implode(PHP_EOL, $contentParts));
-    }
-    
-    /**
-     * Executed an extension hook to add some HTML content after the shipping
-     * address field.
-     * 
-     * @return DBHTMLText
-     */
-    public function BeforeShippingAddressContent() : DBHTMLText
-    {
-        $contentParts = $this->extend('updateBeforeShippingAddressContent');
-        return DBHTMLText::create()->setValue(implode(PHP_EOL, $contentParts));
-    }
-    
-    /**
-     * Executed an extension hook to add some HTML content after the payment
-     * method content.
-     * 
-     * @return DBHTMLText
-     */
-    public function AfterPaymentMethodContent() : DBHTMLText
-    {
-        $contentParts = $this->extend('updateAfterPaymentMethodContent');
-        return DBHTMLText::create()->setValue(implode(PHP_EOL, $contentParts));
     }
 }

@@ -2,32 +2,22 @@
 
 namespace SilverCart\Model\Order;
 
-use Moo\HasOneSelector\Form\Field as HasOneSelector;
 use SilverCart\Admin\Model\Config;
 use SilverCart\Dev\Tools;
-use SilverCart\Extensions\Model\DataValuable;
 use SilverCart\Forms\DecrementPositionQuantityForm;
 use SilverCart\Forms\IncrementPositionQuantityForm;
 use SilverCart\Forms\RemovePositionForm;
 use SilverCart\Model\Order\ShoppingCart;
 use SilverCart\Model\Order\ShoppingCartPositionNotice;
 use SilverCart\Model\Product\Product;
-use SilverCart\ORM\ExtensibleDataObject;
-use SilverCart\View\RenderableDataObject;
 use SilverStripe\Control\Controller;
-use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDecimal;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\FieldType\DBMoney;
 use SilverStripe\Security\Member;
-use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
-use SilverStripe\View\SSViewer;
-use Symbiote\GridFieldExtensions\GridFieldTitleHeader;
-use function _t;
 
 /**
  * abstract for shopping cart positions.
@@ -45,13 +35,10 @@ use function _t;
  * 
  * @method Product      Product()      Returns the related Product.
  * @method ShoppingCart ShoppingCart() Returns the related ShoppingCart.
- * 
- * @mixin DataValuable
  */
 class ShoppingCartPosition extends DataObject
 {
-    use ExtensibleDataObject;
-    use RenderableDataObject;
+    use \SilverCart\ORM\ExtensibleDataObject;
     /**
      * attributes
      *
@@ -84,14 +71,6 @@ class ShoppingCartPosition extends DataObject
         'Quantity',
         'Product.ProductNumberShop',
         'Product.Title',
-    ];
-    /**
-     * Extensions
-     *
-     * @var string[]
-     */
-    private static $extensions = [
-        DataValuable::class,
     ];
     /**
      * List of different accessed prices
@@ -130,51 +109,6 @@ class ShoppingCartPosition extends DataObject
     public function plural_name() : string
     {
         return Tools::plural_name_for($this);
-    }
-
-    /**
-     * Indicates wether the position can be converted into an order position.
-     * 
-     * @param Member|null $member Member to check permission for.
-     *
-     * @return bool
-     */
-    public function canConvert(Member|null $member = null) : bool
-    {
-        $extended = $this->owner->extendedCan(__FUNCTION__, $member);
-        if ($extended !== null) {
-            return $extended;
-        }
-        return true;
-    }
-
-    /**
-     * Indicates wether the current user can view this object.
-     * 
-     * @param Member $member Member to check permission for.
-     *
-     * @return bool
-     */
-    public function canView($member = null) : bool
-    {
-        $extended = $this->extendedCan(__FUNCTION__, $member);
-        if ($extended !== null) {
-            return $extended;
-        }
-        if (Permission::check('ADMIN')) {
-            return true;
-        }
-        $can = false;
-        if (is_null($member)) {
-            $member = Security::getCurrentUser();
-        }
-        if ($member instanceof Member
-         && $member->ID === $this->ShoppingCart()->Member()->ID
-         && !is_null($this->ShoppingCart()->Member()->ID)
-        ) {
-            $can = true;
-        }
-        return $can;
     }
 
     /**
@@ -226,32 +160,6 @@ class ShoppingCartPosition extends DataObject
             'PositionDeleted'           => _t(ShoppingCartPosition::class . '.PositionDeletedMessage', 'One or more positions were deleted from your shoppping cart because they are no more available.'),
             'RemainingQuantityAdded'    => _t(ShoppingCartPosition::class . '.REMAINING_QUANTITY_ADDED_MESSAGE', 'We do NOT have enough products in stock. We just added the remaining quantity to your cart.'),
         ]);
-    }
-    
-    /**
-     * Returns the CMS fields.
-     * 
-     * @return FieldList
-     */
-    public function getCMSFields() : FieldList
-    {
-        $this->beforeUpdateCMSFields(function(FieldList $fields) {
-            if (class_exists(HasOneSelector::class)) {
-                /* @var $productField HasOneSelector */
-                /* @var $cartField HasOneSelector */
-                $productField = Product::getHasOneSelectorFor($this, 'Product');
-                $cartField    = HasOneSelector::create('ShoppingCart', $this->fieldLabel('ShoppingCart'), $this, ShoppingCart::class)
-                        ->setLeftTitle($this->fieldLabel('ShoppingCart'))
-                        ->removeAddable()
-                        ->removeLinkable();
-                $cartField->getConfig()
-                        ->removeComponentsByType(GridFieldDeleteAction::class)
-                        ->addComponent(new GridFieldTitleHeader());
-                $fields->replaceField('ProductID', $productField);
-                $fields->replaceField('ShoppingCartID', $cartField);
-            }
-        });
-        return parent::getCMSFields();
     }
 
     /**
@@ -377,30 +285,6 @@ class ShoppingCartPosition extends DataObject
         }
         return $this->prices[$priceKey];
     }
-    
-    /**
-     * Returns the price without tax.
-     * 
-     * @param bool     $forSingleProduct Get the price for the single product or for all?
-     * @param int|null $precision        Precision for rounding
-     * 
-     * @return DBMoney
-     */
-    public function getPriceWithoutTax(bool $forSingleProduct = false, ?int $precision = null) : DBMoney
-    {
-        $priceType = Config::PriceType();
-        $price     = $this->getPrice($forSingleProduct);
-        $amount    = $price->getAmount();
-        if ($priceType === Config::PRICE_TYPE_GROSS) {
-            $amount -= $this->getTaxAmount($forSingleProduct, $precision);
-        }
-        if ($precision !== null) {
-            $amount = round($amount, $precision);
-        }
-        return DBMoney::create()
-                ->setAmount($amount)
-                ->setCurrency($price->getCurrency());
-    }
 
     /**
      * Returns the formatted (Nice) summed price.
@@ -415,8 +299,7 @@ class ShoppingCartPosition extends DataObject
             $priceNice = DBHTMLText::create()->setValue($price->Nice());
         }
         $this->extend('updatePriceNice', $priceNice);
-        return DBHTMLText::create()->setValue($priceNice);
-        
+        return $priceNice;
     }
 
     /**
@@ -432,7 +315,7 @@ class ShoppingCartPosition extends DataObject
             $priceNice = DBHTMLText::create()->setValue($price->Nice());
         }
         $this->extend('updateSinglePriceNice', $priceNice);
-        return DBHTMLText::create()->setValue($priceNice);
+        return $priceNice;
     }
 
     /**
@@ -566,20 +449,6 @@ class ShoppingCartPosition extends DataObject
     }
     
     /**
-     * Returns the max length for the add-to-cart-form quantity field.
-     * 
-     * @param int $add Integer value to add
-     * @param int $min Minimum value
-     * @param int $max Maximum value
-     * 
-     * @return int
-     */
-    public function getQuantityFieldWidth(int $add = 0, int $min = 30, int $max = 9999) : int
-    {
-        return $this->ShoppingCart()->getQuantityFieldWidth($add, $min, $max);
-    }
-    
-    /**
      * returns a string with notices. Notices are seperated by <br />
      * 
      * @return DBHTMLText
@@ -640,14 +509,13 @@ class ShoppingCartPosition extends DataObject
     /**
      * returns the tax amount included in $this
      *
-     * @param bool $forSingleProduct Indicates wether the price for the total
-     *                               quantity of products should be returned
-     *                               or for one product only.
-     * @param int  $precision        Optional precision for rounding the tax rate
+     * @param boolean $forSingleProduct Indicates wether the price for the total
+     *                                  quantity of products should be returned
+     *                                  or for one product only.
      * 
      * @return float
      */
-    public function getTaxAmount(bool $forSingleProduct = false, ?int $precision = null) : float
+    public function getTaxAmount($forSingleProduct = false) : float
     {
         if (Config::PriceType() === Config::PRICE_TYPE_GROSS) {
             $taxRate = $this->getPrice($forSingleProduct)->getAmount() -
@@ -656,9 +524,6 @@ class ShoppingCartPosition extends DataObject
         } else {
             $taxRate = $this->getPrice($forSingleProduct)->getAmount() *
                        ($this->Product()->getTaxRate() / 100);
-        }
-        if ($precision !== null) {
-            $taxRate = round($taxRate, $precision);
         }
         return $taxRate;
     }
@@ -771,20 +636,4 @@ class ShoppingCartPosition extends DataObject
     {
         $this->extend('updateTransferToNewPosition', $newShoppingCartPosition);
     }
-    
-    /**
-     * Returns the rendered DataObject.
-     * 
-     * @param string $templateAddition Optional template name addition
-     * @param array  $customFields     Optional template custom fields
-     * 
-     * @return DBHTMLText
-     */
-    public function forTemplate(string $templateAddition = '', array $customFields = []) : DBHTMLText
-    {
-        $addition  = empty($templateAddition) ? '' : "_{$templateAddition}";
-        $templates = SSViewer::get_templates_by_class(static::class, $addition, __CLASS__);
-        return $this->renderWith($templates, $customFields);
-    }
-
 }

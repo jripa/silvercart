@@ -85,7 +85,7 @@ class OrderStatus extends DataObject
      *
      * @var array
      */
-    private static array $db = [
+    private static $db = [
         'Code'      => 'Varchar',
         'IsDefault' => 'Boolean',
     ];
@@ -94,7 +94,7 @@ class OrderStatus extends DataObject
      *
      * @var array
      */
-    private static array $has_many = [
+    private static $has_many = [
         'Orders'                  => Order::class,
         'OrderStatusTranslations' => OrderStatusTranslation::class,
     ];
@@ -103,7 +103,7 @@ class OrderStatus extends DataObject
      *
      * @var array
      */
-    private static array $many_many = [
+    private static $many_many = [
         'ShopEmails' => ShopEmail::class,
     ];
     /**
@@ -111,15 +111,15 @@ class OrderStatus extends DataObject
      *
      * @var array
      */
-    private static array $belongs_many_many = [
-        'PaymentMethodRestrictions' => PaymentMethod::class . '.OrderRestrictionStatus',
+    private static $belongs_many_many = [
+        'PaymentMethodRestrictions' => PaymentMethod::class,
     ];
     /**
      * Castings
      *
      * @var array 
      */
-    private static array $casting = [
+    private static $casting = [
         'IsDefaultString' => 'Varchar',
         'Title'           => 'Varchar',
     ];
@@ -128,25 +128,25 @@ class OrderStatus extends DataObject
      *
      * @var string 
      */
-    private static string $default_sort = "SilvercartOrderStatusTranslation.Title";
+    private static $default_sort = "SilvercartOrderStatusTranslation.Title";
     /**
      * DB table name
      *
      * @var string
      */
-    private static string $table_name = 'SilvercartOrderStatus';
+    private static $table_name = 'SilvercartOrderStatus';
     /**
      * Grant API access on this item.
      *
      * @var bool
      */
-    private static bool $api_access = true;
+    private static $api_access = true;
     /**
      * List of extensions to use.
      *
      * @var array
      */
-    private static array $extensions = [
+    private static $extensions = [
         BadgeColorExtension::class,
     ];
     /**
@@ -154,7 +154,7 @@ class OrderStatus extends DataObject
      *
      * @var array 
      */
-    private static array $default_codes = [
+    private static $default_codes = [
         self::STATUS_CODE_NEW,
         self::STATUS_CODE_CANCELED,
         self::STATUS_CODE_COMPLETED,

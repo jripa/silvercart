@@ -152,11 +152,10 @@ class EditProfileForm extends CustomForm {
                     'minlength' => $passwordMinlength,
                 ]));
             }
-            $address = Address::singleton();
             $fields += [
                 DropdownField::create('Salutation', $member->fieldLabel('Salutation'), Tools::getSalutationMap(), $salutationValue),
-                TextField::create('FirstName', $member->fieldLabel('FirstName'), $firstNameValue, $address->config()->max_length_first_name),
-                TextField::create('Surname', $member->fieldLabel('Surname'), $surnameValue, $address->config()->max_length_sur_name),
+                TextField::create('FirstName', $member->fieldLabel('FirstName'), $firstNameValue),
+                TextField::create('Surname', $member->fieldLabel('Surname'), $surnameValue),
                 EmailField::create('Email', $member->fieldLabel('EmailAddress'), $emailValue),
                 $passwordField,
                 $passwordCheckField,
@@ -287,8 +286,7 @@ class EditProfileForm extends CustomForm {
                 $member->Surname,
                 $member->Email,
                 $confirmationHash,
-                $member->Locale,
-                $member
+                $member->Locale
             );
         }
         

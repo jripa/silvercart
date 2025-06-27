@@ -22,51 +22,51 @@ class Response
      *
      * @var Client
      */
-    protected Client|null $client = null;
+    protected $client = null;
     /**
      * Error code
      *
      * @var string
      */
-    protected string|null $errorCode = null;
+    protected $errorCode = null;
     /**
      * Error message
      *
      * @var string
      */
-    protected string|null $errorMessage = null;
+    protected $errorMessage = null;
     /**
      * Response is an error?
      *
      * @var bool
      */
-    protected bool $isError = false;
+    protected $isError = false;
     /**
      * Body of the requested response
      *
      * @var string
      */
-    protected string $body = '';
+    protected $body = '';
     /**
      * Data of the requested response
      *
-     * @var object|bool|string|null
+     * @var object
      */
-    protected object|bool|string|null $data = null;
+    protected $data = null;
     
     /**
      * Returns a new instance of Response.
      * 
-     * @param Client                  $client       The API client
-     * @param string                  $body         The requested responses body
-     * @param object|bool|string|null $data         The requested responses data
-     * @param bool                    $isError      Is the response an error?
-     * @param string                  $errorMessage Error message
-     * @param string                  $errorCode    Error code
+     * @param Client $client       The API client
+     * @param string $body         The requested responses body
+     * @param object $data         The requested responses data
+     * @param bool   $isError      Is the response an error?
+     * @param string $errorMessage Error message
+     * @param string $errorCode    Error code
      * 
      * @return Response
      */
-    public static function create(Client $client = null, string $body = '', object|bool|string|null $data = null, bool $isError = false, string $errorMessage = '', string $errorCode = '') : Response
+    public static function create(Client $client = null, string $body = '', object $data = null, bool $isError = false, string $errorMessage = '', string $errorCode = '') : Response
     {
         $response = new Response($client, $body, $data, $isError, $errorMessage, $errorCode);
         return $response;
@@ -75,16 +75,19 @@ class Response
     /**
      * Constructor.
      * 
-     * @param Client                  $client       The API client
-     * @param string                  $body         The requested responses body
-     * @param object|bool|string|null $data         The requested responses data
-     * @param bool                    $isError      Is the response an error?
-     * @param string                  $errorMessage Error message
-     * @param string                  $errorCode    Error code
+     * @param Client $client       The API client
+     * @param string $body         The requested responses body
+     * @param object $data         The requested responses data
+     * @param bool   $isError      Is the response an error?
+     * @param string $errorMessage Error message
+     * @param string $errorCode    Error code
      * 
      * @return Response
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 11.02.2019
      */
-    public function __construct(Client $client = null, string $body = '', object|bool|string|null $data = null, bool $isError = false, string $errorMessage = '', string $errorCode = '')
+    public function __construct(Client $client = null, string $body = '', object $data = null, bool $isError = false, string $errorMessage = '', string $errorCode = '')
     {
         if (is_null($client)) {
             $client = Client::create();
@@ -104,6 +107,9 @@ class Response
      * Alias for self::getIsError().
      * 
      * @return bool
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 11.02.2019
      */
     public function isError() : bool
     {
@@ -166,10 +172,13 @@ class Response
     /**
      * Returns the data.
      * 
-     * @return object|bool|string|null
+     * @return object
      */
-    public function getData() : object|bool|string|null
+    public function getData() : object
     {
+        if (is_null($this->data)) {
+            $this->data = new stdClass();
+        }
         return $this->data;
     }
 
@@ -241,11 +250,11 @@ class Response
     /**
      * Sets the data.
      * 
-     * @param object|bool|string|null $data Data
+     * @param object $data Data
      * 
      * @return Response
      */
-    public function setData(object|bool|string|null $data) : Response
+    public function setData(object $data) : Response
     {
         $this->data = $data;
         return $this;

@@ -11,7 +11,6 @@
 
 use Broarm\CookieConsent\CookieConsent;
 use Broarm\CookieConsent\Model\CookieGroup;
-use DNADesign\Elemental\Models\BaseElement;
 use SilverCart\Admin\Controllers\LeftAndMainExtension;
 use SilverCart\Admin\Forms\GridField\GridFieldBatchAction_ActivateDataObject;
 use SilverCart\Admin\Forms\GridField\GridFieldBatchAction_ChangeAvailabilityStatus;
@@ -72,9 +71,6 @@ if (class_exists(CookieConsent::class)) {
     CookieGroup::add_extension(CookieGroupExtension::class);
     CookieGroup::add_extension(FluentExtension::class);
 }
-if (class_exists(BaseElement::class)) {
-    BaseElement::add_extension(FluentExtension::class);
-}
 // Define required attributes to display a product in frontend
 Product::addRequiredAttribute("Price");
 Product::addRequiredAttribute("ProductGroupID");
@@ -103,8 +99,6 @@ GroupViewHandler::addGroupView(GroupViewList::class);
 GroupViewHandler::addGroupView(GroupViewTile::class);
 GroupViewHandler::addGroupHolderView(GroupViewList::class);
 GroupViewHandler::addGroupHolderView(GroupViewTile::class);
-GroupViewHandler::addWidgetGroupView(GroupViewList::class);
-GroupViewHandler::addWidgetGroupView(GroupViewTile::class);
 // set default group view if not done in project yet
 if (is_null(GroupViewHandler::getDefaultGroupView())) {
     GroupViewHandler::setDefaultGroupView(GroupViewTile::class);

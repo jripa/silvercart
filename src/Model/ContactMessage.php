@@ -12,14 +12,10 @@ use SilverCart\Model\Forms\FormFieldValue;
 use SilverCart\Model\Pages\ContactFormPage\Subject;
 use SilverCart\Model\ShopEmail;
 use SilverCart\ORM\DataObjectExtension;
-use SilverCart\ORM\ExtensibleDataObject;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\HasManyList;
 use SilverStripe\Security\Member;
-use function _t;
 
 /**
  * A contact message object. There's a storeadmin view for this object, too.
@@ -44,11 +40,11 @@ use function _t;
  * @method Member  Member()         Returns the related Member.
  * @method Subject ContactMessage() Returns the related Subject.
  * 
- * @method HasManyList FormFieldValues() Returns the related FormFieldValues.
+ * @method \SilverStripe\ORM\HasManyList FormFieldValues() Returns the related FormFieldValues.
  */
 class ContactMessage extends DataObject
 {
-    use ExtensibleDataObject;
+    use \SilverCart\ORM\ExtensibleDataObject;
     /**
      * Configuration parameter to determine whether to send an acknowledgement of
      * receipt to the customer or not.
@@ -121,17 +117,6 @@ class ContactMessage extends DataObject
      * @var string
      */
     private static $table_name = 'SilvercartContactMessage';
-    /**
-     * Searchable fields.
-     * 
-     * @var array
-     */
-    private static array $searchable_fields = [
-        'Email',
-        'FirstName',
-        'Surname',
-        'Created',
-    ];
     
     /**
      * Returns the translated singular name.
@@ -297,34 +282,13 @@ class ContactMessage extends DataObject
             $recipients = $this->ContactMessageSubject()->Recipients()->toArray();
             $to         = array_shift($recipients)->Email;
         }
-        $replyTo     = null;
-        $replyToName = null;
-        if (!empty($this->Email)) {
-            $replyTo = $this->Email;
-            if (!empty($this->Salutation)
-             && !empty($this->FirstName)
-             && !empty($this->Surname)
-            ) {
-                $replyToName = "{$this->Salutation} {$this->FirstName} {$this->Surname}";
-            } elseif (!empty($this->Salutation)
-                   && !empty($this->Surname)
-            ) {
-                $replyToName = "{$this->Salutation} {$this->Surname}";
-            } elseif (!empty($this->FirstName)
-                   && !empty($this->Surname)
-            ) {
-                $replyToName = "{$this->FirstName} {$this->Surname}";
-            }
-        }
         ShopEmail::send(
                 'ContactMessage',
                 $to,
                 $fields,
                 [],
                 Tools::default_locale()->getLocale(),
-                $recipients,
-                $replyTo,
-                $replyToName
+                $recipients
         );
         if ($this->config()->send_acknowledgement_of_receipt) {
             ShopEmail::send(
@@ -379,9 +343,8 @@ class ContactMessage extends DataObject
     public function getCMSFields() : FieldList
     {
         $this->beforeUpdateCMSFields(function(FieldList $fields) {
-            $fields->insertBefore(ReadonlyField::create('CreatedNice', $this->fieldLabel('Created'), $this->CreatedNice), 'SubjectText');
             $salutationDropdown = DropdownField::create('Salutation', $this->fieldLabel('Salutation'), Tools::getSalutationMap());
-            $fields->insertBefore($salutationDropdown, 'FirstName');
+            $fields->insertBefore('FirstName', $salutationDropdown);
             if (empty($this->SubjectText)) {
                 $fields->removeByName('SubjectText');
             } else {

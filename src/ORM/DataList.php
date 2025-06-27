@@ -16,34 +16,32 @@ use SilverStripe\ORM\DataList as SilverStripeDataList;
  * @copyright 2018 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class DataList extends SilverStripeDataList
-{
+class DataList extends SilverStripeDataList {
+    
     /**
      * Determines whether to sort linear or not.
      *
-     * @var bool
+     * @var boolean
      */
     public static $do_linear_sort = true;
     
     /**
      * Sets whether to sort linear or not.
      * 
-     * @param bool $do_linear_sort Sort linear?
+     * @param boolean $do_linear_sort Sort linear?
      * 
      * @return void
      */
-    public static function set_do_linear_sort($do_linear_sort) : void
-    {
+    public static function set_do_linear_sort($do_linear_sort) {
         self::$do_linear_sort = $do_linear_sort;
     }
     
     /**
      * Returns whether to sort linear or not.
      * 
-     * @return bool
+     * @return boolean
      */
-    public static function get_do_linear_sort() : bool
-    {
+    public static function get_do_linear_sort() {
         return self::$do_linear_sort;
     }
     
@@ -51,15 +49,14 @@ class DataList extends SilverStripeDataList
      * Returns whether to sort linear or not.
      * Alias for self::get_do_linear_sort().
      * 
-     * @return bool
+     * @return boolean
      */
-    public static function do_linear_sort() : bool
-    {
+    public static function do_linear_sort() {
         return self::get_do_linear_sort();
     }
 
     /**
-     * Adds the optional non-linear sort.
+     * Adds teh optional non-linear sort.
      * 
      * @return $this
      * 
@@ -67,7 +64,8 @@ class DataList extends SilverStripeDataList
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 21.06.2018
      */
-    public function sort() {
+    public function sort(...$args): static {
+       
         $count = func_num_args();
 
         if ($count == 0) {
@@ -84,20 +82,19 @@ class DataList extends SilverStripeDataList
             list($col, $dir) = func_get_args();
 
             // Validate direction
-            if (!in_array(strtolower($dir), ['desc', 'asc'])) {
+            if (!in_array(strtolower($dir), array('desc','asc'))) {
                 user_error('Second argument to sort must be either ASC or DESC');
             }
 
-            $sort = [$col => $dir];
+            $sort = array($col => $dir);
         } else {
             $sort = func_get_arg(0);
         }
 
-        $linearOnly = DataList::do_linear_sort();
-        return $this->alterDataQuery(function (DataQuery $query, DataList $list) use ($sort, $linearOnly) {
+        return $this->alterDataQuery(function (DataQuery $query, DataList $list) use ($sort) {
 
             if (is_string($sort) && $sort) {
-                if (false !== stripos($sort, ' asc') || false !== stripos($sort, ' desc')) {
+                if (stristr($sort, ' asc') || stristr($sort, ' desc')) {
                     $query->sort($sort);
                 } else {
                     $list->applyRelation($sort, $column, true);
@@ -110,10 +107,11 @@ class DataList extends SilverStripeDataList
                 foreach ($sort as $column => $direction) {
                     // Convert column expressions to SQL fragment, while still allowing the passing of raw SQL
                     // fragments.
-                    $list->applyRelation($column, $relationColumn, $linearOnly);
+                    $list->applyRelation($column, $relationColumn, DataList::do_linear_sort());
                     $query->sort($relationColumn, $direction, false);
                 }
             }
         });
     }
+    
 }

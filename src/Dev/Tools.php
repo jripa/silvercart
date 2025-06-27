@@ -2,44 +2,25 @@
 
 namespace SilverCart\Dev;
 
-use Exception;
-use GeoIp2\Database\Reader as GeoIp2Reader;
-use IntlDateFormatter;
 use ReflectionClass;
 use SilverCart\Admin\Model\Config;
-use SilverCart\IPLocator\IPLocator;
 use SilverCart\Model\Customer\Address;
-use SilverCart\Model\Customer\Country;
 use SilverCart\Model\Pages\Page;
-use SilverStripe\CMS\Controllers\ContentController;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\Session;
 use SilverStripe\Core\Config\Config as SilverStripeConfig;
-use SilverStripe\Core\Config\Configurable;
-use SilverStripe\Core\Extensible;
-use SilverStripe\Core\Injector\Injectable;
 use SilverStripe\Forms\FormField;
 use SilverStripe\i18n\i18n;
 use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
-use SilverStripe\View\ArrayData;
-use SilverStripe\View\TemplateGlobalProvider;
 use TractorCow\Fluent\Model\Locale;
 use TractorCow\Fluent\State\FluentState;
-use const BASE_PATH;
-use const FRAMEWORK_DIR;
-use const FRAMEWORK_PATH;
-use const GEOIP_PATH;
-use const SILVERCART_LOG_PATH;
-use function _t;
-use function mb_strlen;
 
 /**
  * Provides methods for common tasks in SilverCart.
@@ -51,11 +32,11 @@ use function mb_strlen;
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class Tools implements TemplateGlobalProvider
+class Tools
 {
-    use Configurable;
-    use Extensible;
-    use Injectable;
+    use \SilverStripe\Core\Config\Configurable;
+    use \SilverStripe\Core\Extensible;
+    use \SilverStripe\Core\Injector\Injectable;
     
     const SESSION_KEY_MESSAGE_ERROR   = 'SilverCart.Message.Error';
     const SESSION_KEY_MESSAGE_INFO    = 'SilverCart.Message.Info';
@@ -96,7 +77,7 @@ class Tools implements TemplateGlobalProvider
     /**
      * Cache for the page hierarchy model.
      *
-     * @var array
+     * @var ArrayList
      */
     public static $pageHierarchy = [];
     /**
@@ -123,19 +104,6 @@ class Tools implements TemplateGlobalProvider
      * @var array
      */
     protected static $fieldLabels = [];
-    
-    /**
-     * Returns the globals to use in template.
-     * Overwrites the default globals for Member.
-     * 
-     * @return array
-     */
-    public static function get_template_global_variables() {
-        return [
-            'PageByIdentifierCode'     => 'PageByIdentifierCode',
-            'PageByIdentifierCodeLink' => 'PageByIdentifierCodeLink',
-        ];
-    }
 
     /**
      * Initializes silvercart specific session data.
@@ -479,8 +447,6 @@ class Tools implements TemplateGlobalProvider
             'Priority'     => _t(Tools::class . '.PRIORITY', 'Priority (the higher the more important)'),
             'To'           => _t(Tools::class . '.To', 'To'),
             'Yes'          => _t(Tools::class . '.YES', 'Yes'),
-            'From'         => _t('SilverCart.From', 'from'),
-            'Until'        => _t('SilverCart.Until', 'until'),
         ];
         self::singleton()->extend('updateFieldLabels', $labels);
         return $labels;
@@ -514,50 +480,23 @@ class Tools implements TemplateGlobalProvider
      * @param string     $emptyString   String to use for an empty value
      * 
      * @return array
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 15.05.2018
      */
     public static function enum_i18n_labels($contextObject, $enumFieldName, $emptyString = '')
     {
         $enumValues = $contextObject->dbObject($enumFieldName)->enumValues();
         $i18nLabels = [];
-        $i18nCallbacks = [
-            function(object $contextObject, string $enumFieldName, string $label, bool &$break) {
-                $value = $contextObject->fieldLabel("{$enumFieldName}{$label}");
-                if ($value !== FormField::name_to_label("{$enumFieldName}{$label}")) {
-                    $break = true;
-                }
-                return $value;
-            },
-            function(object $contextObject, string $enumFieldName, string $label, bool &$break) {
-                $value = $contextObject->fieldLabel($enumFieldName . ucfirst($label));
-                if ($value !== FormField::name_to_label($enumFieldName . ucfirst($label))) {
-                    $break = true;
-                }
-                return $value;
-            },
-            function(object $contextObject, string $enumFieldName, string $label, bool &$break) {
-                $value = $contextObject->fieldLabel("{$enumFieldName}_{$label}");
-                if ($value !== FormField::name_to_label("{$enumFieldName}_{$label}")) {
-                    $break = true;
-                }
-                return $value;
-            },
-            function(object $contextObject, string $enumFieldName, string $label, bool &$break) {
-                $value = _t("{$contextObject->ClassName}.{$enumFieldName}_{$label}", "{$enumFieldName}_{$label}");
-                if ($value !== "{$enumFieldName}_{$label}") {
-                    $break = true;
-                }
-                return $value;
-            },
-        ];
         foreach ($enumValues as $value => $label) {
             if (empty($label)) {
                 $i18nLabels[$value] = $emptyString;
             } else {
-                foreach ($i18nCallbacks as $callback) {
-                    $break = false;
-                    $i18nLabels[$value] = $callback($contextObject, $enumFieldName, $label, $break);
-                    if ($break) {
-                        break;
+                $i18nLabels[$value] = $contextObject->fieldLabel($enumFieldName . $label);
+                if ($i18nLabels[$value] == FormField::name_to_label($enumFieldName . $label)) {
+                    $i18nLabels[$value] = $contextObject->fieldLabel($enumFieldName . ucfirst($label));
+                    if ($i18nLabels[$value] == FormField::name_to_label($enumFieldName . ucfirst($label))) {
+                        $i18nLabels[$value] = $contextObject->fieldLabel("{$enumFieldName}_{$label}");
                     }
                 }
             }
@@ -765,7 +704,7 @@ class Tools implements TemplateGlobalProvider
      */
     public static function getPageHierarchy($currPage)
     {
-        if (!array_key_exists('SiteTree_'.$currPage->ID, (array) self::$pageHierarchy)) {
+        if (!array_key_exists('SiteTree_'.$currPage->ID, self::$pageHierarchy)) {
             $level      = 0;
             $hierarchy  = [
                 'SiteTree_'.$currPage->ID => [
@@ -807,20 +746,20 @@ class Tools implements TemplateGlobalProvider
     /**
      * Returns the localized salutation string.
      * 
-     * @param string|null $salutation Enum value for salutation to get i18n for
+     * @param string $salutation Enum value for salutation to get i18n for
      *
      * @return string
      */
-    public static function getSalutationText(string|null $salutation) : string
+    public static function getSalutationText($salutation)
     {
         if ($salutation == 'Herr') {
             $salutationText = Address::singleton()->fieldLabel('Mister');
         } elseif ($salutation == 'Frau') {
             $salutationText = Address::singleton()->fieldLabel('Misses');
         } else {
-            $salutationText = Address::singleton()->fieldLabel(strtoupper((string) $salutation));
+            $salutationText = Address::singleton()->fieldLabel(strtoupper($salutation));
         }
-        return (string) $salutationText;
+        return $salutationText;
     }
 
     /**
@@ -1000,12 +939,10 @@ class Tools implements TemplateGlobalProvider
     public static function getDateWithTimeNice($date)
     {
         $dateNice           = self::getDateNice($date);
-        $dateTimestamp      = strtotime((string) $date);
-        $timeNiceFormat     = 'HH:mm';
-        $formatter          = new IntlDateFormatter(self::current_locale(), IntlDateFormatter::LONG, IntlDateFormatter::NONE);
-        $formatter->setPattern($timeNiceFormat);
-        $timeNice           = $formatter->format($dateTimestamp);
-        $dateWithTimeNice   = "{$dateNice} {$timeNice} " . _t(Tools::class . '.Oclock', "o'clock");
+        $dateTimestamp      = strtotime($date);
+        $timeNiceFormat     = '%H:%M';
+        $timeNice           = strftime($timeNiceFormat, $dateTimestamp) . ' ' .  _t(Tools::class . '.Oclock', "o'clock");
+        $dateWithTimeNice   = $dateNice . ' ' . $timeNice;
         return $dateWithTimeNice;
     }
     
@@ -1023,30 +960,25 @@ class Tools implements TemplateGlobalProvider
     {
         self::switchLocale(false);
         if ($fullMonthName) {
-            $month = 'MMMM';
+            $month = '%B';
         } else {
-            $month = 'MMM.';
+            $month = '%b.';
         }
-        $dateNice       = '';
-        $dateTimestamp  = strtotime((string) $date);
-        $dateNiceFormat = "dd. {$month}";
+        $dateTimestamp  = strtotime($date);
+        $dateNiceFormat = '%d. ' . $month;
         if (date('Y', $dateTimestamp) != date('Y')
          || $forceYear
         ) {
-            $dateNiceFormat = "{$dateNiceFormat} y";
+            $dateNiceFormat = '%d. ' . $month . ' %Y';
         } elseif (date('m-d', $dateTimestamp) == date('m-d')) {
-            $dateNice = ucfirst(_t(Tools::class . '.TODAY', 'today'));
+            $dateNiceFormat = ucfirst(_t(Tools::class . '.TODAY', 'today'));
         } elseif (date('m-d', $dateTimestamp) == date('m-d', time() - 24*60*60)) {
-            $dateNice = ucfirst(_t(Tools::class . '.YESTERDAY', 'yesterday'));
+            $dateNiceFormat = ucfirst(_t(Tools::class . '.YESTERDAY', 'yesterday'));
         }
-        if ($dateNice === '') {
-            if ($withWeekDay) {
-                $dateNiceFormat = "EEEE, {$dateNiceFormat}";
-            }
-            $formatter = new IntlDateFormatter(self::current_locale(), IntlDateFormatter::LONG, IntlDateFormatter::NONE);
-            $formatter->setPattern($dateNiceFormat);
-            $dateNice  = $formatter->format($dateTimestamp);
+        if ($withWeekDay) {
+            $dateNiceFormat = '%A, ' . $dateNiceFormat;
         }
+        $dateNice = strftime($dateNiceFormat, $dateTimestamp);
         self::switchLocale();
         return $dateNice;
     }
@@ -1166,7 +1098,7 @@ class Tools implements TemplateGlobalProvider
     /**
      * Returns the available content locales.
      * 
-     * @return ArrayList
+     * @return \SilverStripe\ORM\ArrayList
      *
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 25.04.2018
@@ -1224,13 +1156,13 @@ class Tools implements TemplateGlobalProvider
      */
     public static function get_translations($original)
     {
-        if ($original instanceof ContentController) {
+        if ($original instanceof \SilverStripe\CMS\Controllers\ContentController) {
             $original = $original->data();
         }
         $translations = [];
         if ($original->hasMethod('Locales')) {
             $locales = $original->Locales();
-            /* @var $locales ArrayList */
+            /* @var $locales \SilverStripe\ORM\ArrayList */
             foreach ($locales as $locale) {
                 /* @var $locale ArrayData */
                 $translation = self::get_translation($original, $locale->Locale);
@@ -1348,119 +1280,5 @@ class Tools implements TemplateGlobalProvider
     {
         $mb_diff = mb_strlen($input, $encoding) - strlen($input);
         return str_pad($input, $pad_length - $mb_diff, $pad_string, $pad_type);
-    }
-
-    /**
-     * Returns the current client IP.
-     * 
-     * @param string|null $originIP Origin IP address to overwrite
-     * 
-     * @return string|null
-     */
-    public static function getClientIP(string|null $originIP = null) : string|null
-    {
-        $ip = $originIP;
-        if (array_key_exists('HTTP_X_REAL_IP', $_SERVER)) {
-            $ip = $_SERVER['HTTP_X_REAL_IP'];
-        } elseif (array_key_exists('HTTP_X_FORWARDED_FOR', $_SERVER)) {
-            $ip = $_SERVER['HTTP_X_FORWARDED_FOR'];
-        } elseif (array_key_exists('REMOTE_ADDR', $_SERVER)) {
-            $ip = $_SERVER['REMOTE_ADDR'];
-        }
-        if ($ip !== $originIP) {
-            $originIP = $ip;
-        }
-        return $originIP;
-    }
-    
-    /**
-     * Returns the city name matching to the IP.
-     * 
-     * @param string $ip IP address
-     * 
-     * @return string
-     */
-    public static function IPCity(string $ip) : string
-    {
-        if (class_exists(IPLocator::class)) {
-            return IPLocator::getCity($ip);
-        }
-        if (!class_exists(GeoIp2Reader::class)) {
-            return '';
-        }
-        if (!defined('GEOIP_PATH')) {
-            define('GEOIP_PATH', BASE_PATH . '/../geoip');
-        }
-        if (!file_exists(GEOIP_PATH . '/GeoLite2-City.mmdb')) {
-            return '';
-        }
-        $geoip = new GeoIp2Reader(GEOIP_PATH . '/GeoLite2-City.mmdb');
-        $city  = '';
-        try {
-            $reader = $geoip->city($ip);
-            $city   = (string) $reader->city->name;
-        } catch (Exception $e) {
-            
-        }
-        return $city;
-    }
-    
-    /**
-     * Returns the country name matching to the IP.
-     * 
-     * @param string $ip IP address
-     * 
-     * @return string
-     */
-    public static function IPCountry(string $ip) : string
-    {
-        if (class_exists(IPLocator::class)) {
-            return IPLocator::getCountry($ip);
-        }
-        if (!class_exists(GeoIp2Reader::class)) {
-            return '';
-        }
-        if (!defined('GEOIP_PATH')) {
-            define('GEOIP_PATH', BASE_PATH . '/../geoip');
-        }
-        if (!file_exists(GEOIP_PATH . '/GeoLite2-City.mmdb')) {
-            return '';
-        }
-        $geoip   = new GeoIp2Reader(GEOIP_PATH . '/GeoLite2-City.mmdb');
-        $country = '';
-        try {
-            $reader      = $geoip->city($ip);
-            $countryCode = (string) $reader->country->isoCode;
-            $countryObject = Country::get()->filter('ISO2', $countryCode)->first();
-            if ($countryObject instanceof Country) {
-                $country = (string) $countryObject->Title;
-            } else {
-                $country = (string) $reader->country->name;
-            }
-        } catch (Exception $e) {
-            
-        }
-        return $country;
-    }
-    
-    /**
-     * Returns a IP based location string.
-     * 
-     * @param string $ip IP address
-     * 
-     * @return string
-     */
-    public static function IPLocation(string $ip) : string
-    {
-        $city     = self::IPCity($ip);
-        $country  = self::IPCountry($ip);
-        $location = "IP: {$ip}";
-        if (!empty($city)) {
-            $location .= ", {$city}";
-        }
-        if (!empty($country)) {
-            $location .= ", {$country}";
-        }
-        return $location;
     }
 }

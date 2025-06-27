@@ -6,22 +6,17 @@ use SilverCart\Admin\Model\Config;
 use SilverCart\Checkout\Checkout;
 use SilverCart\Dev\DateTools;
 use SilverCart\Dev\Tools;
-use SilverCart\Extensions\Model\DataValuable;
 use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Customer\Country;
 use SilverCart\Model\Customer\Customer;
 use SilverCart\Model\Order\ShoppingCartPosition;
 use SilverCart\Model\Order\ShoppingCartPositionNotice;
-use SilverCart\Model\Pages\CartPage;
-use SilverCart\Model\Pages\CartPageController;
 use SilverCart\Model\Payment\HandlingCost;
 use SilverCart\Model\Payment\PaymentMethod;
-use SilverCart\Model\Product\Product;
 use SilverCart\Model\Product\Tax;
+use SilverCart\Model\Product\Product;
 use SilverCart\Model\Shipment\ShippingFee;
 use SilverCart\Model\Shipment\ShippingMethod;
-use SilverCart\ORM\ExtensibleDataObject;
-use SilverCart\View\RenderableDataObject;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
@@ -34,20 +29,16 @@ use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\FieldType\DBMoney;
-use SilverStripe\ORM\HasManyList;
-use SilverStripe\ORM\ManyManyList;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\ViewableData;
-use function _t;
-use function singleton;
 
 /**
  * abstract for shopping cart.
  *
  * @package SilverCart
- * @subpackage Model\Order
+ * @subpackage Model_Order
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 27.09.2017
  * @copyright 2017 pixeltricks GmbH
@@ -55,33 +46,23 @@ use function singleton;
  * 
  * @var int $MemberID Member ID
  * 
- * @method Member       Member()                Returns the related Member.
- * @method HasManyList  ShoppingCartPositions() Returns the related positions.
- * @method ManyManyList Products()              Returns the related products.
- * 
- * @mixin DataValuable
+ * @method Member                         Member()                Returns the related Member.
+ * @method \SilverStripe\ORM\HasManyList  ShoppingCartPositions() Returns the related positions.
+ * @method \SilverStripe\ORM\ManyManyList Products()              Returns the related products.
  */
 class ShoppingCart extends DataObject
 {
-    use ExtensibleDataObject;
-    use RenderableDataObject;
+    use \SilverCart\ORM\ExtensibleDataObject;
     
     const SESSION_KEY = 'SilverCart.ShoppingCart';
 
     /**
-     * Contains all publicly registered modules that get called when the shoppingcart
+     * Contains all registered modules that get called when the shoppingcart
      * is displayed.
      *
      * @var array
      */
     public static $registeredModules = [];
-    /**
-     * Contains all YAML (Configurable) registered modules that get called when 
-     * the shoppingcart is displayed.
-     *
-     * @var array
-     */
-    private static $registered_modules = [];
     /**
      * Module list to exclude from most valuable tax rate calculation.
      *
@@ -128,20 +109,6 @@ class ShoppingCart extends DataObject
         'ShoppingCartPositions.count',
     ];
     /**
-     * Extensions
-     *
-     * @var string[]
-     */
-    private static $extensions = [
-        DataValuable::class,
-    ];
-    /**
-     * Increment quantity when calling @see $this->addaddProduct() ?
-     * 
-     * @var bool
-     */
-    private static $increment_add_product = false;
-    /**
      * Indicates wether the registered modules should be loaded.
      *
      * @var boolean
@@ -177,12 +144,6 @@ class ShoppingCart extends DataObject
      * @var Int
      */
     protected $shippingMethodID;
-    /**
-     * List of already loaded shipping methods.
-     * 
-     * @var ShippingMethod[]
-     */
-    protected $shippingMethod = [];
     /**
      * Shipping country context to show fees for.
      *
@@ -250,7 +211,7 @@ class ShoppingCart extends DataObject
     /**
      * Returns the global shopping cart instance.
      * 
-     * @return ShoppingCart|null
+     * @return \SilverCart\Model\Order\ShoppingCart|null
      */
     public static function getCart() : ?ShoppingCart
     {
@@ -306,8 +267,8 @@ class ShoppingCart extends DataObject
                     self::$cartCleaningInProgress = true;
                     $this->cleanUp();
                 }
-                $this->shippingMethodID = 0;
-                $this->paymentMethodID  = 0;
+                $this->ShippingMethodID = 0;
+                $this->PaymentMethodID  = 0;
                 $currentUser            = Security::getCurrentUser();
                 if ($currentUser instanceof Member
                  && self::$loadModules
@@ -318,13 +279,6 @@ class ShoppingCart extends DataObject
                     ]);
                     $this->callMethodOnRegisteredModules('ShoppingCartInit', [$this]);
                 }
-                $this->callMethodOnRegisteredModules('ShoppingCartPositions', [
-                    $this,
-                    Customer::currentUser(),
-                    true,
-                    [],
-                    false
-                ], []);
             }
         }
     }
@@ -337,19 +291,12 @@ class ShoppingCart extends DataObject
      */
     protected function cleanUp() : void
     {
-        /* @var $position ShoppingCartPosition */
         $this->extend('onBeforeCleanUp');
         $positionTable = ShoppingCartPosition::config()->table_name;
-        $productTable  = Product::singleton()->getStageTableName();
         $positionIDs   = DB::query("SELECT ID FROM {$positionTable} WHERE {$positionTable}.ShoppingCartID = {$this->ID} AND (ProductID = 0 OR Quantity = 0)");
         if ($positionIDs->numRecords() > 0) {
             foreach ($positionIDs as $positionID) {
                 $position = ShoppingCartPosition::get()->byID($positionID);
-                $position->delete();
-            }
-        }
-        foreach (ShoppingCartPosition::get()->filter('ShoppingCartID', $this->ID) as $position) {
-            if (!$position->Product()->canAddToCart()) {
                 $position->delete();
             }
         }
@@ -389,10 +336,9 @@ class ShoppingCart extends DataObject
     public function fieldLabels($includerelations = true) : array
     {
         return $this->defaultFieldLabels($includerelations, [
-            'AmountTotal'                 => _t(Order::class . '.AMOUNTTOTAL', 'Amount total'),
-            'Products'                    => Product::singleton()->plural_name(),
-            'ShoppingCartPositions'       => ShoppingCartPosition::singleton()->plural_name(),
-            'ShoppingCartPositions.count' => ShoppingCartPosition::singleton()->plural_name(),
+            'AmountTotal'           => _t(Order::class . '.AMOUNTTOTAL', 'Amount total'),
+            'Products'              => Product::singleton()->plural_name(),
+            'ShoppingCartPositions' => ShoppingCartPosition::singleton()->plural_name(),
         ]);
     }
     
@@ -410,8 +356,9 @@ class ShoppingCart extends DataObject
             if ($positionsField instanceof GridField) {
                 $positionFieldConfig = $positionsField->getConfig();
                 $positionFieldConfig->removeComponentsByType(GridFieldAddExistingAutocompleter::class);
+                $positionFieldConfig->removeComponentsByType(GridFieldAddNewButton::class);
                 $deleteAction        = $positionFieldConfig->getComponentByType(GridFieldDeleteAction::class);
-                /** @var GridFieldDeleteAction $deleteAction */
+                /* @var $deleteAction GridFieldDeleteAction */
                 $deleteAction->setRemoveRelation(false);
             }
             $productsField = $fields->dataFieldByName('Products');
@@ -435,26 +382,6 @@ class ShoppingCart extends DataObject
         if (self::getClearCheckoutAfterWrite()) {
             Checkout::clear_session();
         }
-    }
-    
-    /**
-     * Returns a human readable title.
-     * 
-     * @return string
-     */
-    public function getTitle() : string
-    {
-        return "{$this->i18n_singular_name()} #{$this->ID}, {$this->Member()->i18n_singular_name()} {$this->Member()->CustomerNumber} (#{$this->Member()->ID})";
-    }
-    
-    /**
-     * Returns the link to the shopping cart page.
-     * 
-     * @return string
-     */
-    public function Link() : string
-    {
-        return Tools::PageByIdentifierCodeLink(CartPage::IDENTIFIER_CART_PAGE);
     }
 
     /**
@@ -679,12 +606,11 @@ class ShoppingCart extends DataObject
     {
         self::$createForms = $doCreate;
     }
-    
+
     /**
      * adds a product to the cart
      *
-     * @param array $formData  the sended form data
-     * @param bool  $increment Increment quantity?
+     * @param array $formData the sended form data
      *
      * @return ShoppingCartPosition
      *
@@ -692,7 +618,7 @@ class ShoppingCart extends DataObject
      *         Sascha Koehler <skoehler@pixeltricks.de>
      * @since 15.11.2014
      */
-    public static function addProduct(array $formData, bool $increment = false) : ?ShoppingCartPosition
+    public static function addProduct(array $formData) : ?ShoppingCartPosition
     {
         $position = null;
         $member   = Customer::currentUser();
@@ -715,7 +641,7 @@ class ShoppingCart extends DataObject
                 ) {
                     $quantity = (float) str_replace(',', '.', $formData['productQuantity']);
                     if ($quantity > 0) {
-                        $position = $product->addToCart($cart->ID, $quantity, $increment);
+                        $position = $product->addToCart($cart->ID, $quantity);
                     }
                 }
             }
@@ -805,29 +731,7 @@ class ShoppingCart extends DataObject
                 $quantity += $position->Quantity;
             }
         }
-        $this->extend('updateQuantity', $quantity, $productId);
         return $quantity;
-    }
-    
-    /**
-     * Returns the max length for the add-to-cart-form quantity field.
-     * 
-     * @param int $add Integer value to add
-     * @param int $min Minimum value
-     * @param int $max Maximum value
-     * 
-     * @return int
-     */
-    public function getQuantityFieldWidth(int $add = 0, int $min = 30, int $max = 9999) : int
-    {
-        $width = (strlen((string) Config::addToCartMaxQuantity()) * 10) + $add;
-        if ($width > $max) {
-            $width = $max;
-        }
-        if ($width < $min) {
-            $width = $min;
-        }
-        return $width;
     }
 
     /**
@@ -1059,13 +963,9 @@ class ShoppingCart extends DataObject
             $includeModules
         );
         $cacheKey = 'ggetTaxableShoppingcartPositions_'.$cacheHash;
-        // WORKAROUND: Temporarily disable caching because of a tax calculation
-        // bug when using Paypal together with non-domestic tax rates.
-        /*
         if (array_key_exists($cacheKey, $this->cacheHashes)) {
             return $this->cacheHashes[$cacheKey];
         }
-        */
         foreach ($this->ShoppingCartPositions() as $position) {
             $cartPositions->push($position);
         }
@@ -1158,7 +1058,7 @@ class ShoppingCart extends DataObject
      */
     public function getTaxableAmountGrossWithoutFeesAndChargesAndModules(array $excludeShoppingCartPositions = []) : DBMoney
     {
-        return $this->getTaxableAmountGrossWithoutFeesAndCharges(self::getRegisteredModules(), $excludeShoppingCartPositions);
+        return $this->getTaxableAmountGrossWithoutFeesAndCharges(self::$registeredModules, $excludeShoppingCartPositions);
     }
 
     /**
@@ -1199,7 +1099,7 @@ class ShoppingCart extends DataObject
      */
     public function getTaxableAmountNetWithoutFeesAndChargesAndModules(array $excludeShoppingCartPositions = []) : DBMoney
     {
-        return $this->getTaxableAmountNetWithoutFeesAndCharges(self::getRegisteredModules(), $excludeShoppingCartPositions);
+        return $this->getTaxableAmountNetWithoutFeesAndCharges(self::$registeredModules, $excludeShoppingCartPositions);
     }
 
     /**
@@ -1398,11 +1298,8 @@ class ShoppingCart extends DataObject
     public function getShippingMethod() : ?ShippingMethod
     {
         $shippingMethod = null;
-        if (is_numeric($this->shippingMethodID)) {
-            if (!array_key_exists($this->shippingMethodID, $this->shippingMethod)) {
-                $this->shippingMethod[$this->shippingMethodID] = ShippingMethod::get()->byID($this->shippingMethodID);
-            }
-            $shippingMethod = $this->shippingMethod[$this->shippingMethodID];
+        if (is_numeric($this->ShippingMethodID)) {
+            $shippingMethod = ShippingMethod::get()->byID($this->ShippingMethodID);
         }
         return $shippingMethod;
     }
@@ -1489,8 +1386,8 @@ class ShoppingCart extends DataObject
     public function getPaymentMethod() : ?PaymentMethod
     {
         $paymentMethod = null;
-        if (is_numeric($this->paymentMethodID)) {
-            $paymentMethod = PaymentMethod::get()->byID($this->paymentMethodID);
+        if (is_numeric($this->PaymentMethodID)) {
+            $paymentMethod = PaymentMethod::get()->byID($this->PaymentMethodID);
         }
         return $paymentMethod;
     }
@@ -1644,17 +1541,14 @@ class ShoppingCart extends DataObject
     /**
      * Returns the minimum delivery time as date string YYYY-MM-DD.
      * 
-     * @param int|string $shippingMethodID   ID of the shipping method to use for 
-     *                                       delivery. Should always be of type 
-     *                                       integer, but it's possible to be 
-     *                                       string when called out of template.
-     * @param bool       $forceDisplayInDays Force displaying the delivery time in days
+     * @param int  $shippingMethodID   ID of the shipping method to use for delivery
+     * @param bool $forceDisplayInDays Force displaying the delivery time in days
      * 
      * @return DBHTMLText
      */
-    public function getDeliveryTime($shippingMethodID = 0, bool $forceDisplayInDays = false) : DBHTMLText
+    public function getDeliveryTime(int $shippingMethodID = 0, bool $forceDisplayInDays = false) : DBHTMLText
     {
-        $deliveryTimeData = $this->getDeliveryTimeData((int) $shippingMethodID, $forceDisplayInDays);
+        $deliveryTimeData = $this->getDeliveryTimeData($shippingMethodID, $forceDisplayInDays);
         $deliveryTime     = ShippingMethod::get_delivery_time(
                 $deliveryTimeData->Min,
                 $deliveryTimeData->Max,
@@ -2159,8 +2053,8 @@ class ShoppingCart extends DataObject
     public function getShowFees() : bool
     {
         $showFees = false;
-        if ($this->shippingMethodID > 0
-         && $this->paymentMethodID > 0
+        if ($this->ShippingMethodID > 0
+         && $this->PaymentMethodID > 0
         ) {
             $showFees = true;
         }
@@ -2218,16 +2112,6 @@ class ShoppingCart extends DataObject
     /**
      * Returns all registered modules.
      *
-     * @return array
-     */
-    public static function getRegisteredModules() : array
-    {
-        return array_merge(self::$registeredModules, (array) self::config()->registered_modules);
-    }
-
-    /**
-     * Returns all registered modules.
-     *
      * Every module contains two keys for further iteration inside templates:
      *      - ShoppingCartPositions
      *      - ShoppingCartActions
@@ -2239,7 +2123,7 @@ class ShoppingCart extends DataObject
         if (is_null($this->registeredModulesSet)) {
             $customer          = Customer::currentUser();
             $modules           = [];
-            $registeredModules = self::getRegisteredModules();
+            $registeredModules = self::$registeredModules;
             $hookMethods       = [
                 'NonTaxableShoppingCartPositions',
                 'TaxableShoppingCartPositions',
@@ -2284,7 +2168,7 @@ class ShoppingCart extends DataObject
      */
     public function callMethodOnRegisteredModules(string $methodName, array $parameters = [], array $excludeModules = [], array $excludeShoppingCartPositions = []) : array
     {
-        $registeredModules = self::getRegisteredModules();
+        $registeredModules = self::$registeredModules;
         $outputOfModules   = [];
         foreach ($registeredModules as $registeredModule) {
             // Skip excluded modules
@@ -2329,7 +2213,7 @@ class ShoppingCart extends DataObject
      */
     public function setShippingMethodID(int $shippingMethodId) : void
     {
-        $this->shippingMethodID = $shippingMethodId;
+        $this->ShippingMethodID = $shippingMethodId;
     }
 
     /**
@@ -2341,7 +2225,7 @@ class ShoppingCart extends DataObject
      */
     public function setPaymentMethodID(int $paymentMethodId) : void
     {
-        $this->paymentMethodID = $paymentMethodId;
+        $this->PaymentMethodID = $paymentMethodId;
     }
 
     /**
@@ -2422,30 +2306,5 @@ class ShoppingCart extends DataObject
     public function hasNotice() : bool
     {
         return ShoppingCartPositionNotice::hasNotices(0);
-    }
-    
-    /**
-     * Returns the product cart descriptions.
-     * 
-     * @return ArrayList
-     */
-    public function ProductCartDescriptions() : ArrayList
-    {
-        $descriptions = ArrayList::create();
-        $productIDs   = [];
-        foreach ($this->ShoppingCartPositions() as $position) {
-            if (in_array($position->Product()->ID, $productIDs)) {
-                continue;
-            }
-            $description = $position->Product()->CartDescription;
-            if (empty($description)) {
-                continue;
-            }
-            $descriptions->push(ArrayData::create([
-                'CartDescription' => DBHTMLText::create()->setValue($description),
-            ]));
-            $productIDs[] = $position->Product()->ID;
-        }
-        return $descriptions;
     }
 }

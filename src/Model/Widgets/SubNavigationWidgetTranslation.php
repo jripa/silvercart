@@ -16,29 +16,27 @@ use SilverStripe\ORM\DataObject;
  * @since 09.10.2017
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
- * 
- * @property string $FrontTitle   Front Title
- * 
- * @method SubNavigationWidget SubNavigationWidget() Returns the related SubNavigationWidget.
  */
-class SubNavigationWidgetTranslation extends DataObject
-{
+class SubNavigationWidgetTranslation extends DataObject {
+
     /**
      * Attributes.
      *
      * @var array
      */
-    private static $db = [
+    private static $db = array(
         'FrontTitle' => 'Varchar(255)',
-    ];
+    );
+
     /**
      * 1:1 or 1:n relationships.
      *
      * @var array
      */
-    private static $has_one = [
+    private static $has_one = array(
         'SubNavigationWidget' => SubNavigationWidget::class,
-    ];
+    );
+
     /**
      * DB table name
      *
@@ -49,10 +47,12 @@ class SubNavigationWidgetTranslation extends DataObject
     /**
      * Returns the translated singular name of the object.
      * 
-     * @return string
+     * @return string 
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 19.10.2017
      */
-    public function singular_name() : string
-    {
+    public function singular_name() {
         return TranslationTools::singular_name();
     }
 
@@ -61,28 +61,33 @@ class SubNavigationWidgetTranslation extends DataObject
      * Returns the translated plural name of the object.
      * 
      * @return string
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 19.10.2017
      */
-    public function plural_name() : string
-    {
+    public function plural_name() {
         return TranslationTools::plural_name();
     }
 
     /**
      * Field labels for display in tables.
      *
-     * @param bool $includerelations A boolean value to indicate if the labels returned include relation fields
+     * @param boolean $includerelations A boolean value to indicate if the labels returned include relation fields
      *
      * @return array
+     *
+     * @author Sascha Koehler <skoehler@pixeltricks.de>
+     * @since 28.05.2012
      */
-    public function fieldLabels($includerelations = true) : array
-    {
+    public function fieldLabels($includerelations = true) {
         $fieldLabels = array_merge(
             parent::fieldLabels($includerelations),
-            [
+            array(
                 'FrontTitle'          => _t(ProductSliderWidget::class . '.FRONTTITLE', 'Headline'),
                 'SubNavigationWidget' => SubNavigationWidget::singleton()->singular_name(),
-            ]
+            )
         );
+
         $this->extend('updateFieldLabels', $fieldLabels);
         return $fieldLabels;
     }
@@ -91,15 +96,18 @@ class SubNavigationWidgetTranslation extends DataObject
      * Summary fields
      *
      * @return array
+     *
+     * @author Sascha Koehler <skoehler@pixeltricks.de>
+     * @since 28.05.2012
      */
-    public function summaryFields() : array
-    {
+    public function summaryFields() {
         $summaryFields = array_merge(
             parent::summaryFields(),
-            [
+            array(
                 'FrontTitle' => $this->fieldLabel('FrontTitle'),
-            ]
+            )
         );
+
         $this->extend('updateSummaryFields', $summaryFields);
         return $summaryFields;
     }

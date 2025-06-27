@@ -27,11 +27,11 @@ class RegistrationPage extends Page
      */
     private static $table_name = 'SilvercartRegistrationPage';
     /**
-     * Class attached to page icons in the CMS page tree. Also supports font-icon set.
-     * 
+     * We set a custom icon for this page type here
+     *
      * @var string
      */
-    private static $icon_class = 'font-icon-block-user-5';
+    private static $icon = "silvercart/silvercart:client/img/page_icons/metanavigation_page-file.gif";
     
     /**
      * Returns whether the customer is in checkout process while going through the
@@ -56,6 +56,26 @@ class RegistrationPage extends Page
     {
         Tools::Session()->set(self::SESSION_KEY_IS_IN_CHECKOUT, $is);
         Tools::saveSession();
+    }
+
+    /**
+     * Returns the translated singular name.
+     * 
+     * @return string
+     */
+    public function singular_name() : string
+    {
+        return Tools::singular_name_for($this);
+    }
+
+    /**
+     * Returns the translated plural name.
+     * 
+     * @return string
+     */
+    public function plural_name() : string
+    {
+        return Tools::plural_name_for($this); 
     }
     
     /**

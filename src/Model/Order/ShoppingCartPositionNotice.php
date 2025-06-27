@@ -33,18 +33,6 @@ class ShoppingCartPositionNotice
     const NOTICE_FA_CHECK                  = 'check';
     const NOTICE_FA_INFO_CIRCLE            = 'info-circle';
     const SESSION_KEY_ADDITIONAL_NOTICES   = 'SilverCart.AdditionalShoppingCartPositionNotices';
-    /**
-     * Key value pair of position ID and the notice.
-     * 
-     * @var DBHTMLText[]
-     */
-    protected static $notices = [];
-    /**
-     * Key value pair of position ID and the notice lists.
-     * 
-     * @var ArrayList[]
-     */
-    protected static $noticeLists = [];
     
     /**
      * Adds a key value pair of allowed notices.
@@ -182,18 +170,15 @@ class ShoppingCartPositionNotice
      */
     public static function getNotices(int $positionID) : DBHTMLText
     {
-        if (!array_key_exists($positionID, self::$notices)) {
-            $text    = "";
-            $notices = (array) Tools::Session()->get("position".$positionID);
-            if (array_key_exists('codes', $notices)) {
-                foreach ($notices['codes'] as $code) {
-                    $text .= ShoppingCartPositionNotice::getNoticeText($code) . "<br />";
-                }
-                ShoppingCartPositionNotice::unsetNotices($positionID);
+        $text    = "";
+        $notices = (array) Tools::Session()->get("position".$positionID);
+        if (array_key_exists('codes', $notices)) {
+            foreach ($notices['codes'] as $code) {
+                $text .= ShoppingCartPositionNotice::getNoticeText($code) . "<br />";
             }
-            self::$notices[$positionID] = DBHTMLText::create()->setValue($text);
+            ShoppingCartPositionNotice::unsetNotices($positionID);
         }
-        return self::$notices[$positionID];
+        return Tools::string2html($text);
     }
     
     /**
@@ -205,22 +190,19 @@ class ShoppingCartPositionNotice
      */
     public static function getNoticesList(int $positionID) : ArrayList
     {
-        if (!array_key_exists($positionID, self::$noticeLists)) {
-            $list = ArrayList::create();
-            $notices = (array) Tools::Session()->get("position".$positionID);
-            if (array_key_exists('codes', $notices)) {
-                foreach ($notices['codes'] as $code) {
-                    $list->push(ArrayData::create([
-                        'Notice' => DBHTMLText::create()->setValue(ShoppingCartPositionNotice::getNoticeText($code)),
-                        'Type'   => self::getNoticeType($code),
-                        'Icon'   => self::getNoticeIcon($code),
-                    ]));
-                }
-                ShoppingCartPositionNotice::unsetNotices($positionID);
+        $list = ArrayList::create();
+        $notices = (array) Tools::Session()->get("position".$positionID);
+        if (array_key_exists('codes', $notices)) {
+            foreach ($notices['codes'] as $code) {
+                $list->push(ArrayData::create([
+                    'Notice' => DBHTMLText::create()->setValue(ShoppingCartPositionNotice::getNoticeText($code)),
+                    'Type'   => self::getNoticeType($code),
+                    'Icon'   => self::getNoticeIcon($code),
+                ]));
             }
-            self::$noticeLists[$positionID] = $list;
+            ShoppingCartPositionNotice::unsetNotices($positionID);
         }
-        return self::$noticeLists[$positionID];
+        return $list;
     }
     
     /**

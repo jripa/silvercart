@@ -71,11 +71,11 @@ jQuery.fn.daterangepicker = function(settings){
 
             //send back to input or inputs
             if(rangeInput.length == 2){
-                rangeInput.eq(0).val(rangeA);
-                rangeInput.eq(1).val(rangeB);
+                rangeInput.eq(0).focus().val(rangeA);
+                rangeInput.eq(1).focus().val(rangeB);
             }
             else{
-                rangeInput.val((rangeA != rangeB) ? rangeA+' '+ options.rangeSplitter +' '+rangeB : rangeA);
+                rangeInput.focus().val((rangeA != rangeB) ? rangeA+' '+ options.rangeSplitter +' '+rangeB : rangeA);
             }
             //if closeOnSelect is true
             if(options.closeOnSelect){
@@ -105,8 +105,10 @@ jQuery.fn.daterangepicker = function(settings){
         if(inputDateBtemp == null){inputDateBtemp = inputDateAtemp;}
     }
     else {
+        if (rangeInput.val() !== undefined){
         inputDateAtemp = Date.parse( rangeInput.val().split(options.rangeSplitter)[0] );
         inputDateBtemp = Date.parse( rangeInput.val().split(options.rangeSplitter)[1] );
+        }
         if(inputDateBtemp == null){inputDateBtemp = inputDateAtemp;} //if one date, set both
     }
     if(inputDateAtemp != null){inputDateA = inputDateAtemp;}

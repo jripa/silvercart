@@ -11,7 +11,7 @@ use SilverStripe\Forms\Form;
  * ModelAdmin for Products.
  * 
  * @package SilverCart
- * @subpackage Admin\Controllers
+ * @subpackage Admin_Controllers
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @copyright 2017 pixeltricks GmbH
  * @since 22.09.2017
@@ -19,12 +19,6 @@ use SilverStripe\Forms\Form;
  */
 class ProductAdmin extends ModelAdmin
 {
-    /**
-     * Name of DB field to make records sortable by.
-     *
-     * @var string
-     */
-    private static $sortable_field = 'DefaultSortOrder';
     /**
      * The code of the menu under which this admin should be shown.
      * 
@@ -49,18 +43,6 @@ class ProductAdmin extends ModelAdmin
      * @var string
      */
     private static $menu_title = 'Products';
-    /**
-     * Menu icon
-     * 
-     * @var string
-     */
-    private static $menu_icon = null;
-    /**
-     * Menu icon CSS class
-     * 
-     * @var string
-     */
-    private static $menu_icon_class = 'font-icon-p-cart';
     /**
      * Managed models
      *

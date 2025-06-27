@@ -13,18 +13,8 @@ use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\NumericField;
 use SilverStripe\Forms\Validator;
 
-/**
- * Form to add a product to the shopping cart.
- * 
- * @package SilverCart
- * @subpackage Forms
- * @author Sebastian Diel <sdiel@pixeltricks.de>
- * @since 08.11.2021
- * @copyright 2021 pixeltricks GmbH
- * @license see license file in modules root directory
- */
-class AddToCartForm extends CustomForm
-{
+class AddToCartForm extends CustomForm {
+    
     /**
      * Custom form action path, if not linking to itself.
      * E.g. could be used to post to an external link
@@ -32,17 +22,19 @@ class AddToCartForm extends CustomForm
      * @var string
      */
     protected $formActionPath = 'sc-action/addToCart';
+    
     /**
      * Product.
      *
-     * @var Product|null
+     * @var Product 
      */
     protected $product = null;
+    
     /**
      * The forms view context.
      * For example 'List', 'Detail', 'Title'.
      *
-     * @var string|null
+     * @var string
      */
     protected $viewContext = null;
     
@@ -57,9 +49,11 @@ class AddToCartForm extends CustomForm
      * @param Validator      $validator  Override the default validator instance (Default: {@link RequiredFields})
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.11.2017
      */
-    public function __construct(Product $product, RequestHandler $controller = null, $name = self::DEFAULT_NAME, FieldList $fields = null, FieldList $actions = null, Validator $validator = null)
-    {
+    public function __construct(Product $product, RequestHandler $controller = null, $name = self::DEFAULT_NAME, FieldList $fields = null, FieldList $actions = null, Validator $validator = null) {
         $this->setProduct($product);
         parent::__construct($controller, $name, $fields, $actions, $validator);
     }
@@ -69,26 +63,17 @@ class AddToCartForm extends CustomForm
      * 
      * @return array
      */
-    public function getCustomFields() : array
-    {
+    public function getCustomFields() {
         $this->beforeUpdateCustomFields(function (array &$fields) {
-            $product  = $this->getProduct();
+            $product = $this->getProduct();
             $quantity = $product->getQuantityInCart();
             if ($quantity == 0) {
                 $quantity = $product->getMinQuantityForCart();
             }
-            $quantityField = NumericField::create('productQuantity', $product->fieldLabel('Quantity'), $quantity, $this->getQuantityMaxLength())
-                    ->setAttribute('min', 0);
-            if ($product->getMaxQuantityForCart() > 0) {
-                $quantityField->setAttribute('max', $product->getMaxQuantityForCart());
-                if ($quantity > $product->getMaxQuantityForCart()) {
-                    $quantity = $product->getMaxQuantityForCart();
-                }
-            }
             $fields += [
                 HiddenField::create('backLink',  'backLink',  $this->getBackLink()),
                 HiddenField::create('productID', 'productID', $product->ID),
-                $quantityField,
+                NumericField::create('productQuantity', $product->fieldLabel('Quantity'), $quantity, $this->getQuantityMaxLength())
             ];
         });
         return parent::getCustomFields();
@@ -99,8 +84,7 @@ class AddToCartForm extends CustomForm
      * 
      * @return array
      */
-    public function getCustomActions() : array
-    {
+    public function getCustomActions() {
         $this->beforeUpdateCustomActions(function (array &$actions) {
             $actions += [
                 FormAction::create('addtocart', $this->getSubmitButtonTitle())
@@ -113,10 +97,9 @@ class AddToCartForm extends CustomForm
     /**
      * Returns the product
      * 
-     * @return Product|null
+     * @return Product
      */
-    public function getProduct() : ?Product
-    {
+    public function getProduct() {
         return $this->product;
     }
 
@@ -125,12 +108,10 @@ class AddToCartForm extends CustomForm
      * 
      * @param Product $product Product
      * 
-     * @return AddToCartForm
+     * @return void
      */
-    public function setProduct(Product $product) : AddToCartForm
-    {
+    public function setProduct(Product $product) {
         $this->product = $product;
-        return $this;
     }
     
     /**
@@ -138,8 +119,7 @@ class AddToCartForm extends CustomForm
      * 
      * @return string
      */
-    public function getViewContext() : ?string
-    {
+    public function getViewContext() {
         return $this->viewContext;
     }
 
@@ -148,13 +128,11 @@ class AddToCartForm extends CustomForm
      * 
      * @param string $viewContext View context
      * 
-     * @return AddToCartForm
+     * @return void
      */
-    public function setViewContext(string $viewContext) : AddToCartForm
-    {
+    public function setViewContext($viewContext) {
         $this->setTemplateBySuffix('_' . $viewContext);
         $this->viewContext = $viewContext;
-        return $this;
     }
     
     /**
@@ -162,8 +140,7 @@ class AddToCartForm extends CustomForm
      * 
      * @return string
      */
-    protected function getSubmitButtonTitle() : string
-    {
+    protected function getSubmitButtonTitle() {
         $product = $this->getProduct();
         if ($product->HasReleaseDate()) {
             $submitButtonTitle = $product->fieldLabel('PreorderNow');
@@ -180,8 +157,7 @@ class AddToCartForm extends CustomForm
      * 
      * @return string
      */
-    protected function getBackLink() : string
-    {
+    protected function getBackLink() {
         $backLink = $this->getController()->getRequest()->getURL();
         if (Director::is_relative_url($backLink)) {
             $backLink = Director::absoluteURL($backLink, true);
@@ -194,30 +170,19 @@ class AddToCartForm extends CustomForm
      * 
      * @return int
      */
-    protected function getQuantityMaxLength() : int
-    {
+    protected function getQuantityMaxLength() {
         $numberOfDecimalPlaces = $this->getProduct()->QuantityUnit()->numberOfDecimalPlaces;
-        $maxLength             = strlen((string) Config::addToCartMaxQuantity());
-        if ($maxLength === 0) {
-            $maxLength++;
+        $quantityFieldMaxLength = strlen((string) Config::addToCartMaxQuantity());
+        if ($quantityFieldMaxLength == 0) {
+            $quantityFieldMaxLength = 1;
         }
-        if ($numberOfDecimalPlaces !== false
-         && $numberOfDecimalPlaces > 0
-        ) {
-            $maxLength += 1 + $numberOfDecimalPlaces;
+        if ($numberOfDecimalPlaces !== false &&
+            $numberOfDecimalPlaces > 0) {
+            $maxLength = $quantityFieldMaxLength + 1 + $numberOfDecimalPlaces;
+        } else {
+            $maxLength = $quantityFieldMaxLength;
         }
         return $maxLength;
     }
     
-    /**
-     * Returns the max length for the add-to-cart-form quantity field.
-     * 
-     * @param int $add Integer value to add
-     * 
-     * @return int
-     */
-    public function getQuantityWidth(int $add = 0) : int
-    {
-        return (strlen((string) Config::addToCartMaxQuantity()) * 10) + $add;
-    }
 }

@@ -5,7 +5,6 @@ namespace SilverCart\API\Client;
 use SilverCart\API\Response\Response;
 use SilverStripe\Control\Director;
 use SimpleXMLElement;
-use stdClass;
 
 /**
  * Main handler for CURL client calls.
@@ -34,23 +33,11 @@ class CURLClient extends Client
      */
     private static $headers = [];
     /**
-     * Optional list of HTTP response code to trigger an error before handling the request.
-     *
-     * @var array
-     */
-    private static $error_http_codes = [];
-    /**
      * Use the HTTP based authentification using the CURL parameter CURLOPT_USERPWD.
      *
      * @var bool
      */
     private static $use_curl_authentification = true;
-    /**
-     * Enable verbose logging?
-     *
-     * @var bool
-     */
-    private static bool $enable_verbose_logging = false;
     /**
      * Last API request string
      *
@@ -128,21 +115,6 @@ class CURLClient extends Client
     protected function sendPostRequest(string $target, array $postFields = [], string $requestString = '', array $additionalCURLOptions = []) : Response
     {
         return $this->sendRequest($target, 'POST', $postFields, $requestString, $additionalCURLOptions);
-    }
-    
-    /**
-     * Sends an API PATCH request.
-     * 
-     * @param string $target                API target endpoint
-     * @param array  $postFields            Post fields to submit
-     * @param string $requestString         Request string to use instead of $postFields
-     * @param array  $additionalCURLOptions Additional CURL options
-     * 
-     * @return Response
-     */
-    protected function sendPatchRequest(string $target, array $postFields = [], string $requestString = '', array $additionalCURLOptions = []) : Response
-    {
-        return $this->sendRequest($target, 'PATCH', $postFields, $requestString, $additionalCURLOptions);
     }
     
     /**
@@ -229,9 +201,6 @@ class CURLClient extends Client
         } elseif ($method === 'PUT') {
             curl_setopt($ch, CURLOPT_PUT, 1);
             curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
-        } elseif ($method === 'PATCH') {
-            curl_setopt($ch, CURLOPT_CUSTOMREQUEST, 'PATCH');
-            curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
         } elseif ($method === 'DELETE') {
             curl_setopt($ch, CURLOPT_CUSTOMREQUEST, "DELETE");
             curl_setopt($ch, CURLOPT_POSTFIELDS, $postFields);
@@ -249,30 +218,6 @@ class CURLClient extends Client
             curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, 0);
         }
         $response = curl_exec($ch);
-        if (self::config()->enable_verbose_logging) {
-            $protocol   = curl_getinfo($ch, CURLINFO_PROTOCOL);
-            $logString  = '';
-            $logString .= PHP_EOL;
-            $logString  = 'Request data:';
-            $logString .= PHP_EOL;
-            $logString .= "HTTP {$protocol} {$method} {$url}" . PHP_EOL;
-            $logString .= PHP_EOL;
-            if (!empty($headers)) {
-                $logString .= "HEADERS:" . PHP_EOL;
-                foreach ($headers as $header) {
-                    $logString .= "{$header}" . PHP_EOL;
-                }
-                $logString .= PHP_EOL;
-            }
-            if (!empty($postFields)) {
-                $logString .= "POST:" . PHP_EOL;
-                foreach ($postFields as $postFieldName => $postFieldValue) {
-                    $logString .= "{$postFieldName}: {$postFieldValue}" . PHP_EOL;
-                }
-                $logString .= PHP_EOL;
-            }
-            $this->log($logString, 'verbose');
-        }
         $info     = curl_getinfo($ch);
         $error    = curl_error($ch);
         $errno    = curl_errno($ch);
@@ -294,8 +239,6 @@ class CURLClient extends Client
      */
     protected function handleResponse(string $response = null) : Response
     {
-        $info         = $this->getLastResponseInfo();
-        $httpCode     = array_key_exists('http_code', $info) ? $info['http_code'] : null;
         $data         = null;
         $isError      = false;
         $errorMessage = '';
@@ -304,13 +247,7 @@ class CURLClient extends Client
         $diffJSON     = array_diff($headers, self::HEADERS_JSON_CONTENT);
         $diffXML      = array_diff($headers, self::HEADERS_XML_CONTENT);
         if (!empty($response)) {
-            if (in_array($httpCode, (array) $this->config()->error_http_codes)) {
-                $isError       = true;
-                $errorMessage  = "Error: Remote responded with HTTP code {$httpCode}." . PHP_EOL;
-                $errorMessage .= "Raw response output (tags removed):" . PHP_EOL;
-                $errorMessage .= strip_tags($response) . PHP_EOL;
-                $errorCode     = 'HNDL-0002';
-            } elseif (count($diffJSON) < count($headers)) {
+            if (empty($diffJSON)) {
                 $data = json_decode($response);
                 if (json_last_error() !== JSON_ERROR_NONE) {
                     $isError      = true;
@@ -324,18 +261,9 @@ class CURLClient extends Client
                     $errorMessage = $data->message;
                     $errorCode    = $data->error;
                 }
-            } elseif (count($diffXML) < count($headers)) {
+            } elseif (empty($diffXML)) {
                 $data = new SimpleXMLElement($response);
-            } else {
-                $data = new stdClass;
-                $data->Body = $response;
             }
-        } elseif (!in_array($httpCode, (array) $this->config()->error_http_codes)
-               && !$diffJSON
-               && !$diffXML
-        ) {
-            $data = new stdClass;
-            $data->Body = NULL;
         }
         if (!$isError
          && is_null($data)
@@ -361,34 +289,6 @@ class CURLClient extends Client
     /**                                                                      **/
     /**************************************************************************/
     /**************************************************************************/
-    
-    /**
-     * Adds the given $header.
-     * 
-     * @return CURLClient
-     */
-    public function addHeader(string $header) : CURLClient
-    {
-        $this->config()->set('headers', array_merge((array) $this->config()->headers, [$header]));
-        return $this;
-    }
-    
-    /**
-     * Removes the given $header.
-     * 
-     * @return CURLClient
-     */
-    public function removeHeader(string $header) : CURLClient
-    {
-        $headers = (array) $this->config()->headers;
-        foreach ($headers as $key => $existingHeader) {
-            if ($header === $existingHeader) {
-                unset($headers[$key]);
-            }
-        }
-        $this->config()->set('headers', $headers);
-        return $this;
-    }
     
     /**
      * Returns the default headers.

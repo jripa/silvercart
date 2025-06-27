@@ -4,13 +4,9 @@ namespace SilverCart\Security\MemberAuthenticator;
 
 use SilverCart\Dev\Tools;
 use SilverCart\Model\ShopEmail;
-use SilverCart\Security\LostPasswordAttempt;
 use SilverStripe\Control\Director;
-use SilverStripe\Control\HTTPResponse;
-use SilverStripe\Security\MemberAuthenticator\LostPasswordForm;
 use SilverStripe\Security\MemberAuthenticator\LostPasswordHandler as SilverStripeLostPasswordHandler;
 use SilverStripe\Security\Security;
-use SilverStripe\Security\SecurityToken;
 
 /**
  * Alternative class for SilverStripe LostPasswordHandler.
@@ -26,85 +22,19 @@ use SilverStripe\Security\SecurityToken;
 class LostPasswordHandler extends SilverStripeLostPasswordHandler
 {
     /**
-     * Disable security token?
-     * 
-     * @var bool
-     */
-    private static bool $disable_security_token = false;
-
-    /**
-     * Constructor.
-     * 
-     * @param string $link The URL to recreate this request handler
-     * 
-     * @return void
-     */
-    public function __construct($link)
-    {
-        if ($this->config()->disable_security_token) {
-            SecurityToken::disable();
-        }
-        parent::__construct($link);
-    }
-
-    /**
-     * Forgot password form handler method.
-     * Called when the user clicks on "I've lost my password".
-     * Extensions can use the 'forgotPassword' method to veto executing
-     * the logic, by returning FALSE. In this case, the user will be redirected back
-     * to the form without further action. It is recommended to set a message
-     * in the form detailing why the action was denied.
-     *
-     * @param array            $data Submitted data
-     * @param LostPasswordForm $form Form
-     * 
-     * @return HTTPResponse
-     */
-    public function forgotPassword($data, $form)
-    {
-        // Run a first pass validation check on the data
-        $dataValidation = $this->validateForgotPasswordData($data, $form);
-        if ($dataValidation instanceof HTTPResponse) {
-            return $dataValidation;
-        }
-
-        /** @var Member $member */
-        $member = $this->getMemberFromData($data);
-
-        // Allow vetoing forgot password requests
-        $results = $this->extend('forgotPassword', $member);
-        if ($results && is_array($results) && in_array(false, $results ?? [], true)) {
-            return $this->redirectToLostPassword();
-        }
-        
-        $attempt        = LostPasswordAttempt::create();
-        $attempt->Email = $data['Email'];
-        $attempt->IP    = Tools::getClientIP($this->getRequest()->getIP());
-        if ($member) {
-            $token = $member->generateAutologinTokenAndStoreHash();
-
-            $this->sendEmail($member, $token);
-            $attempt->Status = LostPasswordAttempt::SUCCESS;
-        } else {
-            $attempt->Status = LostPasswordAttempt::FAILURE;
-        }
-        $attempt->write();
-
-        return $this->redirectToSuccess($data);
-    }
-
-    /**
      * Send the email to the member that requested a reset link.
      * 
      * @param Member $member Member
      * @param string $token  Token
      * 
      * @return bool
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 17.05.2019
      */
     protected function sendEmail($member, $token) : bool
     {
         $variables                      = $member->toMap();
-        $variables['Member']            = $member;
         $variables['PasswordResetLink'] = Director::absoluteURL(Security::getPasswordResetLink($member, $token));
         $memberDbFields                 = (array) $member->config()->db;
         foreach ($memberDbFields as $dbFieldName => $dbFieldType) {

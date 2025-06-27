@@ -257,7 +257,7 @@ trait CLITask
      */
     public static function removeActionFilename(string $filename) : void
     {
-        if (file_exists((string) $filename)) {
+        if (file_exists($filename)) {
             unlink($filename);
         }
     }
@@ -479,7 +479,7 @@ trait CLITask
     {
         $isRunning = false;
         $filename  = $this->getRunningActionFilename($action);
-        if (file_exists((string) $filename)) {
+        if (file_exists($filename)) {
             $isRunning = true;
         } elseif ($markAsStarted) {
             file_put_contents($filename, time());
@@ -497,7 +497,7 @@ trait CLITask
     public function finishAction(string $action) : void
     {
         $filename = $this->getRunningActionFilename($action);
-        if (file_exists((string) $filename)) {
+        if (file_exists($filename)) {
             unlink($filename);
         }
     }
@@ -513,7 +513,7 @@ trait CLITask
     {
         $starttime = 0;
         $filename  = $this->getRunningActionFilename($action);
-        if (file_exists((string) $filename)) {
+        if (file_exists($filename)) {
             $starttime = file_get_contents($filename);
         }
         return (int) $starttime;
@@ -967,21 +967,6 @@ trait CLITask
     }
     
     /**
-     * Returns the log file name.
-     * 
-     * @return string
-     */
-    protected function getLogFileName() : string
-    {
-        if (static::$log_file_name === null) {
-            $reflection            = new ReflectionClass($this);
-            $name                  = str_replace(['/', '\\'], '-', $reflection->getName());
-            static::$log_file_name = "CLITask.{$name}";
-        }
-        return (string) static::$log_file_name;
-    }
-    
-    /**
      * Adds the given prefix to the log file name (separated with a ".").
      * If $force is not set to true, the $prefix won't be added if there already
      * is an added prefix.
@@ -993,12 +978,14 @@ trait CLITask
      */
     protected function setLogFileNamePrefix(string $prefix, bool $force = false) : void
     {
-        $logFileName = $this->getLogFileName();
-        $last        = $logFileName;
-        if ($force
-         || strpos($logFileName, '-') !== false
-        ) {
-            $parts = explode('-', $logFileName);
+        if (is_null(static::$log_file_name)) {
+            $reflection            = new ReflectionClass($this);
+            static::$log_file_name = $reflection->getShortName();
+        }
+        if (strpos(static::$log_file_name, '-') === false) {
+            $last  = static::$log_file_name;
+        } elseif ($force) {
+            $parts = explode('-', static::$log_file_name);
             $last  = array_pop($parts);
         }
         static::$log_file_name = "{$prefix}-{$last}";
@@ -1016,11 +1003,10 @@ trait CLITask
      */
     protected function setLogFileNameSuffix(string $suffix, bool $force = false) : void
     {
-        $logFileName = $this->getLogFileName();
-        if (strpos($logFileName, '.') === false) {
+        if (strpos(static::$log_file_name, '.') === false) {
             static::$log_file_name .= ".{$suffix}";
         } elseif ($force) {
-            $parts = explode('.', $logFileName);
+            $parts = explode('.', static::$log_file_name);
             $first = array_shift($parts);
             static::$log_file_name = "{$first}.{$suffix}";
         }
@@ -1033,10 +1019,16 @@ trait CLITask
      * @param string $text The text to log
      *
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 30.08.2018
      */
-    public function Log(string $type, string $text) : void
+    public function Log($type, $text)
     {
-        $logFileName = $this->getLogFileName();
+        $logFileName = static::$log_file_name;
+        if (is_null($logFileName)) {
+            $logFileName = static::class;
+        }
         Tools::Log($type, $text, $logFileName);
     }
     

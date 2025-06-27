@@ -55,13 +55,11 @@ class GridFieldDetailForm_ItemRequest extends Extension
                 $index = 1;
                 foreach ($record->getCMSActions() as $action) {
                     /* @var $action FormAction */
-                    if ($action->hasMethod('setFullAction')) {
-                        $this->actionMap[$index] = $action->getName();
-                        $action->setFullAction("action_sccustomaction{$index}");
-                        $action->setName("action_sccustomaction{$index}");
-                        $form->Actions()->push($action);
-                        $index++;
-                    }
+                    $this->actionMap[$index] = $action->getName();
+                    $action->setFullAction("action_sccustomaction{$index}");
+                    $action->setName("action_sccustomaction{$index}");
+                    $form->Actions()->push($action);
+                    $index++;
                 }
             }
         }

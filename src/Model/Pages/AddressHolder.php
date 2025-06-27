@@ -6,8 +6,6 @@ use SilverCart\Dev\Tools;
 use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Pages\MyAccountHolder;
 use SilverStripe\Control\Controller;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\FieldType\DBText;
 use SilverStripe\View\ArrayData;
 
@@ -15,7 +13,7 @@ use SilverStripe\View\ArrayData;
  * Child of customer area; overview of all addresses;
  *
  * @package SilverCart
- * @subpackage Model\Pages
+ * @subpackage Model_Pages
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 27.09.2017
  * @copyright 2017 pixeltricks GmbH
@@ -24,6 +22,7 @@ use SilverStripe\View\ArrayData;
 class AddressHolder extends MyAccountHolder
 {
     use \SilverCart\ORM\ExtensibleDataObject;
+    
     /**
      * DB table name
      *
@@ -37,11 +36,33 @@ class AddressHolder extends MyAccountHolder
      */
     private static $can_be_root = false;
     /**
-     * Class attached to page icons in the CMS page tree. Also supports font-icon set.
-     * 
+     * The icon to use for this page in the storeadmin sitetree.
+     *
      * @var string
      */
-    private static $icon_class = 'font-icon-p-map';
+    private static $icon = "silvercart/silvercart:client/img/page_icons/my_account_holder-file.gif";
+
+    /**
+     * Returns the translated singular name of the object. If no translation exists
+     * the class name will be returned.
+     * 
+     * @return string
+     */
+    public function singular_name()
+    {
+        return Tools::singular_name_for($this);
+    }
+
+    /**
+     * Returns the translated plural name of the object. If no translation exists
+     * the class name will be returned.
+     * 
+     * @return string
+     */
+    public function plural_name()
+    {
+        return Tools::plural_name_for($this); 
+    }
     
     /**
      * Returns the field labels.
@@ -49,6 +70,9 @@ class AddressHolder extends MyAccountHolder
      * @param bool $includerelations Include relations?
      * 
      * @return array
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 18.09.2018
      */
     public function fieldLabels($includerelations = true)
     {
@@ -69,9 +93,12 @@ class AddressHolder extends MyAccountHolder
     /**
      * Returns whether this page has a summary.
      * 
-     * @return bool
+     * @return boolean
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 29.04.2013
      */
-    public function hasSummary() : bool
+    public function hasSummary()
     {
         return true;
     }
@@ -79,9 +106,9 @@ class AddressHolder extends MyAccountHolder
     /**
      * Returns the summary of this page.
      * 
-     * @return DBHTMLText
+     * @return string
      */
-    public function getSummary() : DBHTMLText
+    public function getSummary()
     {
         return $this->renderWith('SilverCart/Model/Pages/Includes/AddressSummary');
     }
@@ -91,7 +118,7 @@ class AddressHolder extends MyAccountHolder
      * 
      * @return string
      */
-    public function getSummaryTitle() : string
+    public function getSummaryTitle()
     {
         return $this->fieldLabel('YourCurrentAddresses');
     }
@@ -102,7 +129,7 @@ class AddressHolder extends MyAccountHolder
      *
      * @return string
      */
-    public function getSection() : string
+    public function getSection()
     {
         return Address::class;
     }
@@ -116,7 +143,7 @@ class AddressHolder extends MyAccountHolder
      * 
      * @return ArrayList
      */
-    public function getBreadcrumbItems($maxDepth = 20, $stopAtPageType = false, $showHidden = false) : ArrayList
+    public function getBreadcrumbItems($maxDepth = 20, $stopAtPageType = false, $showHidden = false)
     {
         $items = parent::getBreadcrumbItems($maxDepth, $stopAtPageType, $showHidden);
         $breadcrumbItem = '';

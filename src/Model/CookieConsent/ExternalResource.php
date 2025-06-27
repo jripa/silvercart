@@ -211,7 +211,7 @@ class ExternalResource extends DataObject implements TemplateGlobalProvider
         if ($extended !== null) {
             return $extended;
         }
-        $can = trim((string) $this->getField('Code')) === '';
+        $can = ($this->getField('Code')) ? trim($this->getField('Code')) : '';
         if ($this->RestrictToLiveMode
          && !Director::isLive()
         ) {
@@ -293,7 +293,7 @@ class ExternalResource extends DataObject implements TemplateGlobalProvider
     {
         parent::onBeforeWrite();
         if (empty($this->URLSegment)) {
-            $this->generateURLSegment(false);
+            $this->generateURLSegment();
         }
         if (!$this->exists()) {
             $index    = 2;

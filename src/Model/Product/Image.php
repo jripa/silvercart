@@ -2,8 +2,8 @@
 
 namespace SilverCart\Model\Product;
 
-use SilverCart\Admin\Controllers\PaymentMethodAdmin;
 use SilverCart\Admin\Controllers\ProductAdmin;
+use SilverCart\Admin\Controllers\PaymentMethodAdmin;
 use SilverCart\Dev\Tools;
 use SilverCart\Model\Payment\PaymentMethod;
 use SilverCart\Model\Product\ImageTranslation;
@@ -11,7 +11,6 @@ use SilverCart\Model\Product\Product;
 use SilverCart\Model\Widgets\ImageSliderImage;
 use SilverCart\Model\Widgets\SlidorionProductGroupWidget;
 use SilverCart\ORM\DataObjectExtension;
-use SilverCart\ORM\ExtensibleDataObject;
 use SilverStripe\Assets\Image as SilverStripeImage;
 use SilverStripe\Control\Controller;
 use SilverStripe\Forms\FieldList;
@@ -19,7 +18,6 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\Filters\PartialMatchFilter;
 use SilverStripe\ORM\HasManyList;
-use function _t;
 
 /**
  * DataObject to handle images added to a product or sth. else.
@@ -46,13 +44,13 @@ use function _t;
  */
 class Image extends DataObject
 {
-    use ExtensibleDataObject;
+    use \SilverCart\ORM\ExtensibleDataObject;
     /**
      * DB properties
      *
      * @var array
      */
-    private static array $db = [
+    private static $db = [
         'ProductNumberToReference' => 'Varchar(128)',
         'SortOrder'                => 'Int',
     ];
@@ -61,25 +59,17 @@ class Image extends DataObject
      *
      * @var array
      */
-    private static array $has_one = [
+    private static $has_one = [
         'Product'       => Product::class,
         'PaymentMethod' => PaymentMethod::class,
         'Image'         => SilverStripeImage::class,
-    ];
-    /**
-     * Owned relationships.
-     *
-     * @var array
-     */
-    private static array $owns = [
-        'Image',
     ];
     /**
      * 1:n relationships.
      *
      * @var array
      */
-    private static array $has_many = [
+    private static $has_many = [
         'ImageTranslations' => ImageTranslation::class
     ];
     /**
@@ -87,21 +77,21 @@ class Image extends DataObject
      *
      * @var array
      */
-    private static array $belongs_many_many = [
-        'SlidorionProductGroupWidgets' => SlidorionProductGroupWidget::class . '.Images',
+    private static $belongs_many_many = [
+        'SlidorionProductGroupWidgets' => SlidorionProductGroupWidget::class,
     ];
     /**
      * Default sort field and direction.
      *
      * @var string
      */
-    private static string $default_sort = 'SortOrder ASC';
+    private static $default_sort = 'SortOrder ASC';
     /**
      * Casted properties
      *
      * @var array
      */
-    private static array $casting = [
+    private static $casting = [
         'Title'       => 'Varchar',
         'Content'     => 'HTMLText',
         'Description' => 'HTMLText',
@@ -111,7 +101,7 @@ class Image extends DataObject
      *
      * @var string
      */
-    private static string $table_name = 'SilvercartImage';
+    private static $table_name = 'SilvercartImage';
     /**
      * Link
      *

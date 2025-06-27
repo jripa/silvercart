@@ -3,13 +3,11 @@
 namespace SilverCart\Model\Widgets;
 
 use SilverCart\Admin\Model\Config;
-use SilverCart\Extensions\Model\LinkBehaviorExtension;
 use SilverCart\Model\Product\Product;
 use SilverCart\Model\Widgets\ProductSliderWidget;
 use SilverCart\Model\Widgets\Widget;
 use SilverCart\Model\Widgets\WidgetTools;
 use SilverCart\Model\Widgets\ProductGroupItemsWidgetTranslation;
-use SilverStripe\Forms\FieldList;
 
 /**
  * Provides a view of items of a definable productgroup.
@@ -20,34 +18,9 @@ use SilverStripe\Forms\FieldList;
  * @since 09.10.2017
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
- * 
- * @property string FrontTitle              Front Title
- * @property string FrontContent            Front Content
- * @property int    numberOfProductsToShow  Number Of Products To Show
- * @property int    numberOfProductsToFetch Number Of Products To Fetch
- * @property string fetchMethod             Fetch Method
- * @property string GroupView               Group View
- * @property bool   isContentView           Is Content View?
- * @property bool   Autoplay                Autoplay?
- * @property bool   buildArrows             Build Arrows?
- * @property bool   buildNavigation         Build Navigation?
- * @property bool   buildStartStop          Build Start/Stop?
- * @property int    slideDelay              Slide Delay
- * @property bool   stopAtEnd               Stop At End?
- * @property string transitionEffect        Transition Effect
- * @property bool   useSlider               Use Slider?
- * @property bool   useRoundabout           Use Roundabout?
- * @property int    ProductGroupPageID      ProductGroupPage ID
- * @property string useSelectionMethod      Use Selection Method
- * 
- * @method \SilverStripe\ORM\HasManyList ProductGroupItemsWidgetTranslations() Returns the related Translations.
- * 
- * @method \SilverStripe\ORM\ManyManyList Products() Returns the related Products.
- * 
- * @mixin LinkBehaviorExtension
  */
-class ProductGroupItemsWidget extends Widget
-{
+class ProductGroupItemsWidget extends Widget {
+    
     use ProductSliderWidget;
     
     /**
@@ -55,7 +28,7 @@ class ProductGroupItemsWidget extends Widget
      * 
      * @var array
      */
-    private static $db = [
+    private static $db = array(
         'numberOfProductsToShow'  => 'Int',
         'numberOfProductsToFetch' => 'Int',
         'fetchMethod'             => "Enum('random,sortOrderAsc','random')",
@@ -71,16 +44,17 @@ class ProductGroupItemsWidget extends Widget
         'useSlider'               => "Boolean(0)",
         'useRoundabout'           => "Boolean(0)",
         'ProductGroupPageID'      => 'Int',
-        'useSelectionMethod'      => "Enum('productGroup,products','productGroup')",
-    ];
+        'useSelectionMethod'      => "Enum('productGroup,products','productGroup')"
+    );
+
     /**
      * Has_many relationships.
      *
      * @var array
      */
-    private static $many_many = [
+    private static $many_many = array(
         'Products' => Product::class,
-    ];
+    );
     /**
      * Has_many relationships.
      *
@@ -91,56 +65,51 @@ class ProductGroupItemsWidget extends Widget
             'Sort' => 'Int',
         ],
     ];
+    
     /**
      * field casting
      *
      * @var array
      */
-    private static $casting = [
+    private static $casting = array(
         'FrontTitle'   => 'Varchar(255)',
         'FrontContent' => 'Text',
-    ];
+    );
+    
     /**
      * Set default values.
      * 
      * @var array
      */
-    private static $defaults = [
+    private static $defaults = array(
         'numberOfProductsToShow'  => 5,
         'numberOfProductsToFetch' => 5,
         'slideDelay'              => 5000
-    ];
+    );
+    
     /**
      * 1:1 or 1:n relationships.
      *
      * @var array
      */
-    private static $has_many = [
+    private static $has_many = array(
         'ProductGroupItemsWidgetTranslations' => ProductGroupItemsWidgetTranslation::class,
-    ];
+    );
+
     /**
      * DB table name
      *
      * @var string
      */
     private static $table_name = 'SilvercartProductGroupItemsWidget';
-    /**
-     * Extensions.
-     * 
-     * @var string[]
-     */
-    private static $extensions = [
-        LinkBehaviorExtension::class,
-    ];
     
     /**
      * Getter for the front title depending on the set language
      *
      * @return string
      */
-    public function getFrontTitle() : string
-    {
-        return (string) $this->getTranslationFieldValue('FrontTitle');
+    public function getFrontTitle() {
+        return $this->getTranslationFieldValue('FrontTitle');
     }
     
     /**
@@ -148,9 +117,8 @@ class ProductGroupItemsWidget extends Widget
      *
      * @return string
      */
-    public function getFrontContent() : string
-    {
-        return (string) $this->getTranslationFieldValue('FrontContent');
+    public function getFrontContent() {
+        return $this->getTranslationFieldValue('FrontContent');
     }
     
     /**
@@ -161,12 +129,16 @@ class ProductGroupItemsWidget extends Widget
      * Excludes all fields that are added in a ToggleCompositeField later.
      * 
      * @return array
+     * 
+     * @author Roland Lehmann <rlehmann@pixeltricks.de>
+     * @since 21.02.2013
      */
-    public function excludeFromScaffolding() : array
-    {
+    public function excludeFromScaffolding() {
+        $parentExcludes = parent::excludeFromScaffolding();
+        
         $excludeFromScaffolding = array_merge(
-                parent::excludeFromScaffolding(),
-                [
+                $parentExcludes,
+                array(
                     'Autoplay',
                     'buildArrows',
                     'buildNavigation',
@@ -178,7 +150,7 @@ class ProductGroupItemsWidget extends Widget
                     'useRoundabout',
                     'GroupView',
                     'ProductGroupPageID',
-                ]
+                )
         );
         $this->extend('updateExcludeFromScaffolding', $excludeFromScaffolding);
         return $excludeFromScaffolding;
@@ -189,29 +161,31 @@ class ProductGroupItemsWidget extends Widget
      * 
      * @return FieldList
      */
-    public function getCMSFields() : FieldList
-    {
-        $fetchMethods = [
+    public function getCMSFields() {
+        $fetchMethods = array(
             'random'       => $this->fieldLabel('fetchMethodRandom'),
             'sortOrderAsc' => $this->fieldLabel('fetchMethodSortOrderAsc')
-        ];
+        );
         $fields = WidgetTools::getCMSFieldsForProductSliderWidget($this, $fetchMethods);
+        
         return $fields;
     }
 
     /**
      * Field labels for display in tables.
      *
-     * @param bool $includerelations A boolean value to indicate if the labels returned include relation fields
+     * @param boolean $includerelations A boolean value to indicate if the labels returned include relation fields
      *
      * @return array
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.03.2014
      */
-    public function fieldLabels($includerelations = true) : array
-    {
+    public function fieldLabels($includerelations = true) {
         $fieldLabels = array_merge(
                 parent::fieldLabels($includerelations),
                 WidgetTools::fieldLabelsForProductSliderWidget($this),
-                [
+                array(
                     'ProductGroupPage'                    => _t(ProductGroupItemsWidget::class . '.STOREADMIN_FIELDLABEL', 'Please choose the product group to display:'),
                     'ProductGroupPageDescription'         => _t(ProductGroupItemsWidget::class . '.ProductGroupPageDescription', 'Only needed if "Selection method for products" is set to "From product group".'),
                     'useSelectionMethod'                  => _t(ProductGroupItemsWidget::class . '.USE_SELECTIONMETHOD', 'Selection method for products'),
@@ -222,9 +196,11 @@ class ProductGroupItemsWidget extends Widget
                     'ProductGroupItemsWidgetTranslations' => _t(Config::class . '.TRANSLATIONS', 'Translations'),
                     'SelectProductDescription'            => _t(ProductGroupItemsWidget::class . '.SELECT_PRODUCT_DESCRIPTION', 'Select products by product number seperated by semicolon'),
                     'Products'                            => _t(Product::class . '.PLURALNAME', 'Products')
-                ]
+                )
         );
+
         $this->extend('updateFieldLabels', $fieldLabels);
         return $fieldLabels;
     }
+    
 }

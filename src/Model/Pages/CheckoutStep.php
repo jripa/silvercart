@@ -10,7 +10,6 @@ use SilverCart\Model\Pages\Page as SilverCartPage;
 use SilverCart\Model\Payment\PaymentMethod;
 use SilverCart\Model\Shipment\ShippingMethod;
 use SilverStripe\Control\Controller;
-use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\HTMLEditor\HTMLEditorField;
 use SilverStripe\Forms\TextField;
@@ -20,24 +19,20 @@ use SilverStripe\ORM\FieldType\DBHTMLText;
  * Checkout step page.
  *
  * @package SilverCart
- * @subpackage Model\Pages
+ * @subpackage Model_Pages
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 27.09.2017
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  * 
- * @property string $ContentStep1                     Content Step 1
- * @property string $ContentStep2                     Content Step 2
- * @property string $ContentStep3                     Content Step 3
- * @property string $ContentStep4                     Content Step 4
- * @property string $ContentStep5                     Content Step 5
- * @property string $ContentStep6                     Content Step 6
- * @property bool   $EnableTermsAndConditionsCheckbox Enable Terms And Conditions Checkbox
- * @property bool   $EnableNote                       Enable Note
- * @property string $NoPaymentMethodText              No Payment Method Text
- * @property string $NoShippingMethodText             No Shipping Method Text
- * @property string $TermsAndConditionsText           Terms And Conditions Text
- * @property string $TitleStep6                       Title Step 6
+ * @property string $TermsAndConditionsText Terms And Conditions Text
+ * @property string $ContentStep1           Content Step 1
+ * @property string $ContentStep2           Content Step 2
+ * @property string $ContentStep3           Content Step 3
+ * @property string $ContentStep4           Content Step 4
+ * @property string $ContentStep5           Content Step 5
+ * @property string $ContentStep6           Content Step 6
+ * @property string $TitleStep6             Title Step 6
  */
 class CheckoutStep extends Page
 {
@@ -48,26 +43,16 @@ class CheckoutStep extends Page
      * @var array
      */
     private static $db = [
-        'ContentStep1'                     => 'HTMLText',
-        'ContentStep2'                     => 'HTMLText',
-        'ContentStep3'                     => 'HTMLText',
-        'ContentStep4'                     => 'HTMLText',
-        'ContentStep5'                     => 'HTMLText',
-        'NoPaymentMethodText'              => 'HTMLText',
-        'NoShippingMethodText'             => 'HTMLText',
-        'TermsAndConditionsText'           => 'HTMLText',
-        'EnableTermsAndConditionsCheckbox' => 'Boolean',
-        'EnableNote'                       => 'Boolean(1)',
-        'TitleStep6'                       => 'Varchar',
-        'ContentStep6'                     => 'HTMLText',
-    ];
-    /**
-     * DB attribute defaults
-     *
-     * @var array
-     */
-    private static $defaults = [
-        'EnableNote' => true,
+        'ContentStep1'           => 'HTMLText',
+        'ContentStep2'           => 'HTMLText',
+        'ContentStep3'           => 'HTMLText',
+        'ContentStep4'           => 'HTMLText',
+        'ContentStep5'           => 'HTMLText',
+        'NoPaymentMethodText'    => 'HTMLText',
+        'NoShippingMethodText'   => 'HTMLText',
+        'TermsAndConditionsText' => 'HTMLText',
+        'TitleStep6'             => 'Varchar',
+        'ContentStep6'           => 'HTMLText',
     ];
     /**
      * DB table name
@@ -76,11 +61,11 @@ class CheckoutStep extends Page
      */
     private static $table_name = 'SilvercartCheckoutStep';
     /**
-     * Class attached to page icons in the CMS page tree. Also supports font-icon set.
-     * 
+     * icon for site tree
+     *
      * @var string
      */
-    private static $icon_class = 'font-icon-credit-card';
+    private static $icon = "silvercart/silvercart:client/img/page_icons/checkout_page-file.gif";
     
     /**
      * Field labels
@@ -101,6 +86,29 @@ class CheckoutStep extends Page
             'ThanksForYourOrder'  => _t(SilverCartPage::class . '.ORDER_THANKS', 'Many thanks for your order'),
             'Register'            => _t(SilverCartPage::class . '.REGISTER', 'Register'),
         ]);
+    }
+
+    /**
+     * Returns the translated singular name of the object. If no translation exists
+     * the class name will be returned.
+     * 
+     * @return string
+     */
+    public function singular_name() : string
+    {
+        return Tools::singular_name_for($this);
+    }
+
+
+    /**
+     * Returns the translated plural name of the object. If no translation exists
+     * the class name will be returned.
+     * 
+     * @return string
+     */
+    public function plural_name() : string
+    {
+        return Tools::plural_name_for($this); 
     }
     
     /**
@@ -124,8 +132,6 @@ class CheckoutStep extends Page
             $fields->addFieldToTab('Root.StepContent', HTMLEditorField::create('NoPaymentMethodText', $this->fieldLabel('NoPaymentMethodText'))->setDescription($noPaymentMethodTextDefault)->addExtraClass('stacked')->setRows(3));
             $fields->addFieldToTab('Root.StepContent', HTMLEditorField::create('ContentStep5', $this->fieldLabel('ContentStep5'))->addExtraClass('stacked')->setRows(8));
             $fields->addFieldToTab('Root.StepContent', HTMLEditorField::create('TermsAndConditionsText', $this->fieldLabel('TermsAndConditionsText'))->addExtraClass('stacked')->setRows(6)->setDescription($this->getDefaultTermsAndConditionsText()));
-            $fields->addFieldToTab('Root.StepContent', CheckboxField::create('EnableTermsAndConditionsCheckbox', $this->fieldLabel('EnableTermsAndConditionsCheckbox')));
-            $fields->addFieldToTab('Root.StepContent', CheckboxField::create('EnableNote', $this->fieldLabel('EnableNote'))->setDescription($this->fieldLabel('EnableNoteDesc')));
             $fields->addFieldToTab('Root.StepContent', TextField::create('TitleStep6', $this->fieldLabel('TitleStep6'))->setAttribute('placeholder', $titleStep6Default)->setDescription(_t(self::class . '.TitleStep6Info', 'Alternative title to display on the order confirmation page (default: "{default}").', ['default' => $titleStep6Default])));
             $fields->addFieldToTab('Root.StepContent', HTMLEditorField::create('ContentStep6', $this->fieldLabel('ContentStep6'))->addExtraClass('stacked')->setRows(8));
         });
@@ -234,9 +240,9 @@ class CheckoutStep extends Page
         return Tools::string2html(_t(CheckoutStep::class . '.AcceptTermsAndConditionsText',
                     'With your order you agree with our <a class="text-primary font-weight-bold" href="{termsAndConditionsLink}" target="blank">terms and conditions</a>. Please read and take note of our <a class="text-primary font-weight-bold" href="{privacyLink}" target="blank">data privacy statement</a> and <a class="text-primary font-weight-bold" href="{revocationLink}" target="blank">revocation instructions</a>',
                     [
-                        'termsAndConditionsLink' => Tools::PageByIdentifierCodeLink(self::IDENTIFIER_TERMS_OF_SERVICE_PAGE),
-                        'privacyLink'            => Tools::PageByIdentifierCodeLink(self::IDENTIFIER_DATA_PRIVACY_PAGE),
-                        'revocationLink'         => Tools::PageByIdentifierCodeLink(self::IDENTIFIER_REVOCATION_INSTRUCTION_PAGE),
+                        'termsAndConditionsLink' => Tools::PageByIdentifierCodeLink(SilverCartPage::IDENTIFIER_TERMS_OF_SERVICE_PAGE),
+                        'privacyLink'            => Tools::PageByIdentifierCodeLink(SilverCartPage::IDENTIFIER_DATA_PRIVACY_PAGE),
+                        'revocationLink'         => Tools::PageByIdentifierCodeLink(SilverCartPage::IDENTIFIER_REVOCATION_INSTRUCTION_PAGE),
                     ]
         ));
     }

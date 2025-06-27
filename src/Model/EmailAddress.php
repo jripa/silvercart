@@ -3,11 +3,10 @@
 namespace SilverCart\Model;
 
 use SilverCart\Dev\Tools;
+use SilverCart\Model\ShopEmail;
 use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Pages\ContactFormPage\Subject as ContactFormSubject;
 use SilverCart\Model\Product\Product;
-use SilverCart\Model\ShopEmail;
-use SilverCart\ORM\ExtensibleDataObject;
 use SilverStripe\Control\Email\Email;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridField;
@@ -26,19 +25,19 @@ use SilverStripe\ORM\DataObject;
  */
 class EmailAddress extends DataObject
 {
-    use ExtensibleDataObject;
+    use \SilverCart\ORM\ExtensibleDataObject;
     /**
      * DB table name
      *
      * @var string
      */
-    private static string $table_name = 'SilvercartEmailAddress';
+    private static $table_name = 'SilvercartEmailAddress';
     /**
      * Attributes.
      *
      * @var string
      */
-    private static array $db = [
+    private static $db = [
         'Name'  => 'Varchar(100)',
         'Email' => 'Varchar(100)',
     ];
@@ -47,9 +46,9 @@ class EmailAddress extends DataObject
      * 
      * @var string
      */
-    private static array $belongs_many_many = [
-        'ShopEmails'          => ShopEmail::class . '.AdditionalReceipients',
-        'ContactFormSubjects' => ContactFormSubject::class . '.Recipients',
+    private static $belongs_many_many = [
+        'ShopEmails'          => ShopEmail::class,
+        'ContactFormSubjects' => ContactFormSubject::class,
     ];
     
     /**

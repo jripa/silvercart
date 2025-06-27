@@ -14,7 +14,7 @@ use SilverStripe\View\Requirements_Minifier as SilverStripeRequirements_Minifier
  * @copyright 2018 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class Requirements_Minifier implements SilverStripeRequirements_Minifier
+class Requirements_Minifier
 {
     use \SilverStripe\Core\Injector\Injectable;
     

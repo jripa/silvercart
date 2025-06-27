@@ -6,16 +6,15 @@ use SilverCart\Admin\Dev\ExampleData;
 use SilverCart\Admin\Model\Config;
 use SilverCart\Dev\Tools;
 use SilverCart\Model\EmailAddress;
-use SilverCart\Model\Order\OrderStatus;
-use SilverCart\Model\ShopEmail\Content;
 use SilverCart\Model\ShopEmailTranslation;
-use SilverCart\ORM\ExtensibleDataObject;
+use SilverCart\Model\ShopEmail\Content;
+use SilverCart\Model\Order\OrderStatus;
 use SilverCart\View\SCTemplateParser;
 use SilverStripe\CMS\Controllers\RootURLController;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Director;
-use SilverStripe\Control\Email\Email;
 use SilverStripe\Control\HTTP;
+use SilverStripe\Control\Email\Email;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
@@ -24,19 +23,11 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\i18n\i18n;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\HasManyList;
-use SilverStripe\ORM\ManyManyList;
-use SilverStripe\Security\Member;
-use SilverStripe\Security\Permission;
-use SilverStripe\Security\PermissionProvider;
-use SilverStripe\Security\Security;
 use SilverStripe\View\ArrayData;
 use SilverStripe\View\Requirements;
 use SilverStripe\View\SSViewer;
 use SilverStripe\View\SSViewer_FromString;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
-use const THEMES_PATH;
-use function _t;
 
 /**
  * base class for emails.
@@ -53,26 +44,20 @@ use function _t;
  * @property string $Subject                        Subject
  * @property string $AdditionalRecipientsHtmlString Additional Recipients Html String
  * 
- * @method HasManyList  Contents()              Returns the related Contents.
- * @method HasManyList  ShopEmailTranslations() Returns the related ShopEmailTranslations.
- * @method ManyManyList AdditionalReceipients() Returns the related AdditionalReceipients (EmailAddress).
- * @method ManyManyList OrderStatus()           Returns the related OrderStatus.
+ * @method \SilverStripe\ORM\HasManyList  Contents()              Returns the related Contents.
+ * @method \SilverStripe\ORM\HasManyList  ShopEmailTranslations() Returns the related ShopEmailTranslations.
+ * @method \SilverStripe\ORM\ManyManyList AdditionalReceipients() Returns the related AdditionalReceipients (EmailAddress).
+ * @method \SilverStripe\ORM\ManyManyList OrderStatus()           Returns the related OrderStatus.
  */
-class ShopEmail extends DataObject implements PermissionProvider
+class ShopEmail extends DataObject
 {
-    use ExtensibleDataObject;
-    
-    public const PERMISSION_CREATE = 'SILVERCART_SHOPEMAIL_CREATE';
-    public const PERMISSION_DELETE = 'SILVERCART_SHOPEMAIL_DELETE';
-    public const PERMISSION_EDIT   = 'SILVERCART_SHOPEMAIL_EDIT';
-    public const PERMISSION_VIEW   = 'SILVERCART_SHOPEMAIL_VIEW';
-    
+    use \SilverCart\ORM\ExtensibleDataObject;
     /**
      * DB attributes
      *
      * @var array
      */
-    private static array $db = [
+    private static $db = [
         'TemplateName' => 'Varchar',
     ];
     /**
@@ -80,7 +65,7 @@ class ShopEmail extends DataObject implements PermissionProvider
      * 
      * @var type array
      */
-    private static array $has_many = [
+    private static $has_many = [
         'Contents'              => Content::class,
         'ShopEmailTranslations' => ShopEmailTranslation::class,
     ];
@@ -89,7 +74,7 @@ class ShopEmail extends DataObject implements PermissionProvider
      * 
      * @var type array
      */
-    private static array $many_many = [
+    private static $many_many = [
         'AdditionalReceipients' => EmailAddress::class,
     ];
     /**
@@ -97,224 +82,69 @@ class ShopEmail extends DataObject implements PermissionProvider
      *
      * @var array
      */
-    private static array $belongs_many_many = [
-        'OrderStatus' => OrderStatus::class . '.ShopEmails',
+    private static $belongs_many_many = [
+        'OrderStatus' => OrderStatus::class,
     ];
     /**
      * Casted properties
      *
      * @var array
      */
-    private static array $casting = [
+    private static $casting = [
         'Subject'                        => 'Text',
         'AdditionalRecipientsHtmlString' => 'HTMLText',
         'TemplateNameTitle'              => 'Text',
-    ];
-    /**
-     * Casted properties
-     *
-     * @var array
-     */
-    private static array $searchable_fields = [
-        'TemplateName',
-        'Subject',
     ];
     /**
      * DB table name
      *
      * @var string
      */
-    private static string $table_name = 'SilvercartShopEmail';
+    private static $table_name = 'SilvercartShopEmail';
     /**
      * Alternative email address to use as universal recipient in dev mode.
      * The original recipient address will be overwritten and added to the subject.
      *
      * @var string
      */
-    private static string $dev_email_recipient = '';
-    /**
-     * Disables the Email transport.
-     *
-     * @var bool
-     */
-    private static bool $disable_email_transport = false;
+    private static $dev_email_recipient = '';
     /**
      * List of the email templates.
      *
      * @var array
      */
-    private static array $email_templates = [];
+    private static $email_templates = [];
     /**
      * List of the registered email templates.
      *
      * @var array
      */
-    private static array $registered_email_templates = [];
+    private static $registered_email_templates = [];
     /**
      * List of custom email content blocks per email template.
      *
      * @var array
      */
-    private static array $custom_content_blocks = [];
+    private static $custom_content_blocks = [];
     /**
      * Determines to insert the translation CMS fields automatically.
      *
      * @var bool
      */
-    private static bool $insert_translation_cms_fields = true;
+    private static $insert_translation_cms_fields = true;
     /**
      * Field name to insert the translation CMS fields after.
      *
      * @var string
      */
-    private static string $insert_translation_cms_fields_after = 'TemplateName';
+    private static $insert_translation_cms_fields_after = 'TemplateName';
     /**
      * Key value pair of CSS styles to use as inline styles in emails.
      *
      * @var array
      */
     protected static $style = [];
-    /**
-     * Template variables.
-     * 
-     * @var array
-     */
-    protected $variables = [];
-
-    /**
-     * Set permissions.
-     *
-     * @return array
-     */
-    public function providePermissions() : array
-    {
-        $permissions = [
-            self::PERMISSION_VIEW   => [
-                'name'     => $this->fieldLabel(self::PERMISSION_VIEW),
-                'help'     => $this->fieldLabel(self::PERMISSION_VIEW . '_HELP'),
-                'category' => $this->i18n_singular_name(),
-                'sort'     => 10,
-            ],
-            self::PERMISSION_EDIT   => [
-                'name'     => $this->fieldLabel(self::PERMISSION_EDIT),
-                'help'     => $this->fieldLabel(self::PERMISSION_EDIT . '_HELP'),
-                'category' => $this->i18n_singular_name(),
-                'sort'     => 20,
-            ],
-            self::PERMISSION_CREATE => [
-                'name'     => $this->fieldLabel(self::PERMISSION_CREATE),
-                'help'     => $this->fieldLabel(self::PERMISSION_CREATE . '_HELP'),
-                'category' => $this->i18n_singular_name(),
-                'sort'     => 30,
-            ],
-            self::PERMISSION_DELETE => [
-                'name'     => $this->fieldLabel(self::PERMISSION_DELETE),
-                'help'     => $this->fieldLabel(self::PERMISSION_DELETE . '_HELP'),
-                'category' => $this->i18n_singular_name(),
-                'sort'     => 40,
-            ],
-        ];
-        $this->extend('updateProvidePermissions', $permissions);
-        return $permissions;
-    }
-
-    /**
-     * Indicates wether the current user can view this object.
-     * 
-     * @param Member $member Member to check permission for.
-     *
-     * @return bool
-     */
-    public function canView($member = null) : bool
-    {
-        if ($member === null) {
-            $member = Security::getCurrentUser();
-        }
-        $can     = Permission::checkMember($member, self::PERMISSION_VIEW);
-        $results = $this->extend('canView', $member);
-        if ($results
-         && is_array($results)
-        ) {
-            if(!min($results)) {
-                $can = false;
-            }
-        }
-        return $can;
-    }
-
-    /**
-     * Indicates wether the current user can edit this object.
-     * 
-     * @param Member $member Member to check permission for.
-     *
-     * @return bool
-     */
-    public function canEdit($member = null) : bool
-    {
-        if ($member === null) {
-            $member = Security::getCurrentUser();
-        }
-        $can     = Permission::checkMember($member, self::PERMISSION_EDIT);
-        $results = $this->extend('canView', $member);
-        if ($results
-         && is_array($results)
-        ) {
-            if(!min($results)) {
-                $can = false;
-            }
-        }
-        return $can;
-    }
-
-    /**
-     * Indicates wether the current user can create this object.
-     * 
-     * @param Member $member  Member to check permission for.
-     * @param array  $context Context
-     *
-     * @return bool
-     */
-    public function canCreate($member = null, $context = []) : bool
-    {
-        if ($member === null) {
-            $member = Security::getCurrentUser();
-        }
-        $can     = Permission::checkMember($member, self::PERMISSION_CREATE);
-        $results = $this->extend('canView', $member);
-        if ($results
-         && is_array($results)
-        ) {
-            if(!min($results)) {
-                $can = false;
-            }
-        }
-        return $can;
-    }
-
-    /**
-     * Indicates wether the current user can delete this object.
-     * 
-     * @param Member $member Member to check permission for.
-     *
-     * @return bool
-     */
-    public function canDelete($member = null) : bool
-    {
-        if ($member === null) {
-            $member = Security::getCurrentUser();
-        }
-        $can     = Permission::checkMember($member, self::PERMISSION_DELETE);
-        $results = $this->extend('canView', $member);
-        if ($results
-         && is_array($results)
-        ) {
-            if(!min($results)) {
-                $can = false;
-            }
-        }
-        return $can;
-    }
-
+    
     /**
      * Returns the translated singular name of the object. If no translation exists
      * the class name will be returned.
@@ -364,14 +194,6 @@ class ShopEmail extends DataObject implements PermissionProvider
             'Preview'               => _t(ShopEmail::class . '.Preview', 'Preview'),
             'ShopEmailTranslations' => _t(ShopEmailTranslation::class . '.PLURALNAME', 'Translations'),
             'OrderStatus'           => _t(OrderStatus::class . '.PLURALNAME', 'Order status'),
-            self::PERMISSION_CREATE           => _t(self::class . '.' . self::PERMISSION_CREATE, 'Create email templates'),
-            self::PERMISSION_CREATE . '_HELP' => _t(self::class . '.' . self::PERMISSION_CREATE . '_HELP', 'Allows an user to create email templates.'),
-            self::PERMISSION_DELETE           => _t(self::class . '.' . self::PERMISSION_DELETE, 'Delete email templates'),
-            self::PERMISSION_DELETE . '_HELP' => _t(self::class . '.' . self::PERMISSION_DELETE . '_HELP', 'Allows an user to delete email templates.'),
-            self::PERMISSION_EDIT             => _t(self::class . '.' . self::PERMISSION_EDIT, 'Edit email templates'),
-            self::PERMISSION_EDIT . '_HELP'   => _t(self::class . '.' . self::PERMISSION_EDIT . '_HELP', 'Allows an user to edit email templates.'),
-            self::PERMISSION_VIEW             => _t(self::class . '.' . self::PERMISSION_VIEW, 'View email templates'),
-            self::PERMISSION_VIEW . '_HELP'   => _t(self::class . '.' . self::PERMISSION_VIEW . '_HELP', 'Allows an user to view email templates.'),
         ]);
     }
 
@@ -408,14 +230,14 @@ class ShopEmail extends DataObject implements PermissionProvider
                 $gridContents->getConfig()->removeComponentsByType(GridFieldDeleteAction::class);
                 $gridContents->getConfig()->addComponent(new GridFieldDeleteAction());
                 if (class_exists(GridFieldOrderableRows::class)) {
-                    $gridContents->getConfig()->addComponent(GridFieldOrderableRows::create('Sort')->setExtraSortFields('DisplayPositionSort'));
+                    $gridContents->getConfig()->addComponent(GridFieldOrderableRows::create('Sort'));
                 }
             }
             $fields->removeByName('TemplateName');
             $templateNames     = self::get_email_templates();
             $templateNameField = DropdownField::create('TemplateName', $this->fieldLabel('TemplateName'), $templateNames);
             $fields->addFieldToTab('Root.Main', $templateNameField);
-            $exampleEmail      = ExampleData::render_example_email((string) $this->TemplateName);
+            $exampleEmail      = ExampleData::render_example_email($this->TemplateName);
             if (!empty($exampleEmail)) {
                 $fields->findOrMakeTab('Root.Preview', $this->fieldLabel('Preview'));
                 $frame = '<iframe class="full-height" src="' . Director::absoluteURL('example-data/renderemail/' . $this->TemplateName) . '"></iframe>';
@@ -713,18 +535,14 @@ class ShopEmail extends DataObject implements PermissionProvider
     /**
      * sends email to defined address
      *
-     * @param string $identifier           identifier for email template
-     * @param string $to                   recipients email address
-     * @param array  $variables            array with template variables that can be called in the template
-     * @param array  $attachments          absolute filename to an attachment file
-     * @param string $locale               Locale to use
-     * @param array  $additionalRecipients Additional recipients list
-     * @param string $replyTo              Reply to address
-     * @param string $replyToName          Reply to name
+     * @param string $identifier  identifier for email template
+     * @param string $to          recipients email address
+     * @param array  $variables   array with template variables that can be called in the template
+     * @param array  $attachments absolute filename to an attachment file
      *
      * @return bool
      */
-    public static function send(string $identifier, string $to, array $variables = [], array $attachments = null, string $locale = null, array $additionalRecipients = [], string $replyTo = null, string $replyToName = null) : bool
+    public static function send(string $identifier, string $to, array $variables = [], array $attachments = null, string $locale = null, array $additionalRecipients = []) : bool
     {
         $originalLocale = null;
         if ($locale !== null) {
@@ -733,7 +551,7 @@ class ShopEmail extends DataObject implements PermissionProvider
             Tools::set_current_locale($locale);
         }
         $email = ShopEmail::get()->filter('TemplateName', $identifier)->first();
-        /* @var $email ShopEmail */
+
         if (!($email instanceof ShopEmail)
          || !$email->exists()
         ) {
@@ -767,7 +585,6 @@ class ShopEmail extends DataObject implements PermissionProvider
         SSViewer::set_themes($frontendThemes);
         $subject = HTTP::absoluteURLs(SSViewer_FromString::create($rawSubject)->process(ArrayData::create($variables)));
         $variables['ShopEmailSubject'] = $subject;
-        $email->setVariables($variables);
         $htmlText = $email->customise($variables)->renderWith(['SilverCart/Email/' . $identifier, 'SilverCart/Email/ShopEmail']);
         if (SSViewer::hasTemplate(['SilverCart/Email/Layout/' . $identifier . 'Plain'])) {
             $plainText = $email->customise($variables)->renderWith(['SilverCart/Email/' . $identifier . 'Plain', 'SilverCart/Email/ShopEmailPlain']);
@@ -781,35 +598,38 @@ class ShopEmail extends DataObject implements PermissionProvider
         if (empty($plainText)) {
             $plainText = strip_tags($htmlText);
         }
-        if ($email->AdditionalReceipients()->exists()) {
-            $additionalRecipients = array_merge($additionalRecipients, $email->AdditionalReceipients()->toArray());
-        }
-        $email->extend('onBeforeSendEmail', $to, $subject, $htmlText, $attachments, $replyTo, $replyToName, $additionalRecipients);
-        $result = self::send_email($to, $subject, $htmlText, $attachments, $replyTo, $replyToName);
-        $email->extend('onAfterSendEmail', $to, $subject, $htmlText, $attachments, $replyTo, $replyToName, $additionalRecipients);
+        
+        $result = self::send_email($to, $subject, $htmlText, $attachments);
         
         if (Config::GlobalEmailRecipient() != '') {
             self::send_email(Config::GlobalEmailRecipient(), $subject, $htmlText);
         }
+
+        //Send the email to additional standard receipients from the n:m
+        //relation AdditionalReceipients;
+        //Email address is validated.
+        if ($email->AdditionalReceipients()->exists()) {
+            $additionalRecipients = array_merge($additionalRecipients, $email->AdditionalReceipients()->toArray());
+        }
         foreach ($additionalRecipients as $additionalRecipient) {
             if ($additionalRecipient instanceof EmailAddress) {
-                $addTo = $additionalRecipient->getMailTo();
-                if ($addTo === null) {
+                $to = $additionalRecipient->getMailTo();
+                if ($to === null) {
                     continue;
                 }
             } elseif (Email::is_valid_address($additionalRecipient)) {
-                $addTo = $additionalRecipient;
+                $to = $additionalRecipient;
             } else {
                 continue;
             }
-            self::send_email($addTo, $subject, $htmlText, $attachments, $replyTo, $replyToName);
+            self::send_email($to, $subject, $htmlText, $attachments);
         }
         
         $additionalReceipients = [];
-        ShopEmail::singleton()->extend('addAdditionalRecipients', $additionalReceipients, $to);
+        ShopEmail::singleton()->extend('addAdditionalRecipients', $additionalReceipients);
         if (is_array($additionalReceipients)) {
             foreach ($additionalReceipients as $recipient) {
-                self::send_email($recipient, $subject, $htmlText, $attachments, $replyTo, $replyToName);
+                self::send_email($recipient, $subject, $htmlText, $attachments);
             }
         }
         if ($originalLocale !== null) {
@@ -826,12 +646,13 @@ class ShopEmail extends DataObject implements PermissionProvider
      * @param string $subject     Subject
      * @param string $content     Content
      * @param array  $attachments Attachments
-     * @param string $replyTo     Reply to address
-     * @param string $replyToName Reply to name
      * 
      * @return bool
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 31.08.2018
      */
-    public static function send_email($recipient, string $subject, string $content, array $attachments = null, string $replyTo = null, string $replyToName = null) : bool
+    public static function send_email($recipient, string $subject, string $content, array $attachments = null) : bool
     {
         if (Director::isDev()) {
             $devEmailRecipient = self::config()->get('dev_email_recipient');
@@ -854,23 +675,15 @@ class ShopEmail extends DataObject implements PermissionProvider
         ) {
             return false;
         }
-        $sender = Config::EmailSender();
-        ShopEmail::singleton()->extend('updateSendEmail', $sender, $recipient, $subject, $content);
         $email = Email::create(
-            $sender,
+            Config::EmailSender(),
             $recipient,
             $subject,
             $content
         );
-        if ($replyTo !== null) {
-            $email->setReplyTo($replyTo, $replyToName);
-        }
         $email->setFrom(Config::EmailSender(), Config::EmailSenderName());
         if (!is_null($attachments)) {
             self::attachFiles($email, $attachments);
-        }
-        if (self::config()->disable_email_transport === true) {
-            return false;
         }
         return $email->send();
     }
@@ -900,13 +713,13 @@ class ShopEmail extends DataObject implements PermissionProvider
                         $attachedFilename   = basename($attachment);
                         $mimetype           = null;
                     }
-                    if (file_exists((string) $filename)) {
+                    if (file_exists($filename)) {
                         $email->addAttachment($filename, $attachedFilename, $mimetype);
                     }
                 }
             } else {
                 $filename = str_replace('//', '/', $attachments);
-                if (file_exists((string) $filename)) {
+                if (file_exists($filename)) {
                     $email->addAttachment($filename, basename($filename));
                 }
             }
@@ -1016,28 +829,5 @@ class ShopEmail extends DataObject implements PermissionProvider
             }
         }
         return $finalStyle;
-    }
-    
-    /**
-     * Returns the template variables.
-     * 
-     * @return array
-     */
-    public function getVariables() : array
-    {
-        return $this->variables;
-    }
-    
-    /**
-     * Sets the template variables.
-     * 
-     * @param array $variables Template variables
-     * 
-     * @return ShopEmail
-     */
-    public function setVariables(array $variables) : ShopEmail
-    {
-        $this->variables = $variables;
-        return $this;
     }
 }

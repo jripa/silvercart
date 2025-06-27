@@ -421,9 +421,9 @@ class CheckoutStepController extends \PageController
     /**
      * Returns the invoice address set in checkout
      *
-     * @return Address|null
+     * @return Address 
      */
-    public function getInvoiceAddress() : ?Address
+    public function getInvoiceAddress()
     {
         return $this->getAddress('InvoiceAddress');
     }
@@ -431,9 +431,9 @@ class CheckoutStepController extends \PageController
     /**
      * Returns the shipping address set in checkout
      *
-     * @return Address|null
+     * @return Address
      */
-    public function getShippingAddress() : ?Address
+    public function getShippingAddress()
     {
         return $this->getAddress('ShippingAddress');
     }
@@ -443,11 +443,11 @@ class CheckoutStepController extends \PageController
      *
      * @param string $type The type to use
      * 
-     * @return Address|null
+     * @return \SilverCart\Model\Customer\Address
      */
-    public function getAddress(string $type) : ?Address
+    public function getAddress(string $type)
     {
-        $address  = null;
+        $address  = false;
         $checkout = $this->getCheckout();
         /* @var $checkout \SilverCart\Checkout\Checkout */
         $addressData = $checkout->getDataValue($type);
@@ -479,25 +479,14 @@ class CheckoutStepController extends \PageController
     }
     
     /**
-     * Returns the step number for the given $stepClassName.
-     * 
-     * @param string $stepClassName Step class name
-     * 
-     * @return int
-     */
-    public function getStepNumberFor(string $stepClassName) : int
-    {
-        return (int) array_search($stepClassName, $this->getCheckout()->getStepList()) + 1;
-    }
-    
-    /**
      * Returns the address step number.
      * 
      * @return int
      */
     public function getAddressStepNumber() : int
     {
-        return $this->getStepNumberFor(CheckoutStep2::class);
+        $stepNumber = 2;
+        return $stepNumber;
     }
     
     /**
@@ -507,7 +496,8 @@ class CheckoutStepController extends \PageController
      */
     public function getShipmentStepNumber() : int
     {
-        return $this->getStepNumberFor(CheckoutStep3::class);
+        $stepNumber = 3;
+        return $stepNumber;
     }
     
     /**
@@ -517,7 +507,8 @@ class CheckoutStepController extends \PageController
      */
     public function getPaymentStepNumber() : int
     {
-        return $this->getStepNumberFor(CheckoutStep4::class);
+        $stepNumber = 4;
+        return $stepNumber;
     }
     
     /**
@@ -527,7 +518,8 @@ class CheckoutStepController extends \PageController
      */
     public function getLastStepNumber() : int
     {
-        return $this->getStepNumberFor(CheckoutStep5::class);
+        $stepNumber = 5;
+        return $stepNumber;
     }
     
     /**
@@ -537,7 +529,7 @@ class CheckoutStepController extends \PageController
      */
     public function getAddressStepLink() : string
     {
-        return $this->Link("step/{$this->getAddressStepNumber()}");
+        return $this->Link('step/' . $this->getAddressStepNumber());
     }
     
     /**
@@ -547,7 +539,7 @@ class CheckoutStepController extends \PageController
      */
     public function getShipmentStepLink() : string
     {
-        return $this->Link("step/{$this->getShipmentStepNumber()}");
+        return $this->Link('step/' . $this->getShipmentStepNumber());
     }
     
     /**
@@ -557,7 +549,7 @@ class CheckoutStepController extends \PageController
      */
     public function getPaymentStepLink() : string
     {
-        return $this->Link("step/{$this->getPaymentStepNumber()}");
+        return $this->Link('step/' . $this->getPaymentStepNumber());
     }
     
     /**
@@ -567,7 +559,7 @@ class CheckoutStepController extends \PageController
      */
     public function getLastStepLink() : string
     {
-        return $this->Link("step/{$this->getLastStepNumber()}");
+        return $this->Link('step/' . $this->getLastStepNumber());
     }
     
     /**
@@ -605,7 +597,7 @@ class CheckoutStepController extends \PageController
      * During the checkout process the user may not be able to alter the
      * shopping cart.
      *
-     * @return bool
+     * @return boolean false
      */
     public function getEditableShoppingCart() : bool
     {

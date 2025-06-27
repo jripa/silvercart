@@ -2,26 +2,24 @@
 
 namespace SilverCart\Model\Pages;
 
-use Page;
+use SilverCart\Dev\Tools;
 use SilverCart\Model\Pages\DownloadPage;
 use SilverStripe\Control\Controller;
 use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\FieldType\DBText;
 use SilverStripe\View\ArrayData;
-use function _t;
 
 /**
  * DownloadPageHolder.
  *
  * @package SilverCart
- * @subpackage Model\Pages
+ * @subpackage Model_Pages
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 27.09.2017
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class DownloadPageHolder extends Page
+class DownloadPageHolder extends \Page
 {
     /**
      * Configuration property to enable the download search.
@@ -43,12 +41,26 @@ class DownloadPageHolder extends Page
     private static $allowed_children = [
         DownloadPage::class,
     ];
+    
     /**
-     * Class attached to page icons in the CMS page tree. Also supports font-icon set.
+     * returns the singular name
      * 
-     * @var string
+     * @return string
      */
-    private static $icon_class = 'font-icon-p-download';
+    public function singular_name() : string
+    {
+        return Tools::singular_name_for($this);
+    }
+    
+    /**
+     * returns the plural name
+     * 
+     * @return string
+     */
+    public function plural_name() : string
+    {
+        return Tools::plural_name_for($this);
+    }
     
     /**
      * Returns a list of breadcrumbs for the current page.
@@ -91,33 +103,6 @@ class DownloadPageHolder extends Page
             );
         }
         return ArrayList::create(array_reverse($pages));
-    }
-    
-    /**
-     * Uses the children of MetaNavigationHolder to render a subnavigation
-     * with the SilverCart/Model/Pages/Includes/SubNavigation.ss template.
-     * 
-     * @param string $identifierCode param only added because it exists on parent::getSubNavigation
-     *                               to avoid strict notice
-     *
-     * @return DBHTMLText
-     */
-    public function getSubNavigation(string $identifierCode = self::IDENTIFIER_PRODUCT_GROUP_HOLDER) : DBHTMLText
-    {
-        $subNavigation = null;
-        $parent        = $this->Parent();
-        while (is_null($subNavigation)
-            && $parent->exists()
-        ) {
-            if ($parent instanceof MyAccountHolder) {
-                $subNavigation = $parent->getSubNavigation($identifierCode);
-            }
-            $parent = $parent->Parent();
-        }
-        if (is_null($subNavigation)) {
-            $subNavigation = parent::getSubNavigation($identifierCode);
-        }
-        return $subNavigation;
     }
     
     /**

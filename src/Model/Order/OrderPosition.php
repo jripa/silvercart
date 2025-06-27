@@ -2,29 +2,19 @@
 
 namespace SilverCart\Model\Order;
 
-use Moo\HasOneSelector\Form\Field as HasOneSelector;
 use SilverCart\Dev\Tools;
-use SilverCart\Extensions\Model\DataValuable;
 use SilverCart\Model\Order\Order;
-use SilverCart\Model\Pages\OrderHolder;
 use SilverCart\Model\Pages\Page;
 use SilverCart\Model\Product\Product;
 use SilverCart\Model\Product\QuantityUnit;
-use SilverCart\ORM\ExtensibleDataObject;
-use SilverCart\ORM\FieldType\DBMoney as SilverCartDBMoney;
+use SilverCart\ORM\DataObjectExtension;
 use SilverCart\ORM\Filters\DateRangeSearchFilter;
-use SilverCart\View\RenderableDataObject;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\Forms\TextField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\FieldType\DBMoney;
-use SilverStripe\ORM\FieldType\DBText;
 use SilverStripe\ORM\Filters\PartialMatchFilter;
-use SilverStripe\Security\Member;
-use Symbiote\GridFieldExtensions\GridFieldTitleHeader;
-use function _t;
 
 /**
  * The OrderPosition object.
@@ -36,33 +26,29 @@ use function _t;
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  * 
- * @property SilverCartDBMoney $Price                              Price (single)
- * @property SilverCartDBMoney $PriceTotal                         Price total
- * @property bool              $isChargeOrDiscount                 Is charge or discount?
- * @property bool              $isIncludedInTotal                  Is included in total?
- * @property string            $chargeOrDiscountModificationImpact Charge or discount modification impact
- * @property float             $Tax                                Tax
- * @property float             $TaxTotal                           Tax total
- * @property float             $TaxRate                            Tax rate
- * @property string            $ProductDescription                 Product description
- * @property float             $Quantity                           Quantity
- * @property string            $Title                              Title
- * @property string            $ProductNumber                      Product number
- * @property int               $numberOfDecimalPlaces              Number of decimal places
- * @property bool              $IsNonTaxable                       Is non taxable
- * @property int               $ExternalID                         External ID
- * @property int               $OrderID                            Order ID
- * @property int               $ProductID                          Product ID
+ * @property \SilverCart\ORM\FieldType\DBMoney $Price                              Price (single)
+ * @property \SilverCart\ORM\FieldType\DBMoney $PriceTotal                         Price total
+ * @property bool                              $isChargeOrDiscount                 Is charge or discount?
+ * @property bool                              $isIncludedInTotal                  Is included in total?
+ * @property string                            $chargeOrDiscountModificationImpact Charge or discount modification impact
+ * @property float                             $Tax                                Tax
+ * @property float                             $TaxTotal                           Tax total
+ * @property float                             $TaxRate                            Tax rate
+ * @property string                            $ProductDescription                 Product description
+ * @property float                             $Quantity                           Quantity
+ * @property string                            $Title                              Title
+ * @property string                            $ProductNumber                      Product number
+ * @property int                               $numberOfDecimalPlaces              Number of decimal places
+ * @property bool                              $IsNonTaxable                       Is non taxable
+ * @property int                               $OrderID                            Order ID
+ * @property int                               $ProductID                          Product ID
  * 
  * @method Order   Order()   Returns the related Order.
  * @method Product Product() Returns the related Product.
- * 
- * @mixin DataValuable
  */
 class OrderPosition extends DataObject
 {
-    use ExtensibleDataObject;
-    use RenderableDataObject;
+    use \SilverCart\ORM\ExtensibleDataObject;
     /**
      * Indicates whether changes and creations of order positions should
      * be logged or not.
@@ -95,8 +81,8 @@ class OrderPosition extends DataObject
      * @var array
      */
     private static $db = [
-        'Price'                              => SilverCartDBMoney::class,
-        'PriceTotal'                         => SilverCartDBMoney::class,
+        'Price'                              => \SilverCart\ORM\FieldType\DBMoney::class,
+        'PriceTotal'                         => \SilverCart\ORM\FieldType\DBMoney::class,
         'isChargeOrDiscount'                 => 'Boolean(0)',
         'isIncludedInTotal'                  => 'Boolean(0)',
         'chargeOrDiscountModificationImpact' => "Enum('none,productValue,totalValue','none')",
@@ -109,7 +95,6 @@ class OrderPosition extends DataObject
         'ProductNumber'                      => 'Varchar',
         'numberOfDecimalPlaces'              => 'Int',
         'IsNonTaxable'                       => 'Boolean(0)',
-        'ExternalID'                         => 'Varchar(64)',
     ];
     /**
      * 1:n relations
@@ -139,14 +124,6 @@ class OrderPosition extends DataObject
      * @var string
      */
     private static $table_name = 'SilvercartOrderPosition';
-    /**
-     * Extensions
-     *
-     * @var string[]
-     */
-    private static $extensions = [
-        DataValuable::class,
-    ];
     /**
      * Grant API access on this item.
      *
@@ -208,9 +185,12 @@ class OrderPosition extends DataObject
      * 
      * @param Member $member current member
      *
-     * @return bool
+     * @return boolean
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 13.07.2012
      */
-    public function canView($member = null) : bool
+    public function canView($member = null)
     {
         return $this->Order()->canView($member);
     }
@@ -220,9 +200,12 @@ class OrderPosition extends DataObject
      * 
      * @param Member $member current member
      *
-     * @return bool
+     * @return boolean
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 13.07.2012
      */
-    public function canEdit($member = null) : bool
+    public function canEdit($member = null)
     {
         return $this->Order()->canEdit($member);
     }
@@ -232,32 +215,14 @@ class OrderPosition extends DataObject
      * 
      * @param Member $member current member
      *
-     * @return bool
+     * @return boolean
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 13.07.2012
      */
-    public function canDelete($member = null) : bool
+    public function canDelete($member = null)
     {
         return $this->Order()->canDelete($member);
-    }
-
-    /**
-     * Indicates wether the product can be reordered.
-     *
-     * @param Member|null $member Member
-     *
-     * @return bool
-     */
-    public function canReorder(Member|null $member = null) : bool
-    {
-        $extended = $this->extendedCan('canReorder', $member);
-        if ($extended !== null) {
-            return $extended;
-        }
-        $holder = Page::PageByIdentifierCode('SilvercartOrderHolder');
-        $can    = $holder instanceof OrderHolder
-               && $holder->AllowReorder
-               && $this->Product()->canAddToCart();
-        $this->extend('updateCanReorder', $can);
-        return $can;
     }
     
     /**
@@ -268,17 +233,9 @@ class OrderPosition extends DataObject
     public function exportColumns() : array
     {
         $exportColumns = [];
-        $this->extend('updateExportColumns', $exportColumns);
+        $this->owner->extend('updateExportColumns', $exportColumns);
         if (empty($exportColumns)) {
-            $exportColumns = array_merge(
-                    [
-                        'Order.Created' => $this->Order()->fieldLabel('Created'),
-                    ],
-                    $this->summaryFields()
-            );
-            if (array_key_exists('Order.CreatedNice', $exportColumns)) {
-                unset($exportColumns['Order.CreatedNice']);
-            }
+            $exportColumns = $this->summaryFields();
         }
         return $exportColumns;
     }
@@ -287,11 +244,14 @@ class OrderPosition extends DataObject
      * Summaryfields for display in tables.
      *
      * @return array
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 15.06.2012
      */
     public function summaryFields() : array
     {
         $summaryFields = [
-            'Order.CreatedNice'           => $this->Order()->fieldLabel('Created'),
+            'CreatedNice'                 => $this->Order()->fieldLabel('Created'),
             'Order.OrderNumber'           => $this->Order()->fieldLabel('OrderNumber'),
             'Order.Member.CustomerNumber' => $this->Order()->Member()->fieldLabel('CustomerNumber'),
             'ProductNumber'               => $this->fieldLabel('ProductNumber'),
@@ -459,7 +419,7 @@ class OrderPosition extends DataObject
     /**
      * returns the order positions Title with extensions
      *
-     * @return DBHTMLText
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
      */
     public function getFullTitle() : DBHTMLText
     {
@@ -480,7 +440,7 @@ class OrderPosition extends DataObject
     /**
      * returns the order positions Title with extensions
      *
-     * @return DBText
+     * @return \SilverStripe\ORM\FieldType\DBText
      */
     public function getShortDescription($numWords = 28)
     {
@@ -525,31 +485,26 @@ class OrderPosition extends DataObject
      */
     public function getCMSFields() : FieldList
     {
-        $this->beforeUpdateCMSFields(function(FieldList $fields) {
-            if (class_exists(HasOneSelector::class)) {
-                $orderField = HasOneSelector::create('Order', $this->fieldLabel('Order'), $this, Order::class)
-                        ->setLeftTitle($this->fieldLabel('Order'))
-                        ->removeAddable()
-                        ->removeLinkable();
-                $orderField->getConfig()
-                        ->removeComponentsByType(GridFieldDeleteAction::class)
-                        ->addComponent(new GridFieldTitleHeader());
-                $fields->replaceField('OrderID', $orderField);
-                $productField = HasOneSelector::create('Product', $this->fieldLabel('Product'), $this, Product::class)
-                        ->setLeftTitle($this->fieldLabel('Product'))
-                        ->removeAddable();
-                $productField->getConfig()
-                        ->removeComponentsByType(GridFieldDeleteAction::class)
-                        ->addComponent(new GridFieldTitleHeader());
-                $fields->replaceField('ProductID', $productField);
-            }
-            if (empty($this->ExternalID)) {
-                $fields->removeByName('ExternalID');
-            } else {
-                $fields->dataFieldByName('ExternalID')->setDescription($this->fieldLabel('ExternalIDDesc'));
-            }
-        });
-        return parent::getCMSFields();
+        $fields = DataObjectExtension::getCMSFields($this);
+        if ($this->exists()) {
+            $fields->makeFieldReadonly('Price');
+            $fields->makeFieldReadonly('PriceTotal');
+            $fields->makeFieldReadonly('Tax');
+            $fields->makeFieldReadonly('TaxTotal');
+            $fields->makeFieldReadonly('TaxRate');
+            $fields->makeFieldReadonly('Quantity');
+            $fields->makeFieldReadonly('ProductDescription');
+            $fields->makeFieldReadonly('Title');
+            $fields->makeFieldReadonly('ProductNumber');
+            $fields->makeFieldReadonly('isChargeOrDiscount');
+            $fields->makeFieldReadonly('chargeOrDiscountModificationImpact');
+            $fields->makeFieldReadonly('OrderID');
+            $fields->makeFieldReadonly('ProductID');
+            $fields->removeByName('isIncludedInTotal');
+            $fields->removeByName('numberOfDecimalPlaces');
+            $fields->removeByName('IsNonTaxable');
+        }
+        return $fields;
     }
 
     /**
@@ -572,7 +527,6 @@ class OrderPosition extends DataObject
         } elseif (!$this->objectCreated) {
             $this->saveChanges($changedFields);
         }
-        $this->Title = strip_tags((string) $this->Title);
         $this->extend('updateOnBeforeWrite', $changedFields, $this->doRecalculate);
         parent::onBeforeWrite();
     }
@@ -715,7 +669,7 @@ class OrderPosition extends DataObject
     /**
      * Returns additional tile information provided by plugins
      * 
-     * @return DBHTMLText
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
      *
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 23.04.2018
@@ -725,5 +679,18 @@ class OrderPosition extends DataObject
         $addToTitle = '';
         $this->extend('addToTitle', $addToTitle);
         return Tools::string2html($addToTitle);
+    }
+    
+    /**
+     * Returns the rendered position.
+     * 
+     * @param string $templateAddition Optional template name addition
+     * 
+     * @return DBHTMLText
+     */
+    public function forTemplate(string $templateAddition = '') : DBHTMLText
+    {
+        $addition = empty($templateAddition) ? '' : "_{$templateAddition}";
+        return $this->renderWith(static::class . $addition);
     }
 }

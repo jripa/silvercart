@@ -60,7 +60,7 @@ class Tax extends DataObject
      * @var array
      */
     private static $searchable_fields = [
-        'Rate',
+        'Rate'
     ];
     /**
      * cast fields to other SS data types
@@ -68,8 +68,8 @@ class Tax extends DataObject
      * @var array
      */
     private static $casting = [
-        'Title'           => 'Text',
-        'IsDefaultString' => 'Text',
+        'Title'             => 'Text',
+        'IsDefaultString'   => 'Text',
     ];
     /**
      * DB table name
@@ -178,10 +178,10 @@ class Tax extends DataObject
      */
     public function getTitle() : string
     {
-        if ($this->i18nTitle === null) {
+        if (is_null($this->i18nTitle)) {
             $this->i18nTitle = $this->getTranslationFieldValue('Title');
         }
-        return (string) $this->i18nTitle;
+        return $this->i18nTitle;
     }
     
     /**
@@ -249,10 +249,10 @@ class Tax extends DataObject
         } else {
             $rate = $overwritten[0];
         }
-        if ($rate === null) {
+        if (is_null($rate)) {
             $rate = 0;
         }
-        return (float) $rate;
+        return $rate;
     }
     
     /**

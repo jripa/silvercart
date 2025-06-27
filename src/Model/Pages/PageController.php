@@ -20,7 +20,6 @@ use SilverCart\Model\Pages\Page;
 use SilverCart\Model\Pages\ProductGroupHolder;
 use SilverCart\Model\Payment\PaymentMethod;
 use SilverCart\Model\Widgets\Widget;
-use SilverCart\View\MessageProvider;
 use SilverCart\View\Requirements_Backend;
 use SilverStripe\CMS\Controllers\ContentController;
 use SilverStripe\CMS\Controllers\ModelAsController;
@@ -36,13 +35,9 @@ use SilverStripe\ORM\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\PaginatedList;
-use SilverStripe\ORM\SS_List;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 use SilverStripe\View\Requirements;
-use TractorCow\Fluent\Model\Locale;
-use const RESOURCES_DIR;
-use function _t;
 
 /**
  * Standard Controller
@@ -56,9 +51,7 @@ use function _t;
  */
 class PageController extends ContentController
 {
-    use MessageProvider;
-    
-    public const SESSION_KEY_HTTP_REFERER = 'SilverCart.HttpReferer';
+    use \SilverCart\View\MessageProvider;
     /**
      * Prevents recurring rendering of this page's controller.
      *
@@ -94,16 +87,6 @@ class PageController extends ContentController
         i18n::config()->merge('default_locale', Tools::current_locale());
         i18n::set_locale(Tools::current_locale());
         parent::__construct($dataRecord);
-    }
-    
-    /**
-     * Blocks the requirement with the given $fileOrID.
-     * 
-     * @param string|int $fileOrID File name or ID to block
-     */
-    public function BlockRequirement(string $fileOrID) : void
-    {
-        Requirements::block($fileOrID);
     }
     
     /**
@@ -224,7 +207,6 @@ class PageController extends ContentController
         ) {
             return;
         }
-        $this->RequireCustomScript();
         $jsFilesExt = [];
         $this->extend('updateRequireExtendedJavaScript', $jsFilesExt);
         
@@ -233,16 +215,6 @@ class PageController extends ContentController
                 Requirements::javascript($file);
             }
         }
-    }
-    
-    /**
-     * Requires some custom JS script.
-     * 
-     * @return void
-     */
-    public function RequireCustomScript() : void
-    {
-        Requirements::customScript($this->renderWith(self::class . '_CustomScript', ['ResourcesDir' => RESOURCES_DIR]), 'SilverCart-Custom-Script');
     }
     
     /**
@@ -284,7 +256,7 @@ class PageController extends ContentController
      * Returns custom HTML code to place within the <head> tag, injected by
      * extensions.
      * 
-     * @return DBHTMLText
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
      * 
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 31.08.2018
@@ -300,7 +272,7 @@ class PageController extends ContentController
      * Returns custom HTML code to place right after the <body> tag, injected by
      * extensions.
      * 
-     * @return DBHTMLText
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
      * 
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 31.08.2018
@@ -316,7 +288,7 @@ class PageController extends ContentController
      * Returns custom HTML code to place right before the footer (first line in
      * Footer.ss) injected by extensions.
      * 
-     * @return DBHTMLText
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
      * 
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 31.08.2018
@@ -332,7 +304,7 @@ class PageController extends ContentController
      * Returns custom HTML code to place right before the closing </body> tag, 
      * injected by extensions.
      * 
-     * @return DBHTMLText
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
      * 
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 31.08.2018
@@ -375,16 +347,6 @@ class PageController extends ContentController
                 $this->httpError(403);
             }
         }
-        if ($this->SiteConfig()->MaintenanceModeIsEnabled(true)) {
-            $this->httpError(503);
-        }
-        $referer = Tools::Session()->get(self::SESSION_KEY_HTTP_REFERER);
-        if ($referer === null
-         && $this->getReferer() !== null
-        ) {
-            Tools::Session()->set(self::SESSION_KEY_HTTP_REFERER, $this->getReferer());
-            Tools::saveSession();
-        }
         if (array_key_exists($this->ID, self::$instanceMemorizer)) {
             parent::init();
             return;
@@ -423,16 +385,12 @@ class PageController extends ContentController
              && !($this instanceof RegistrationPageController)
              && !($this instanceof NewsletterPageController)
             ) {
-                $owerwriteOptInPending = false;
-                $this->extend('overwriteOptInPending', $owerwriteOptInPending);
-                if (!$owerwriteOptInPending) {
-                    $registrationPage = RegistrationPage::get()->first();
-                    if ($registrationPage instanceof RegistrationPage
-                     && $registrationPage->exists()
-                     && !$this->redirectedTo()
-                    ) {
-                        $this->redirect($registrationPage->Link('optinpending'));
-                    }
+                $registrationPage = RegistrationPage::get()->first();
+                if ($registrationPage instanceof RegistrationPage
+                 && $registrationPage->exists()
+                 && !$this->redirectedTo()
+                ) {
+                    $this->redirect($registrationPage->Link('optinpending'));
                 }
             } elseif ($registeredCustomer->Locale !== Tools::current_locale()) {
                 $registeredCustomer->Locale = Tools::current_locale();
@@ -481,7 +439,7 @@ class PageController extends ContentController
     {
         $form         = null;
         $translations = Tools::get_translations($this->data());
-        if ($translations instanceof SS_List
+        if ($translations instanceof \SilverStripe\ORM\SS_List
          && $translations->exists()
         ) {
             $form = ChangeLanguageForm::create($this);
@@ -584,8 +542,7 @@ class PageController extends ContentController
         $has      = false;
         $customer = Security::getCurrentUser();
         if ($customer instanceof Member) {
-            $has = $this->CurrentMembersOrders() !== null
-                && $this->CurrentMembersOrders()->exists();
+            $has = Order::get()->filter('MemberID', $customer->ID)->exists();
         }
         return $has;
     }
@@ -601,14 +558,10 @@ class PageController extends ContentController
     {
         $customer = Security::getCurrentUser();
         if ($customer instanceof Member) {
-            $filter = [
-                'MemberID' => $customer->ID,
-            ];
-            $this->extend('updateCurrentMembersOrdersFilter', $filter);
             if ($limit) {
-                $orders = Order::get()->filter($filter)->limit($limit);
+                $orders = Order::get()->filter('MemberID', $customer->ID)->limit($limit);
             } else {
-                $orders = Order::get()->filter($filter);
+                $orders = Order::get()->filter('MemberID', $customer->ID);
             }
             if (array_key_exists('oq', $_GET)) {
                 $query  = trim($_GET['oq']);
@@ -618,7 +571,7 @@ class PageController extends ContentController
                     'OrderPositions.ProductDescription:PartialMatch' => $query,
                     'OrderPositions.ProductNumber:PartialMatch'      => $query,
                 ];
-                $this->extend('updateCurrentMembersOrdersQueryFilter', $filter, $query);
+                $this->extend('updateCurrentMembersOrdersFilter', $filter, $query);
                 return $orders->filterAny($filter);
             }
             return $orders;
@@ -742,6 +695,54 @@ class PageController extends ContentController
     public static function PageByIdentifierCodeLink(string $identifierCode = Page::IDENTIFIER_FRONT_PAGE) : string
     {
         return Tools::PageByIdentifierCodeLink($identifierCode);
+    }
+
+    /**
+     * Uses the children of ProductGroupHolder to render a subnavigation
+     * with the SilverCart/Model/Pages/Includes/SubNavigation.ss template. This is the default sub-
+     * navigation.
+     *
+     * @param string $identifierCode The code of the parent page.
+     *
+     * @return \SilverStripe\ORM\FieldType\DBHTMLText
+     */
+    public function getSubNavigation(string $identifierCode = Page::IDENTIFIER_PRODUCT_GROUP_HOLDER) : DBHTMLText
+    {
+        $output = '';
+        $this->extend('updateSubNavigation', $output);
+        if (empty($output)) {
+            $isInformationPage = false;
+            $page = $this->data();
+            do {
+                if ($page instanceof MetaNavigationHolder) {
+                    $isInformationPage = true;
+                } else {
+                    $page = $page->Parent();
+                }
+            } while ($page->Parent()->exists()
+                  && !$isInformationPage);
+            if ($isInformationPage) {
+                $output = (string) ModelAsController::controller_for($page)->getSubNavigation();
+            } else {
+                $items            = [];
+                $productGroupPage = Tools::PageByIdentifierCode($identifierCode);
+
+                if ($productGroupPage) {
+                    foreach ($productGroupPage->Children() as $child) {
+                        if ($child->hasmethod('hasProductsOrChildren')
+                         && $child->hasProductsOrChildren()
+                        ) {
+                            $items[] = $child;
+                        }
+                    }
+                    $elements = [
+                        'SubElements' => ArrayList::create($items),
+                    ];
+                    $output = $this->customise($elements)->renderWith('SilverCart/Model/Pages/Includes/SubNavigation');
+                }
+            }
+        }
+        return Tools::string2html($output);
     }
 
     /**
@@ -1007,71 +1008,5 @@ class PageController extends ContentController
     public function LoginForm() : LoginForm
     {
         return LoginForm::create($this);
-    }
-    
-    /**
-     * Returns the referer link.
-     * The referer link is the link to the page the customer visited right before
-     * accessing the registration page.
-     * 
-     * @return string
-     */
-    public function RefererLink() : string
-    {
-        $link = Tools::Session()->get(self::SESSION_KEY_HTTP_REFERER);
-        return (string) $link;
-    }
-    
-    /**
-     * Returns the referer page.
-     * 
-     * @return SiteTree|null
-     */
-    public function RefererPage(string $link = null) : ?SiteTree
-    {
-        if ($link === null) {
-            $link = (string) Tools::Session()->get(self::SESSION_KEY_HTTP_REFERER);
-        }
-        $originalLink = $link;
-        $page         = $this->data();
-        $localeCode   = $page->getSourceQueryParam('Fluent.Locale');
-        $localeObj    = null;
-        if (is_string($localeCode)
-         && !empty($localeCode)
-        ) {
-            $localeObj = Locale::getByLocale($localeCode);
-        }
-        if (!($localeObj instanceof Locale)) {
-            $localeObj = Locale::getCurrentLocale();
-        }
-        if ($localeObj instanceof Locale) {
-            $URLSegment = $localeObj->getURLSegment();
-            if (!empty($URLSegment)) {
-                $relativeLink = Director::makeRelative($link);
-                if (strpos($relativeLink, "{$URLSegment}/") === 0) {
-                    $originalLink = substr($relativeLink, strlen("{$URLSegment}/"));
-                }
-            }
-
-        }
-        do {
-            $refererPage  = SiteTree::get_by_link($originalLink);
-            $parts        = explode('/', (string) $originalLink);
-            array_pop($parts);
-            $originalLink = implode('/', (array) $parts);
-        } while ($refererPage === null
-              && !empty($originalLink)
-        );
-        return $refererPage;
-    }
-    
-    /**
-     * Returns the content locale in a two character format.
-     * 
-     * @return string
-     */
-    public function ContentLocaleShort() : string
-    {
-        return (string) substr($this->ContentLocale(), 0, 2);
     }
 }

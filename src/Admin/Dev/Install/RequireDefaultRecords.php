@@ -712,7 +712,7 @@ class RequireDefaultRecords
      */
     public static function require_default_records()
     {
-        self::singleton()->requireDefaultRecords();
+        // self::singleton()->requireDefaultRecords();
     }
     
     /**
@@ -1303,7 +1303,7 @@ class RequireDefaultRecords
             $imageFolder->Name = 'test-images';
             $imageFolder->write();
             
-            if (!file_exists((string) $exampleDataDir)) {
+            if (!file_exists($exampleDataDir)) {
                 mkdir($exampleDataDir);
             }
             
@@ -1369,7 +1369,7 @@ class RequireDefaultRecords
                     $fileHash   = sha1_file($filePath);
                     $hashDir    = substr($fileHash, 0, 10);
                     $targetPath = $exampleDataDir . $hashDir;
-                    if (!file_exists((string) $targetPath)) {
+                    if (!file_exists($targetPath)) {
                         mkdir($targetPath);
                     }
                     copy(
@@ -1484,7 +1484,7 @@ class RequireDefaultRecords
             $fileHash   = sha1_file($filePath);
             $hashDir    = substr($fileHash, 0, 10);
             $targetPath = $exampleDataDir . $hashDir;
-            if (!file_exists((string) $targetPath)) {
+            if (!file_exists($targetPath)) {
                 mkdir($targetPath);
             }
             copy(

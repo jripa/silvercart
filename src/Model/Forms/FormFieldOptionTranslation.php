@@ -35,8 +35,7 @@ class FormFieldOptionTranslation extends DataObject
      * @var array
      */
     private static $db = [
-        'Title'   => 'Varchar',
-        'Content' => 'HTMLText',
+        'Title' => 'Varchar',
     ];
     /**
      * 1:1 or 1:n relationships.

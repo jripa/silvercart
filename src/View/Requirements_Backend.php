@@ -44,18 +44,6 @@ class Requirements_Backend extends SilverStripeRequirements_Backend
      */
     private static $force_combine_files_async = true;
     /**
-     * Determines whether to require JS files no async.
-     *
-     * @var bool
-     */
-    private static $force_combine_files_not_async = false;
-    /**
-     * Determines whether to disable minify.
-     *
-     * @var bool
-     */
-    private static $disable_minify = false;
-    /**
      * List of file names to skip combining files for.
      *
      * @var string[]
@@ -85,13 +73,10 @@ class Requirements_Backend extends SilverStripeRequirements_Backend
     public function __construct()
     {
         if (Director::isDev()) {
-            $this->setMinifyCombinedFiles(false);
+          //  $this->setMinifyCombinedFiles(false);
             $this->setWriteHeaderComment(true);
         }
-        if ((bool) $this->config()->disable_minify) {
-            $this->setMinifyCombinedFiles(false);
-        }
-        $this->setMinifier(Requirements_Minifier::create());
+        //$this->setMinifier(Requirements_Minifier::create());
     }
     
     /**
@@ -352,7 +337,7 @@ MESSAGE
                     $combinedData = '';
                     foreach ($fileList as $file) {
                         $filePath = Director::getAbsFile($file);
-                        if (!file_exists((string) $filePath)) {
+                        if (!file_exists($filePath)) {
                             throw new InvalidArgumentException("Combined file {$file} does not exist");
                         }
                         $fileContent = file_get_contents($filePath);
@@ -424,10 +409,6 @@ MESSAGE
             if (Director::isLive()
              && self::config()->get('force_combine_files_async')) {
                 $attributes['async'] = true;
-            } elseif (Director::isLive()
-                   && self::config()->get('force_combine_files_not_async')
-            ) {
-                $attributes['async'] = false;
             }
             if (!empty($attributes['async'])) {
                 $jsAttributes['async'] = $attributes['async'];

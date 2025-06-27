@@ -3,9 +3,6 @@
 namespace SilverCart\Admin\Controllers;
 
 use SilverCart\Dev\Tools;
-use SilverStripe\Admin\LeftAndMain as SilverStripeLeftAndMain;
-use SilverStripe\Security\Member;
-use function singleton;
 
 /**
  * LeftAndMain extension for SilverCart.
@@ -18,7 +15,7 @@ use function singleton;
  * @since 22.09.2017
  * @license see license file in modules root directory
  */
-class LeftAndMain extends SilverStripeLeftAndMain
+class LeftAndMain extends \SilverStripe\Admin\LeftAndMain
 {
     /**
      * The URL segment
@@ -32,8 +29,11 @@ class LeftAndMain extends SilverStripeLeftAndMain
      * and other definitions.
      * 
      * @return void
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.09.2018
      */
-    protected function init() : void
+    protected function init()
     {
         parent::init();
         $this->extend('updateInit');
@@ -46,8 +46,11 @@ class LeftAndMain extends SilverStripeLeftAndMain
      * @param callable $callback The callback to execute
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.09.2018
      */
-    protected function beforeUpdateInit(callable $callback) : void
+    protected function beforeUpdateInit($callback)
     {
         $this->beforeExtending('updateInit', $callback);
     }
@@ -59,8 +62,11 @@ class LeftAndMain extends SilverStripeLeftAndMain
      * @param callable $callback The callback to execute
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.09.2018
      */
-    protected function beforeUpdateEditForm(callable $callback) : void
+    protected function beforeUpdateEditForm($callback)
     {
         $this->beforeExtending('updateEditForm', $callback);
     }
@@ -68,15 +74,18 @@ class LeftAndMain extends SilverStripeLeftAndMain
     /**
      * title in the top bar of the CMS
      *
-     * @return string
+     * @return string 
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 19.02.2013
      */
-    public function SectionTitle() : string
+    public function SectionTitle()
     {
         $sectionTitle = parent::SectionTitle();
-        if (class_exists((string) $this->modelClass)) {
+        if (class_exists($this->modelClass)) {
             $sectionTitle = Tools::singular_name_for(singleton($this->modelClass));
         }
-        return (string) $sectionTitle;
+        return $sectionTitle;
     }
     
     /**
@@ -84,13 +93,16 @@ class LeftAndMain extends SilverStripeLeftAndMain
      * 
      * @param Member $member Member
      * 
-     * @return bool
+     * @return boolean
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 24.10.2017
      */
-    public function canView($member = null) : bool
+    public function canView($member = null)
     {
         if (get_class($this) === LeftAndMain::class) {
             return false;
         }
-        return (bool) parent::canView($member);
+        return parent::canView($member);
     }
 }

@@ -125,7 +125,7 @@ class BargainProductsWidget extends Widget
         ];
         $fetchMethodsField = $fields->dataFieldByName('fetchMethod');
         $fetchMethodsField->setSource($fetchMethods);
-        $fields->replaceField('GroupView', GroupViewHandler::getWidgetGroupViewDropdownField('GroupView', $this->fieldLabel('GroupView')));
+        $fields->replaceField('GroupView', GroupViewHandler::getGroupViewDropdownField('GroupView', $this->fieldLabel('GroupView')));
         
         return $fields;
     }
@@ -187,6 +187,9 @@ class BargainProductsWidget extends Widget
      * Returns a number of bargain products.
      * 
      * @return SS_List
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 27.03.2012
      */
     public function Elements()
     {
@@ -199,13 +202,13 @@ class BargainProductsWidget extends Widget
             if (Config::Pricetype() === Config::PRICE_TYPE_NET) {
                 $priceField = 'PriceNetAmount';
             }
-            $productStageTable = Product::singleton()->getStageTableName();
+            $productTable = Tools::get_table_name(Product::class);
             switch ($this->fetchMethod) {
                 case 'sortOrderAsc':
-                    $sort = "{$productStageTable}.MSRPriceAmount - {$productStageTable}.{$priceField} ASC";
+                    $sort = '"' . $productTable . '"."MSRPriceAmount" - "' . $productTable . '"."PriceGrossAmount" ASC';
                     break;
                 case 'sortOrderDesc':
-                    $sort = "{$productStageTable}.MSRPriceAmount - {$productStageTable}.{$priceField} DESC";
+                    $sort = '"' . $productTable . '"."MSRPriceAmount" - "' . $productTable . '"."PriceGrossAmount" DESC';
                     break;
                 case 'random':
                 default:
@@ -224,9 +227,12 @@ class BargainProductsWidget extends Widget
                     }
                 }
             }
-            $filter = "{$productStageTable}.MSRPriceAmount IS NOT NULL"
-                    . " AND {$productStageTable}.MSRPriceAmount > 0"
-                    . " AND {$productStageTable}.{$priceField} < {$productStageTable}.MSRPriceAmount";
+            $filter = sprintf(
+                            '"' . $productTable . '"."MSRPriceAmount" IS NOT NULL 
+                            AND "' . $productTable . '"."MSRPriceAmount" > 0
+                            AND "' . $productTable . '"."%s" < "' . $productTable . '"."MSRPriceAmount"',
+                            $priceField
+            );
             foreach ($this->listFilters as $listFilterIdentifier => $listFilter) {
                 $filter .= ' ' . $listFilter;
             }

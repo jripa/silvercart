@@ -13,7 +13,7 @@ use SilverStripe\Forms\FieldList;
  * page type to display search results.
  *
  * @package SilverCart
- * @subpackage Model\Pages
+ * @subpackage Model_Pages
  * @author Sebastian Diel <sdiel@pixeltricks.de>
  * @since 28.09.2017
  * @copyright 2017 pixeltricks GmbH
@@ -38,11 +38,11 @@ class SearchResultsPage extends ProductGroupPage
      */
     private static $allowed_children = 'none';
     /**
-     * Class attached to page icons in the CMS page tree. Also supports font-icon set.
-     * 
+     * We set a custom icon for this page type here
+     *
      * @var string
      */
-    private static $icon_class = 'font-icon-p-search';
+    private static $icon = "silvercart/silvercart:client/img/page_icons/metanavigation_page_search-file.gif";
     /**
      * Attributes.
      *
@@ -51,6 +51,28 @@ class SearchResultsPage extends ProductGroupPage
     private static $db = [
         'productsPerPage' => 'Int'
     ];
+    
+    /**
+     * Returns the translated singular name of the object. If no translation exists
+     * the class name will be returned.
+     * 
+     * @return string
+     */
+    public function singular_name() : string
+    {
+        return Tools::singular_name_for($this);
+    }
+
+    /**
+     * Returns the translated plural name of the object. If no translation exists
+     * the class name will be returned.
+     * 
+     * @return string
+     */
+    public function plural_name() : string
+    {
+        return Tools::plural_name_for($this); 
+    }
 
     /**
      * Field labels for display in tables.
@@ -58,6 +80,9 @@ class SearchResultsPage extends ProductGroupPage
      * @param boolean $includerelations A boolean value to indicate if the labels returned include relation fields
      *
      * @return array
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 26.09.2018
      */
     public function fieldLabels($includerelations = true) : array
     {
@@ -223,17 +248,13 @@ class SearchResultsPage extends ProductGroupPage
      */
     public static function getCurrentSearchQuery() : string
     {
-        $searchQuery          = '';
-        $searchQueryByRequest = null;
-        if (Controller::has_curr()) {
-            $searchQueryByRequest = Controller::curr()->getRequest()->getVar('q');
-            if (!is_null($searchQueryByRequest)) {
-                $searchQuery = $searchQueryByRequest;
-            } else {
-                $searchQuery = trim((string) Tools::Session()->get(self::SESSION_KEY_SEARCH_QUERY));
-            }
+        $searchQueryByRequest = Controller::curr()->getRequest()->getVar('q');
+        if (!is_null($searchQueryByRequest)) {
+            $searchQuery = $searchQueryByRequest;
+        } else {
+            $searchQuery = trim(Tools::Session()->get(self::SESSION_KEY_SEARCH_QUERY));
         }
-        return (string) $searchQuery;
+        return $searchQuery;
     }
     
     /**
@@ -256,7 +277,7 @@ class SearchResultsPage extends ProductGroupPage
      */
     public static function getCurrentSearchCategory() : string
     {
-        return trim((string) Tools::Session()->get(self::SESSION_KEY_SEARCH_CATEGORY));
+        return trim(Tools::Session()->get(self::SESSION_KEY_SEARCH_CATEGORY));
     }
     
     /**
@@ -279,7 +300,7 @@ class SearchResultsPage extends ProductGroupPage
      */
     public static function getCurrentSearchContext() : string
     {
-        return trim((string) Tools::Session()->get(self::SESSION_KEY_SEARCH_CONTEXT));
+        return trim(Tools::Session()->get(self::SESSION_KEY_SEARCH_CONTEXT));
     }
     
     /**

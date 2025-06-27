@@ -17,7 +17,7 @@ use TractorCow\Fluent\State\FluentState;
  * @copyright 2020 pixeltricks GmbH
  * @license see license file in modules root directory
  * 
- * @property CookieGroup $owner Owner
+ * @property \Broarm\CookieConsent\Model\CookieGroup $owner Owner
  */
 class CookieGroupExtension extends DataExtension
 {
@@ -26,15 +26,17 @@ class CookieGroupExtension extends DataExtension
      *
      * @var array
      */
-    private static array $db = [
+    private static $db = [
         'Sort' => 'Int',
     ];
     /**
      * Default sort.
      *
-     * @var string
+     * @var array
      */
-    private static string $default_sort = 'Sort ASC';
+    private static $default_sort = [
+        'Sort ASC',
+    ];
     
     /**
      * On before write.

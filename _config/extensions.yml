@@ -13,9 +13,6 @@ SilverStripe\Forms\DropdownField:
 SilverStripe\Forms\FormField:
   extensions:
     - SilverCart\Extensions\Forms\FormFields\FormFieldExtension
-SilverStripe\Forms\OptionsetField:
-  extensions:
-    - SilverCart\Extensions\Forms\FormFields\OptionsetFieldExtension
 SilverStripe\ORM\ArrayList:
     extensions:
         - SilverCart\Extensions\ORM\SS_ListExtension
@@ -31,12 +28,6 @@ SilverStripe\ORM\FieldType\DBString:
 SilverStripe\ORM\PaginatedList:
   extensions:
     - SilverCart\Extensions\ORM\PaginatedListExtension
-SilverStripe\Forms\GridField\GridField:
-  extensions:
-    - SilverCart\Extensions\Forms\GridField\GridFieldExtension
-SilverStripe\Forms\GridField\GridFieldDetailForm:
-  extensions:
-    - SilverCart\Extensions\Forms\GridField\GridFieldDetailFormExtension
 SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest:
   extensions:
     - SilverCart\Admin\Forms\GridField\GridFieldDetailForm_ItemRequest
@@ -61,9 +52,6 @@ SilverStripe\Security\Member:
 SilverStripe\Security\Member_Validator:
   extensions:
     - SilverCart\Model\Customer\CustomerValidator
-SilverStripe\Security\MemberAuthenticator\MemberAuthenticator:
-  extensions:
-    - SilverCart\Extensions\Security\MemberAuthenticator\MemberAuthenticatorExtension
 SilverStripe\Admin\ModelAdmin:
   extensions:
     - SilverCart\Admin\Controllers\ModelAdminExtension
@@ -82,6 +70,10 @@ SilverStripe\Security\MemberAuthenticator\LogoutHandler:
 SilverCart\Model\Pages\Page:
   extensions:
     - SilverCart\Model\Widgets\PageListWidgetPage
+SilverCart\Model\Product\Product:
+  extensions:
+    - SilverCart\ORM\DataObjectCacheExtension
+    - SilverCart\Model\Translation\TranslatableDataObjectExtension
 SilverStripe\ErrorPage\ErrorPageController:
   extensions:
     - SilverCart\Extensions\Pages\ErrorPageControllerExtension
@@ -94,6 +86,10 @@ SilverCart\Model\Pages\ProductGroupPage:
 SilverCart\Model\Pages\ProductGroupPageController:
   extensions:
     - SilverCart\View\GroupView\GroupViewExtension
+SilverCart\Model\Product\ProductTranslation:
+  extensions:
+    - SilverCart\ORM\DataObjectCacheExtension
+    - SilverCart\Model\Translation\TranslationExtension
 SilverCart\Model\Pages\SearchResultsPageController:
   extensions:
     - SilverCart\View\GroupView\GroupViewExtension

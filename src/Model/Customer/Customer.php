@@ -9,12 +9,10 @@ use SilverCart\Model\ShopEmail;
 use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Customer\Country;
 use SilverCart\Model\Customer\CustomerConfig;
-use SilverCart\Model\DataValue;
 use SilverCart\Model\Order\NumberRange;
 use SilverCart\Model\Order\Order;
 use SilverCart\Model\Order\OrderStatus;
 use SilverCart\Model\Order\ShoppingCart;
-use SilverCart\Model\Order\ShoppingCartPosition;
 use SilverCart\Model\Pages\CheckoutStepController;
 use SilverCart\Model\Pages\CustomerDataPage;
 use SilverCart\Model\Pages\Page;
@@ -22,7 +20,6 @@ use SilverCart\Model\Payment\PaymentMethod;
 use SilverCart\Model\Product\Product;
 use SilverCart\Model\Shipment\Zone;
 use SilverStripe\Admin\SecurityAdmin;
-use SilverStripe\CMS\Controllers\ModelAsController;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Forms\DropdownField;
@@ -42,7 +39,6 @@ use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\Filters\ExactMatchFilter;
 use SilverStripe\ORM\Filters\PartialMatchFilter;
 use SilverStripe\ORM\Search\SearchContext;
-use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Group;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
@@ -50,10 +46,8 @@ use SilverStripe\Security\Security;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\View\TemplateGlobalProvider;
 use SilverStripe\Core\Injector\Injector;
-use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\Security\IdentityStore;
 use SilverStripe\Security\LoginAttempt;
-use SilverStripe\Security\Member_Validator;
 use SilverStripe\Security\PermissionProvider;
 
 /**
@@ -186,41 +180,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
     }
     
     /**
-     * Returns whether to hide prices for the current customer context.
-     * 
-     * @return bool
-     */
-    public static function hidePrices() : bool
-    {
-        $hide = self::getCustomerGroups()->filter('HidePrices', true)->exists();
-        Member::singleton()->extend('updateHidePrices', $hide);
-        return $hide;
-    }
-    
-    /**
-     * Returns an optional information HTML content to show when hiding prices.
-     * 
-     * @return DBHTMLText
-     */
-    public static function hidePricesInfo() : DBHTMLText
-    {
-        $info = DBHTMLText::create();
-        if (self::hidePrices()) {
-            $groups = self::getCustomerGroups()->filter('HidePrices', true);
-            $html   = '';
-            foreach ($groups as $group) {
-                /* @var $group Group */
-                if ((string) $group->HidePricesInfo === '') {
-                    continue;
-                }
-                $html .= $group->HidePricesInfo;
-            }
-            $info->setValue($html);
-        }
-        return $info;
-    }
-
-    /**
      * Comma separated string of related group names
      *
      * @var string[]
@@ -235,7 +194,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
     /**
      * Group ID string to use as cache key part
      *
-     * @var string[]
+     * @var string
      */
     protected $groupCacheKey = [];
     /**
@@ -244,12 +203,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * @var bool[]
      */
     protected $doesNotHaveToPayTaxes = [];
-    /**
-     * Skip change password info message?
-     * 
-     * @var bool
-     */
-    protected bool $skipChangePasswordInfo = false;
     /**
      * DB attributes
      *
@@ -297,8 +250,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * @var array
      */
     private static $belongs_many_many = [
-        'PaymentMethods'       => PaymentMethod::class . '.ShowOnlyForUsers',
-        'HiddenPaymentMethods' => PaymentMethod::class . '.ShowNotForUsers',
+        'PaymentMethods' => PaymentMethod::class,
     ];
     /**
      * api access
@@ -341,7 +293,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      *
      * @var array
      */
-    private static $valid_customer_group_codes = [
+    public static $valid_customer_group_codes = [
         self::GROUP_CODE_B2C,
         self::GROUP_CODE_B2B,
         self::GROUP_CODE_ADMINISTRATORS,
@@ -464,7 +416,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
         $can     = $this->owner->MarkForDeletion
                 && strtotime("{$this->owner->MarkForDeletionDate} 00:00:00") < strtotime(date('Y-m-d 00:00:00'))
                 && !$this->hasOpenOrders();
-        $results = $this->owner->extend('updateCanBeDeletedAutomatically');
+        $results = $this->owner->extend('canBeDeletedAutomatically');
         if ($results
          && is_array($results)
         ) {
@@ -489,7 +441,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
     public function updateCMSFields(FieldList $fields) : void
     {
         $this->getCMSFieldsIsCalled[$this->owner->ID] = true;
-        $fields->insertBefore($fields->dataFieldByName('Salutation'), 'FirstName');
+        $fields->insertBefore('FirstName', $fields->dataFieldByName('Salutation'));
         $fields->dataFieldByName('Salutation')->setSource(Tools::getSalutationMap());
         
         $fields->removeByName('NewsletterOptInStatus');
@@ -512,12 +464,12 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
 
             $invoiceAddressField  = DropdownField::create('InvoiceAddressID',  $this->owner->fieldLabel('InvoiceAddress'),  $addresses);
             $shippingAddressField = DropdownField::create('ShippingAddressID', $this->owner->fieldLabel('ShippingAddress'), $addresses);
-            $fields->insertBefore($invoiceAddressField,  'Locale');
-            $fields->insertBefore($shippingAddressField, 'Locale');
+            $fields->insertBefore('Locale', $invoiceAddressField);
+            $fields->insertBefore('Locale', $shippingAddressField);
             $created = $this->owner->dbObject('Created');
             /* @var $created \SilverStripe\ORM\FieldType\DBDatetime */
             $createdNice = "{$created->Date()}, {$created->Time()}";
-            $fields->insertBefore(ReadonlyField::create('CreatedNice', Tools::field_label('DATE'), $createdNice), 'CustomerNumber');
+            $fields->insertBefore('CustomerNumber', ReadonlyField::create('CreatedNice', Tools::field_label('DATE'), $createdNice));
             if (class_exists(HasOneSelector::class)) {
                 $cartField = HasOneSelector::create('ShoppingCart', $this->owner->fieldLabel('ShoppingCartID'), $this->owner, ShoppingCart::class)->setLeftTitle($this->owner->fieldLabel('ShoppingCart'));
                 $cartField->removeAddable();
@@ -528,9 +480,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
             if (!$this->owner->PaymentMethods()->exists()) {
                 $fields->removeByName('PaymentMethods');
             }
-            if (!$this->owner->HiddenPaymentMethods()->exists()) {
-                $fields->removeByName('HiddenPaymentMethods');
-            }
             if ($this->getLoginAttempts()->exists()) {
                 $attemptField = GridField::create('LoginAttempts', LoginAttempt::singleton()->i18n_plural_name(), $this->getLoginAttempts(), GridFieldConfig_RecordEditor::create());
                 $attemptField->getConfig()->removeComponentsByType(GridFieldAddNewButton::class);
@@ -540,19 +489,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
                 $fields->addFieldToTab('Root.LoginAttempts', $attemptField);
             }
         }
-    }
-
-    /**
-     * Returns the CMS validator.
-     * 
-     * @return Member_Validator
-     */
-    public function getCMSValidator() : Member_Validator
-    {
-        $validator = Member_Validator::create();
-        $validator->setForMember($this->owner);
-        $this->owner->extend('updateValidator', $validator);
-        return $validator;
     }
     
     /**
@@ -586,7 +522,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
         $labels = array_merge(
                 $labels,
                 [
-                    'AllAddresses'                      => _t(Customer::class . '.AllAddresses', 'All addresses'),
                     'MarkForDeletion'                   => _t(Customer::class . '.MarkForDeletion', 'Mark for deletion'),
                     'MarkForDeletionReason'             => _t(Customer::class . '.MarkForDeletionReason', 'Mark for deletion reason'),
                     'Customer'                          => _t(Customer::class . '.Customer', 'Customer'),
@@ -608,7 +543,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
                     'Addresses'                         => Address::singleton()->plural_name(),
                     'Orders'                            => Order::singleton()->plural_name(),
                     'PaymentMethods'                    => PaymentMethod::singleton()->plural_name(),
-                    'HiddenPaymentMethods'              => _t(Customer::class . '.HiddenPaymentMethods', 'Hidden Payment Methods'),
                     'GroupNames'                        => _t(Customer::class . '.TYPE', 'type'),
                     'AddressCountry'                    => Country::singleton()->singular_name(),
                     'IsBusinessAccount'                 => _t(Customer::class . '.ISBUSINESSACCOUNT', 'Is business account'),
@@ -636,23 +570,29 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * @param array &$fields The searchable fields from the decorated object
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>,
+     *         Sascha Koehler <skoehler@pixeltricks.de>
+     * @since 25.06.2014
      */
-    public function updateSearchableFields(array &$fields) : void
-    {
-        $address = Address::singleton();
-        $fields  = array_merge(
+    public function updateSearchableFields(&$fields) {
+        $address = new Address();
+        
+        $addressesCountryFilter = [
+            'Addresses.CountryID' => [
+                'title'     => $address->fieldLabel('Country'),
+                'filter'    => ExactMatchFilter::class,
+                'field'     => new DropdownField('Addresses.CountryID', $address->fieldLabel('Country'), Country::getPrioritiveDropdownMap(false, '')),
+            ],
+        ];
+        
+        $fields = array_merge(
+                $fields,
                 [
                     'CustomerNumber' => [
                         'title'     => $this->owner->fieldLabel('CustomerNumber'),
                         'filter'    => PartialMatchFilter::class,
                     ],
-                    'ID' => [
-                        'title'     => $this->owner->fieldLabel('ID'),
-                        'filter'    => PartialMatchFilter::class,
-                    ],
-                ],
-                $fields,
-                [
                     'FirstName' => [
                         'title'     => $this->owner->fieldLabel('FirstName'),
                         'filter'    => PartialMatchFilter::class,
@@ -665,106 +605,89 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
                         'title'     => $this->owner->fieldLabel('SubscribedToNewsletter'),
                         'filter'    => ExactMatchFilter::class,
                     ],
-                    'Addresses.Company' => [
-                        'title'     => "{$this->owner->fieldLabel('AllAddresses')}: {$address->fieldLabel('Company')}",
-                        'filter'    => PartialMatchFilter::class,
-                    ],
                     'Addresses.FirstName' => [
-                        'title'     => "{$this->owner->fieldLabel('AllAddresses')}: {$address->fieldLabel('FirstName')}",
+                        'title'     => $address->fieldLabel('FirstName'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'Addresses.Surname' => [
-                        'title'     => "{$this->owner->fieldLabel('AllAddresses')}: {$address->fieldLabel('Surname')}",
+                        'title'     => $address->fieldLabel('Surname'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'Addresses.Street' => [
-                        'title'     => "{$this->owner->fieldLabel('AllAddresses')}: {$address->fieldLabel('Street')}",
+                        'title'     => $address->fieldLabel('Street'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'Addresses.StreetNumber' => [
-                        'title'     => "{$this->owner->fieldLabel('AllAddresses')}: {$address->fieldLabel('StreetNumber')}",
+                        'title'     => $address->fieldLabel('StreetNumber'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'Addresses.Postcode' => [
-                        'title'     => "{$this->owner->fieldLabel('AllAddresses')}: {$address->fieldLabel('Postcode')}",
+                        'title'     => $address->fieldLabel('Postcode'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'Addresses.City' => [
-                        'title'     => "{$this->owner->fieldLabel('AllAddresses')}: {$address->fieldLabel('City')}",
+                        'title'     => $address->fieldLabel('City'),
                         'filter'    => PartialMatchFilter::class,
-                    ],
-                    'Addresses.CountryID' => [
-                        'title'     => "{$this->owner->fieldLabel('AllAddresses')}: {$address->fieldLabel('Country')}",
-                        'filter'    => ExactMatchFilter::class,
-                        'field'     => DropdownField::create('Addresses.CountryID', $address->fieldLabel('Country'), Country::getPrioritiveDropdownMap(false, '')),
                     ],
                 ],
+                $addressesCountryFilter,
                 [
-                    'InvoiceAddress.Company' => [
-                        'title'     => "{$this->owner->fieldLabel('InvoiceAddress')}: {$address->fieldLabel('Company')}",
-                        'filter'    => PartialMatchFilter::class,
-                    ],
                     'InvoiceAddress.FirstName' => [
-                        'title'     => "{$this->owner->fieldLabel('InvoiceAddress')}: {$address->fieldLabel('FirstName')}",
+                        'title'     => $address->fieldLabel('FirstName'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'InvoiceAddress.Surname' => [
-                        'title'     => "{$this->owner->fieldLabel('InvoiceAddress')}: {$address->fieldLabel('Surname')}",
+                        'title'     => $address->fieldLabel('Surname'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'InvoiceAddress.Street' => [
-                        'title'     => "{$this->owner->fieldLabel('InvoiceAddress')}: {$address->fieldLabel('Street')}",
+                        'title'     => $address->fieldLabel('Street'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'InvoiceAddress.StreetNumber' => [
-                        'title'     => "{$this->owner->fieldLabel('InvoiceAddress')}: {$address->fieldLabel('StreetNumber')}",
+                        'title'     => $address->fieldLabel('StreetNumber'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'InvoiceAddress.Postcode' => [
-                        'title'     => "{$this->owner->fieldLabel('InvoiceAddress')}: {$address->fieldLabel('Postcode')}",
+                        'title'     => $address->fieldLabel('Postcode'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'InvoiceAddress.City' => [
-                        'title'     => "{$this->owner->fieldLabel('InvoiceAddress')}: {$address->fieldLabel('City')}",
+                        'title'     => $address->fieldLabel('City'),
                         'filter'    => PartialMatchFilter::class,
                     ],
-                    'InvoiceAddress.CountryID' => [
-                        'title'     => "{$this->owner->fieldLabel('InvoiceAddress')}: {$address->fieldLabel('Country')}",
+                    'InvoiceAddress.Country.ID' => [
+                        'title'     => $address->fieldLabel('Country'),
                         'filter'    => ExactMatchFilter::class,
-                        'field'     => DropdownField::create('InvoiceAddress.CountryID', $address->fieldLabel('Country'), Country::getPrioritiveDropdownMap(false, '')),
                     ],
-                    'ShippingAddress.Company' => [
-                        'title'     => "{$this->owner->fieldLabel('ShippingAddress')}: {$address->fieldLabel('Company')}",
-                        'filter'    => PartialMatchFilter::class,
-                    ],
+                    
                     'ShippingAddress.FirstName' => [
-                        'title'     => "{$this->owner->fieldLabel('ShippingAddress')}: {$address->fieldLabel('FirstName')}",
+                        'title'     => $address->fieldLabel('FirstName'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'ShippingAddress.Surname' => [
-                        'title'     => "{$this->owner->fieldLabel('ShippingAddress')}: {$address->fieldLabel('Surname')}",
+                        'title'     => $address->fieldLabel('Surname'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'ShippingAddress.Street' => [
-                        'title'     => "{$this->owner->fieldLabel('ShippingAddress')}: {$address->fieldLabel('Street')}",
+                        'title'     => $address->fieldLabel('Street'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'ShippingAddress.StreetNumber' => [
-                        'title'     => "{$this->owner->fieldLabel('ShippingAddress')}: {$address->fieldLabel('StreetNumber')}",
+                        'title'     => $address->fieldLabel('StreetNumber'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'ShippingAddress.Postcode' => [
-                        'title'     => "{$this->owner->fieldLabel('ShippingAddress')}: {$address->fieldLabel('Postcode')}",
+                        'title'     => $address->fieldLabel('Postcode'),
                         'filter'    => PartialMatchFilter::class,
                     ],
                     'ShippingAddress.City' => [
-                        'title'     => "{$this->owner->fieldLabel('ShippingAddress')}: {$address->fieldLabel('City')}",
+                        'title'     => $address->fieldLabel('City'),
                         'filter'    => PartialMatchFilter::class,
                     ],
-                    'ShippingAddress.CountryID' => [
-                        'title'     => "{$this->owner->fieldLabel('ShippingAddress')}: {$address->fieldLabel('Country')}",
+                    'ShippingAddress.Country.ID' => [
+                        'title'     => $address->fieldLabel('Country'),
                         'filter'    => ExactMatchFilter::class,
-                        'field'     => DropdownField::create('ShippingAddress.CountryID', $address->fieldLabel('Country'), Country::getPrioritiveDropdownMap(false, '')),
                     ],
                 ]
         );
@@ -864,7 +787,13 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * @return \SilverStripe\ORM\FieldType\DBHTMLText
      */
     public function getShippingAddressSummary() {
-        return $this->owner->ShippingAddress()->SummaryHTML;
+        $shippingAddressSummary = '';
+        $shippingAddressSummary .= $this->owner->ShippingAddress()->FirstName . ' ' . $this->owner->ShippingAddress()->Surname . "<br/>" . PHP_EOL;
+        $shippingAddressSummary .= $this->owner->ShippingAddress()->Street . ' ' . $this->owner->ShippingAddress()->StreetNumber . "<br/>" . PHP_EOL;
+        $shippingAddressSummary .= $this->owner->ShippingAddress()->Addition == '' ? '' : $this->owner->ShippingAddress()->Addition . "<br/>" . PHP_EOL;
+        $iso2Raw = $this->owner->ShippingAddress()->Country()->ISO2 ?? '';
+        $shippingAddressSummary .= strtoupper($iso2Raw) . '-' . $this->owner->ShippingAddress()->Postcode . ' ' . $this->owner->ShippingAddress()->City . "<br/>" . PHP_EOL;
+        return Tools::string2html($shippingAddressSummary);
     }
 
     /**
@@ -872,9 +801,14 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      *
      * @return \SilverStripe\ORM\FieldType\DBHTMLText
      */
-    public function getInvoiceAddressSummary() : DBHTMLText
-    {
-        return $this->owner->InvoiceAddress()->SummaryHTML;
+    public function getInvoiceAddressSummary() {
+        $invoiceAddressSummary = '';
+        $invoiceAddressSummary .= $this->owner->InvoiceAddress()->FirstName . ' ' . $this->owner->InvoiceAddress()->Surname . "<br/>" . PHP_EOL;
+        $invoiceAddressSummary .= $this->owner->InvoiceAddress()->Street . ' ' . $this->owner->InvoiceAddress()->StreetNumber . "<br/>" . PHP_EOL;
+        $invoiceAddressSummary .= $this->owner->InvoiceAddress()->Addition == '' ? '' : $this->owner->InvoiceAddress()->Addition . "<br/>" . PHP_EOL;
+        $iso2 = $this->owner->InvoiceAddress()->Country()->ISO2 ?? '';
+        $invoiceAddressSummary .= strtoupper($iso2) . '-' . $this->owner->InvoiceAddress()->Postcode . ' ' . $this->owner->InvoiceAddress()->City . "<br/>" . PHP_EOL;
+        return Tools::string2html($invoiceAddressSummary);
     }
     
     // ------------------------------------------------------------------------
@@ -1007,22 +941,33 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
     
     /**
      * Returns whether the current customer is a registered one.
-     * Alias for @see $this->isValidCustomer()
      * 
-     * @return bool
+     * @return boolean
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.04.2015
      */
-    public function isRegisteredCustomer() : bool
+    public function isRegisteredCustomer()
     {
-        return $this->isValidCustomer();
+        $isRegisteredCustomer = false;
+        if ($this->owner->Groups()->find('Code', self::default_customer_group_code())
+         || $this->owner->Groups()->find('Code', self::default_customer_group_code_b2b())
+         || $this->owner->Groups()->find('Code', self::GROUP_CODE_ADMINISTRATORS)
+        ) {
+            $isRegisteredCustomer = true;
+        }
+        return $isRegisteredCustomer;
     }
     
     /**
      * Returns whether the current customer is a anonymous one.
      * 
-     * @return bool
+     * @return boolean
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 15.11.2014
      */
-    public function isAnonymousCustomer() : bool
-    {
+    public function isAnonymousCustomer() {
         $isAnonymousCustomer = false;
         if ($this->owner->Groups()->find('Code', self::GROUP_CODE_ANONYMOUS)) {
             $isAnonymousCustomer = true;
@@ -1035,24 +980,25 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * 
      * @var \SilverCart\Model\Shipment\Zone $zone Zone
      * 
-     * @return bool
+     * @return boolean
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 30.04.2018
      */
-    public function isInZone(Zone $zone) : bool
-    {
+    public function isInZone($zone) {
         $isInZone = true;
-        if ($zone instanceof Zone
-         && $zone->exists()
-        ) {
-            $isInZone        = false;
+        if ($zone instanceof Zone &&
+            $zone->exists()) {
+            $isInZone = false;
+            
             $shippingAddress = $this->owner->ShippingAddress();
             $shippingCountry = $shippingAddress->Country();
             if ($shippingCountry->exists()) {
                 $matchingZones = Zone::getZonesFor($shippingCountry->ID);
                 if ($matchingZones->exists()) {
                     $foundZone = $matchingZones->byID($zone->ID);
-                    if ($foundZone instanceof Zone
-                     && $foundZone->exists()
-                    ) {
+                    if ($foundZone instanceof Zone &&
+                        $foundZone->exists()) {
                         $isInZone = true;
                     }
                 }
@@ -1065,24 +1011,31 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * Creates an anonymous customer if there's no currentMember object.
      *
      * @return Member
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>,
+     *         Sascha Koehler <skoehler@pixeltricks.de>
+     * @since 15.11.2014
      */
-    public static function createAnonymousCustomer() : Member
-    {
+    public static function createAnonymousCustomer() {
         $member = self::currentUser();
+        
         if (!$member) {
-            $member = Member::create();
-            $member->URLSegment = uniqid('anonymous-');
+            $member = new Member();
             $member->write();
+            
             // Add customer to intermediate group
-            $customerGroup = Group::get()->filter('Code', self::GROUP_CODE_ANONYMOUS)->first();        
+            $customerGroup = Group::get()->filter('Code', self::GROUP_CODE_ANONYMOUS)->first();
+            
             if ($customerGroup) {
                 $member->Groups()->add($customerGroup);
             }
-            Security::setCurrentUser($member);
+            
+            $member->logIn(true);
             /** @var IdentityStore $identityStore */
             $identityStore = Injector::inst()->get(IdentityStore::class);
             $identityStore->logIn($member, false, Controller::curr()->getRequest());
         }
+        
         return $member;
     }
     
@@ -1092,17 +1045,22 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * If the user is not logged in or the Member is not anonymous boolean
      * false will be returned.
      *
-     * @return Member|bool
+     * @return mixed Member|boolean false
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>,
+     *         Sascha Koehler <skoehler@pixeltricks.de>
+     * @since 15.11.2014
      */
-    public static function currentAnonymousCustomer()
-    {
+    public static function currentAnonymousCustomer() {
         $member = self::currentUser();
-        if ($member instanceof Member
-         && $member->exists()
-         && $member->isAnonymousCustomer()
-        ) {
+        
+        if ($member instanceof Member &&
+            $member->exists() &&
+            $member->isAnonymousCustomer()) {
+            
             return $member;
         }
+        
         return false;
     }
     
@@ -1110,49 +1068,59 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * Returns the default customer group code.
      * 
      * @return string
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 08.04.2014
      */
-    public static function default_customer_group_code() : string
-    {
-        return (string) Member::config()->default_customer_group_code;
+    public static function default_customer_group_code() {
+        return Member::config()->default_customer_group_code;
     }
     
     /**
      * Returns the default customer group code B2B.
      * 
      * @return string
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 08.04.2014
      */
-    public static function default_customer_group_code_b2b() : string
-    {
-        return (string) Member::config()->default_customer_group_code_b2b;
+    public static function default_customer_group_code_b2b() {
+        return Member::config()->default_customer_group_code_b2b;
     }
     
     /**
      * Returns the default B2C group.
      * 
-     * @return Group|null
+     * @return Group
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 08.04.2014
      */
-    public static function default_customer_group() : ?Group
-    {
+    public static function default_customer_group() {
         return Group::get()->filter('Code', self::default_customer_group_code())->first();
     }
     
     /**
      * Returns the default B2B group.
      * 
-     * @return Group|null
+     * @return Group
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 08.04.2014
      */
-    public static function default_customer_group_b2b() : ?Group
-    {
+    public static function default_customer_group_b2b() {
         return Group::get()->filter('Code', self::default_customer_group_code_b2b())->first();
     }
     
     /**
      * Returns whether this customer is a B2B customer.
      * 
-     * @return bool
+     * @return boolean
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.04.2015
      */
-    public function isB2BCustomer() : bool
-    {
+    public function isB2BCustomer() {
         $isB2BCustomer = false;
         if ($this->owner->Groups()->find('Code', self::default_customer_group_code_b2b())) {
             $isB2BCustomer = true;
@@ -1164,10 +1132,24 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * Returns whether this is a valid customer.
      * 
      * @return bool
+     *
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 08.04.2014
      */
     public function isValidCustomer() : bool
     {
-        return $this->owner->Groups()->filterAny('Code', (array) Member::config()->valid_customer_group_codes)->exists();
+        $isValidCustomer = false;
+        $member          = $this->owner;
+        if ($member->Groups()->exists()) {
+            $map = $member->Groups()->map('ID', 'Code')->toArray();
+            foreach ($map as $groupCode) {
+                if (in_array($groupCode, self::$valid_customer_group_codes)) {
+                    $isValidCustomer = true;
+                    break;
+                }
+            }
+        }
+        return $isValidCustomer;
     }
 
     /**
@@ -1197,16 +1179,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
     public static function currentUser() : ?Member
     {
         return Security::getCurrentUser();
-    }
-
-    /**
-     * Returns all customer groups.
-     * 
-     * @return DataList
-     */
-    public static function CustomerGroups() : DataList
-    {
-        return Group::get();
     }
 
     /**
@@ -1591,65 +1563,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
             }
         }
     }
-    
-    /**
-     * Adds a message to inform the customer about the successfull password change
-     * while being locked out due to security settings.
-     * 
-     * @param string           $password Password
-     * @param ValidationResult $result   Result
-     * 
-     * @return void
-     */
-    public function onAfterChangePassword(string $password, ValidationResult $result) : void
-    {
-        if (!$result->isValid()
-         || $this->skipChangePasswordInfo
-        ) {
-            $this->skipChangePasswordInfo = false;
-            return;
-        }
-        $ctrl    = ModelAsController::controller_for(Page::singleton());
-        $message = _t(Member::class . '.MessageChangePasswordSuccess', 'Congratulations! Your password was changed successfully.');
-        $result->addMessage($message);
-        $ctrl->setSuccessMessage($message);
-        if ($this->owner->isLockedOut()) {
-            $message = _t(
-                    Member::class . '.MessageChangePasswordLockedOut',
-                    'Please be aware that your account still has been temporarily disabled because of too many failed attempts at logging in. Please try again in {count} minutes.',
-                    null,
-                    ['count' => Member::config()->lock_out_delay_mins]
-            );
-            $result->addMessage($message);
-            $ctrl->setInfoMessage($message);
-        }
-    }
-
-    /**
-     * Returns the minutes left for the LockedOutUntil property.
-     * 
-     * @return int
-     */
-    public function LockedOutUntilMinutes() : int
-    {
-        /** @var DBDatetime $lockedOutUntilObj */
-        $lockedOutUntilObj = $this->owner->dbObject('LockedOutUntil');
-        $now               = DBDatetime::now()->getTimestamp();
-        $time              = $lockedOutUntilObj->getTimestamp();
-        $ago               = abs($time - $now);
-        return round($ago / 60);
-    }
-
-    /**
-     * Sets the @see $this->skipChangePasswordInfo to true.
-     * 
-     * @return Member
-     */
-    public function skipChangePasswordInfo() : Member
-    {
-        $this->skipChangePasswordInfo = true;
-        return $this->owner;
-    }
 
     /**
      * Returns true if this user is an administrator.
@@ -1691,7 +1604,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
             'currentUser'     => 'currentUser',
             'currentShippingCountry' => 'currentShippingCountry',
             'CurrentShippingCountry' => 'currentShippingCountry',
-            'CustomerGroups'  => 'CustomerGroups',
         ];
     }
     
@@ -1707,7 +1619,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
         /* @var $member Member */
         $member                         = $this->owner;
         $variables                      = $member->toMap();
-        $variables['Member']            = $member;
         $token                          = $member->generateAutologinTokenAndStoreHash();
         $variables['PasswordResetLink'] = Director::absoluteURL(Security::getPasswordResetLink($member, $token));
         
@@ -1802,12 +1713,13 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * Sends the registration opt in email.
      * 
      * @return void
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 03.07.2019
      */
     public function sendRegistrationOptInEmail() : void
     {
-        if (!$this->owner->RegistrationOptInConfirmed
-         && !empty($this->owner->Email)
-        ) {
+        if (!$this->owner->RegistrationOptInConfirmed) {
             if (empty($this->owner->RegistrationOptInConfirmationHash)) {
                 $this->owner->RegistrationOptInConfirmationHash = $this->createOptInConfirmationHash();
                 $this->owner->write();
@@ -1822,6 +1734,9 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * @param string $hash Hash to confirm
      * 
      * @return bool
+     * 
+     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 04.07.2019
      */
     public function confirmRegistrationOptIn(string $hash) : bool
     {
@@ -1832,15 +1747,8 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
             $confirmed = true;
             $this->owner->RegistrationOptInConfirmed = true;
             $this->owner->write();
-            $customFields          = ['Customer' => $this->owner];
-            $confirmationRecipient = $this->owner->Email;
-            $confirmationLocale    = $this->owner->Locale;
-            $notificationRecipient = Config::DefaultMailRegistrationRecipient();
-            $notificationLocale    = Tools::default_locale()->getLocale();
-            $this->owner->extend('onBeforeSendRegistrationOptInConfirmation', $confirmationRecipient, $customFields, $confirmationLocale);
-            ShopEmail::send('RegistrationOptInConfirmation', $confirmationRecipient, $customFields, [], $confirmationLocale);
-            $this->owner->extend('onBeforeSendRegistrationOptInNotification', $notificationRecipient, $customFields, $notificationLocale);
-            ShopEmail::send('RegistrationOptInNotification', $notificationRecipient, $customFields, [], $notificationLocale);
+            ShopEmail::send('RegistrationOptInConfirmation', $this->owner->Email, ['Customer' => $this->owner], [], $this->owner->Locale);
+            ShopEmail::send('RegistrationOptInNotification', Config::DefaultMailRegistrationRecipient(), ['Customer' => $this->owner], [], Tools::default_locale()->getLocale());
         }
         return $confirmed;
     }
@@ -1854,32 +1762,19 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      */
     public function moveShoppingCartTo(Member $customer) : void
     {
-        $ownerCart      = $this->owner->getCart();
-        $ownerPositions = $ownerCart->ShoppingCartPositions();
-        $customerCart   = $customer->getCart();
-        /** @var ShoppingCart $customerCart */
+        $ownerPositions = $this->owner->getCart()->ShoppingCartPositions();
         if ($ownerPositions->exists()) {
             //delete registered customers cart positions
-            $customerPositions = $customerCart->ShoppingCartPositions();
+            $customerPositions = $customer->getCart()->ShoppingCartPositions();
             if ($customerPositions->exists()) {
                 foreach ($customerPositions as $customerPosition) {
-                    /** @var ShoppingCartPosition $customerPosition */
                     $customerPosition->delete();
                 }
             }
             //add anonymous positions to the registered user
             foreach ($ownerPositions as $ownerPosition) {
-                /** @var ShoppingCartPosition $ownerPosition */
                 $customerPositions->add($ownerPosition);
             }
         }
-        if ($ownerCart->DataValues()->exists()) {
-            foreach ($ownerCart->DataValues() as $dataValue) {
-                /** @var DataValue $dataValue */
-                $dataValue->ShoppingCartID = $customerCart->ID;
-                $dataValue->write();
-            }
-        }
-        $this->owner->extend('updateMoveShoppingCartTo', $customer);
     }
 }
