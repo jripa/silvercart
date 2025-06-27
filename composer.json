@@ -17,7 +17,7 @@
         "silverstripe/cms": "^5.0",
         "silverstripe/widgets": "^3.0",
         "silvercart/widgetsets": "^4",
-        "silvercart/payment-prepayment": "dev-master",
+        "jripa/payment-prepayment": "dev-master",
         "tractorcow/silverstripe-fluent": "^7.2",
         "matthiasmullie/minify": "^1.3",
         "google/recaptcha": "^1.2"
