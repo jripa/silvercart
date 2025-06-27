@@ -15,7 +15,7 @@
     "prefer-stable": true,
     "require": {
         "silverstripe/cms": "^5.0",
-        "silverstripe/widgets": "^2.1",
+        "silverstripe/widgets": "^3.0",
         "silvercart/widgetsets": "^4",
         "silvercart/payment-prepayment": "^4",
         "tractorcow/silverstripe-fluent": "^7.2",
