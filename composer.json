@@ -13,6 +13,12 @@
     ],
     "minimum-stability": "dev",
     "prefer-stable": true,
+        "repositories": [
+        {
+          "type": "vcs",
+          "url": "https://github.com/jripa/payment-prepayment"
+        }
+    ],
     "require": {
         "silverstripe/cms": "^5.0",
         "silverstripe/widgets": "^3.0",
