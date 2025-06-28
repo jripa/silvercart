@@ -1603,7 +1603,7 @@ class Config
     public static function isUserAgentBlacklisted($userAgent)
     {
         $isBlacklisted         = false;
-        $blacklistedUserAgents = explode(PHP_EOL, self::UserAgentBlacklist());
+        $blacklistedUserAgents = explode(PHP_EOL, self::UserAgentBlacklist() ?? '');
 
         if (in_array($userAgent, $blacklistedUserAgents)) {
             $isBlacklisted = true;
