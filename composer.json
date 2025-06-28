@@ -1,5 +1,5 @@
 {
-    "name": "jripa/silvercart",
+    "name": "silvercart/silvercart",
     "type": "silverstripe-vendormodule",
     "description": "The SilverCart ecommerce module for SilverStripe",
     "homepage": "http://www.silvercart.org",
