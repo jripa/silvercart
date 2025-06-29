@@ -712,7 +712,7 @@ class RequireDefaultRecords
      */
     public static function require_default_records()
     {
-        // self::singleton()->requireDefaultRecords();
+         self::singleton()->requireDefaultRecords();
     }
     
     /**
