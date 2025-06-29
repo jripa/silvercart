@@ -76,13 +76,13 @@ class LeftAndMain extends \SilverStripe\Admin\LeftAndMain
      *
      * @return string 
      * 
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 19.02.2013
+     * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+     * @since 29.07.2025
      */
     public function SectionTitle()
     {
         $sectionTitle = parent::SectionTitle();
-        if (class_exists($this->modelClass)) {
+        if (is_string($this->modelClass) && class_exists($this->modelClass)) {
             $sectionTitle = Tools::singular_name_for(singleton($this->modelClass));
         }
         return $sectionTitle;
