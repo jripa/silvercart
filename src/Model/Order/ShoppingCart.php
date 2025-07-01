@@ -2237,7 +2237,7 @@ class ShoppingCart extends DataObject
     {
         $positionTable = Tools::get_table_name(ShoppingCartPosition::class);
         $records       = DB::query("SELECT COUNT(Pos.ID) AS NumberOfPositions FROM {$positionTable} Pos WHERE Pos.ShoppingCartID = {$this->ID}");
-        $record        = $records->nextRecord();
+        $record = iterator_to_array($records)[0] ?? null;
         if ($record
          && $record['NumberOfPositions'] > 0
         ) {

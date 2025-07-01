@@ -61,9 +61,9 @@ class TranslatableDataObjectExtension extends DataExtension
             ) {
                 $fields->addFieldToTab('Root.Main', $languageField);
             } elseif ($insertBefore !== null) {
-                $fields->insertBefore($languageField, $insertBefore);
+                $fields->insertBefore($insertBefore, $languageField);
             } else {
-                $fields->insertAfter($languageField, $insertAfter);
+                $fields->insertAfter($insertAfter, $languageField);
                 /*
                  * Change the name of the field the insert the next field
                  * Otherwise the sort order would be inverted

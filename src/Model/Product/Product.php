@@ -1627,10 +1627,10 @@ class Product extends DataObject implements PermissionProvider
             $productGroupMirrorPagesField->setTreeBaseID($productGroupHolderID);
 
             $fields->removeByName('ProductGroupMirrorPages');
-            $fields->insertBefore($silvercartProductGroupDropdown, 'ProductNumberGroup');
-            $fields->insertAfter($productGroupMirrorPagesField, 'ProductGroupID');
+            $fields->insertBefore('ProductNumberGroup',$silvercartProductGroupDropdown);
+            $fields->insertAfter('ProductGroupID',$productGroupMirrorPagesField);
         } else {
-            $fields->insertBefore($silvercartProductGroupDropdown, 'ProductNumberGroup');
+            $fields->insertBefore('ProductNumberGroup',$silvercartProductGroupDropdown);
         }
     }
 
@@ -1682,9 +1682,9 @@ class Product extends DataObject implements PermissionProvider
         )->setHeadingLevel(4)->setStartClosed(false);
         $fields->removeByName('isActive');
         $fields->removeByName('IsNotBuyable');
-        $fields->insertBefore($baseDataToggle, 'Title');
+        $fields->insertBefore('Title', $baseDataToggle);
         if ($this->exists()) {
-            $fields->insertAfter(CheckboxField::create('RefreshCache', $this->fieldLabel('RefreshCache')), 'isActive');
+            $fields->insertAfter('RefreshCache', CheckboxField::create($this->fieldLabel('RefreshCache')), 'isActive');
         }
 
         $availabilityGroup  = FieldGroup::create('AvailabilityGroup', '', $fields);
@@ -1702,7 +1702,7 @@ class Product extends DataObject implements PermissionProvider
                     $availabilityGroup,
                 ]
         )->setHeadingLevel(4)->setStartClosed(false);
-        $fields->insertAfter($availabilityGroupToggle, 'ProductBaseDataToggle');
+        $fields->insertAfter('ProductBaseDataToggle',$availabilityGroupToggle);
         
         $descriptionToggle = ToggleCompositeField::create(
                 'ProductDescriptionToggle',
@@ -1716,7 +1716,7 @@ class Product extends DataObject implements PermissionProvider
         $fields->removeByName('Title');
         $fields->removeByName('ShortDescription');
         $fields->removeByName('LongDescription');
-        $fields->insertAfter($descriptionToggle, 'AvailabilityGroupToggle');
+        $fields->insertAfter('AvailabilityGroupToggle', $descriptionToggle);
         
         $timeGroup = FieldGroup::create('TimeGroup', '', $fields);
         $timeGroup->push(        $fields->dataFieldByName('ReleaseDate'));
@@ -1732,7 +1732,7 @@ class Product extends DataObject implements PermissionProvider
                     $timeGroup,
                 ]
         )->setHeadingLevel(4)->setStartClosed(true);
-        $fields->insertAfter($timeGroupToggle, 'ProductDescriptionToggle');
+        $fields->insertAfter('ProductDescriptionToggle',$timeGroupToggle);
         
         $miscGroup = FieldGroup::create('MiscGroup', '', $fields);
         $manufactuerField = $fields->dataFieldByName('ManufacturerID');
@@ -1757,7 +1757,7 @@ class Product extends DataObject implements PermissionProvider
                     $miscGroup,
                 ]
         )->setHeadingLevel(4)->setStartClosed(true);
-        $fields->insertAfter($miscGroupToggle, 'TimeGroupToggle');
+        $fields->insertAfter('TimeGroupToggle',$miscGroupToggle);
     }
 
     /**
@@ -1797,7 +1797,7 @@ class Product extends DataObject implements PermissionProvider
         $pricesGroup->push($fields->dataFieldByName('TaxID'));
         
         $this->extend('updateFieldsForPrices', $pricesGroup, $fields);
-        $fields->insertAfter($pricesGroup, 'ProductNumberGroup');
+        $fields->insertAfter('ProductNumberGroup', $pricesGroup );
     }
 
     /**
@@ -1819,7 +1819,7 @@ class Product extends DataObject implements PermissionProvider
         )->setHeadingLevel(4)->setStartClosed(true);
         $fields->removeByName('MetaTitle');
         $fields->removeByName('MetaDescription');
-        $fields->insertAfter($seoToggle, 'ProductDescriptionToggle');
+        $fields->insertAfter('ProductDescriptionToggle',$seoToggle);
     }
 
     /**
@@ -2584,7 +2584,7 @@ class Product extends DataObject implements PermissionProvider
     {
         $linkIdentifier = $this->ID;
         $this->extend('updatelinkIdentifier', $linkIdentifier);
-        return "{$groupLink}{$linkIdentifier}/{$urlSegment}";
+        return "{$groupLink}/{$linkIdentifier}/{$urlSegment}";
     }
     
     /**
@@ -2641,7 +2641,7 @@ class Product extends DataObject implements PermissionProvider
                     $buildLink = true;
                 }
             }
-
+ 
             if ($buildLink) {
                 $translation          = $this->getTranslationFor($locale);
                 $i18nURLSegment       = $this->title2urlSegment();
@@ -2659,7 +2659,7 @@ class Product extends DataObject implements PermissionProvider
             $i18nLink = $this->buildLinkWithGroup($this->ProductGroup(), $this->title2urlSegment());
         }
         $this->i18nLinks[$locale] = $i18nLink;
-        
+       
         return $i18nLink;
     }
 

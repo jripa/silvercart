@@ -233,8 +233,15 @@ class NumberRange extends DataObject
             DB::query("UNLOCK TABLES");
         }
         
-        $firstRow          = $results->first();
-        $this->ActualCount = $firstRow['ActualCount'];
+        $firstRow = null;
+        foreach ($results as $row) {
+            $firstRow = $row;
+            break;
+        }
+
+        if ($firstRow && isset($firstRow['ActualCount'])) {
+            $this->ActualCount = $firstRow['ActualCount'];
+        }
         return $this->getActualNumber();
     }
 

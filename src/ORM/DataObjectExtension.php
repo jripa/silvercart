@@ -36,10 +36,10 @@ class DataObjectExtension extends DataExtension {
      * 
      * @return void
      *
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 07.10.2014
+     * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>,
+     * @since 29.07.2025
      */
-    public function onBeforeVersionedPublish($fromStage, $toStage, $createNewVersion) {
+    public function onBeforeVersionedPublish($fromStage, $toStage, $createNewVersion = true) {
         if ($toStage == 'Live') {
             if ($this->owner instanceof Page &&
                 $this->owner->UseAsRootForMainNavigation) {
@@ -243,7 +243,7 @@ class DataObjectExtension extends DataExtension {
             foreach ($languageFields as $languageField) {
                 if (!is_null($neighbourFieldOfTranslationFields)) {
                     if ($insertLangugeFieldsAfter) {
-                        $tabbedFields->insertAfter($languageField, $neighbourFieldOfTranslationFields);
+                        $tabbedFields->insertAfter($neighbourFieldOfTranslationFields,$languageField);
                         
                         /*
                          * Change the name of the field the insert the next field
@@ -251,7 +251,7 @@ class DataObjectExtension extends DataExtension {
                          */
                         $neighbourFieldOfTranslationFields = $languageField->getName();
                     } else {
-                        $tabbedFields->insertBefore($languageField, $neighbourFieldOfTranslationFields);
+                        $tabbedFields->insertBefore( $neighbourFieldOfTranslationFields, $languageField);
                     }
                 } else {
                     $tabbedFields->addFieldToTab('Root.Main', $languageField);

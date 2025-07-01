@@ -539,6 +539,7 @@ class Page extends SiteTree
 
     /**
      * Same as \TractorCow\Fluent\Extension\FluentExtension::LocaleLink() but uses the method
+     * newer versions \TractorCow\Fluent\Extension\FluentExtension::LocaleInformation($locale)
      * self::OriginalLink() instead.
      * If the method self::OriginalLink() doesn't exists on the called page, self::LocaleLink() 
      * will be used instead.
@@ -547,15 +548,15 @@ class Page extends SiteTree
      * 
      * @return string
      * 
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 26.04.2018
-     * @see \TractorCow\Fluent\Extension\FluentExtension::LocaleLink()
+     * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+     * @since 29.07.2025
+     * @see \TractorCow\Fluent\Extension\FluentExtension::LocaleInformation()
      */
     public function LocaleOriginalLink($locale)
     {
         // Skip dataobjects that do not have the Link method
         if (!$this->hasMethod('OriginalLink')) {
-            return $this->LocaleLink($locale);
+            return $this->LocaleInformation($locale);
         }
 
         // Return locale root url if unable to view this item in this locale

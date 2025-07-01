@@ -361,7 +361,7 @@ class Country extends DataObject
                 $content = _t(self::class . '.AlertWarningCreationContent', 'Do you really want to create a new country? If you want to assign one of the {count} existing countries instead, use the "Link Existing" function (upper right corner of the table).', ['count' => self::get()->count()]);
                 $title   = _t(self::class . '.AlertWarningCreationTitle', 'Caution');
                 $creationWarningField = AlertWarningField::create('CreationWarning', $content, "{$title}:");
-                $fields->insertBefore($creationWarningField, 'Title');
+                $fields->insertBefore('Title', $creationWarningField);
             }
             $displayPositionMap = [
                 '0' => Tools::field_label('PleaseChoose'),
@@ -370,7 +370,7 @@ class Country extends DataObject
                 $displayPositionMap[$x] = $x;
             }
             $displayPositionField = DropdownField::create('DisplayPosition', $this->fieldLabel('DisplayPosition'), $displayPositionMap);
-            $fields->insertAfter($displayPositionField, 'IsPrioritive');
+            $fields->insertAfter('IsPrioritive', $displayPositionField);
         });
         return parent::getCMSFields();
     }

@@ -42,7 +42,7 @@ class GridFieldAddExistingAutocompleter extends SilverStripeGridFieldAddExisting
      * @since 23.04.2018
      */
     public function scaffoldSearchFields($dataClass) {
-        $fields            = parent::scaffoldSearchFields($dataClass);
+        $fields            = parent::scaffoldSearchFields($dataClass) ?? [];
         $db                = Config::inst()->get($dataClass, 'db');
         $has_many          = Config::inst()->get($dataClass, 'has_many');
         $many_many         = Config::inst()->get($dataClass, 'many_many');

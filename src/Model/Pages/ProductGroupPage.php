@@ -538,7 +538,7 @@ class ProductGroupPage extends \Page
                         $fieldGroup,
                     ]
             )->setHeadingLevel(4)->setStartClosed(true);
-            $fields->insertAfter($displaySettingsToggle, 'Content');
+            $fields->insertAfter('Content',$displaySettingsToggle);
 
             if ($this->drawCMSFields()) {
                 $productAdminLink     = Director::baseURL().'admin/silvercart-products';

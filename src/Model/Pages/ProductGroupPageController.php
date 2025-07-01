@@ -1043,13 +1043,16 @@ class ProductGroupPageController extends PageController
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 08.11.2017
      */
-    public function handleRequest(HTTPRequest $request): HTTPResponse
-    {
+    public function handleRequest(HTTPRequest $request): HTTPResponse {
         $allowed_actions = array_merge(
                 $this->config()->get('allowed_actions'),
                 [Manufacturer::get_filter_action()]
         );
-        $this->config()->update('allowed_actions', $allowed_actions);
+
+        \SilverStripe\Core\Config\Config::modify()->merge(static::class, 'allowed_actions', [
+            Manufacturer::get_filter_action()
+        ]);
+
         $this->setRequest($request);
         return parent::handleRequest($request);
     }

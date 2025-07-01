@@ -84,7 +84,8 @@ class PageController extends ContentController
      */
     public function __construct($dataRecord = null)
     {
-        i18n::config()->merge('default_locale', Tools::current_locale());
+
+        //i18n::config()->set('default_locale', Tools::current_locale());
         i18n::set_locale(Tools::current_locale());
         parent::__construct($dataRecord);
     }

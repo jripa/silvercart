@@ -104,7 +104,7 @@ class ProductCondition extends DataObject
      */
     public function getTitle() : string
     {
-        return $this->getTranslationFieldValue('Title');
+        return $this->getTranslationFieldValue('Title') ?? 'empty';
     }
     
     /**

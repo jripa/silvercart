@@ -202,8 +202,8 @@ class ProductGroupHolder extends \Page
                     ]
             )->setHeadingLevel(4)->setStartClosed(true);
 
-            $fields->insertAfter($redirectionSettingsToggle, 'Content');
-            $fields->insertAfter($displaySettingsToggle, 'Content');
+            $fields->insertAfter('Content',$redirectionSettingsToggle);
+            $fields->insertAfter('Content',$displaySettingsToggle);
         });
         $this->getCMSFieldsIsCalled = true;
         return parent::getCMSFields();
