@@ -16,12 +16,12 @@
     "require": {
         "silverstripe/cms": "^6.1",
         "silvercart/payment-prepayment": "^6.x-dev",
-        "tractorcow/silverstripe-fluent": "^6.0",
         "matthiasmullie/minify": "^1.3",
         "google/recaptcha": "^1.2"
     },
     "require-dev": {},
        "suggest": {
+         "tractorcow/silverstripe-fluent": "Optional: multilingual support (use SS6-compatible version)",
          "silverstripe/widgets": "Add if you need widget support (check SS6 compatibility)"
     },
     "extra": {
