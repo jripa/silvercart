@@ -3,7 +3,7 @@
 namespace SilverCart\Model\Order;
 
 use SilverStripe\Security\Member;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 
 /**
  * Used to create a sub shopping cart dependent on the "normal" shopping cart.
@@ -133,8 +133,9 @@ class SubShoppingCart extends ShoppingCart
      * 
      * @return int
      */
-    public function write($showDebug = false, $forceInsert = false, $forceWrite = false, $writeComponents = false) : int
+    public function write($showDebug = false, $forceInsert = false, $forceWrite = false, $writeComponents = false, bool $skipValidation = false) : int
     {
+        parent::write($showDebug, $forceInsert, $forceWrite, $writeComponents);
         return 0;
     }
 }

@@ -18,13 +18,16 @@ use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Control\HTTPResponse;
 use SilverStripe\Core\Convert;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\PaginatedList;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\List\PaginatedList;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\Security\Member;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\View\SSViewer;
+use SilverStripe\Model\ModelData;
+use SilverStripe\Core\Injector\Injector;
+use Psr\SimpleCache\CacheInterface;
 
 /**
  * ProductGroupPage Controller class.
@@ -1049,7 +1052,7 @@ class ProductGroupPageController extends PageController
                 $this->config()->get('allowed_actions'),
                 [Manufacturer::get_filter_action()]
         );
-        $this->config()->update('allowed_actions', $allowed_actions);
+        $this->config()->set('allowed_actions', $allowed_actions);
         $this->setRequest($request);
         return parent::handleRequest($request);
     }
@@ -1190,7 +1193,7 @@ class ProductGroupPageController extends PageController
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 27.07.2012
      */
-    public function customise($data)
+    public function customise(array|ModelData $data): ModelData
     {
         if ($this->isProductDetailView()) {
             $data = array_merge(

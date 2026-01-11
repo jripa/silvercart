@@ -44,11 +44,11 @@ use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\GridField\GridFieldAddNewButton;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\i18n\i18n;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
-use SilverStripe\ORM\PaginatedList;
+use SilverStripe\Model\List\PaginatedList;
 use SilverStripe\ORM\SS_List;
 use SilverStripe\ORM\FieldType\DBDate;
 use SilverStripe\ORM\FieldType\DBDatetime;
@@ -62,7 +62,7 @@ use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\View\SSViewer;
 use SilverStripe\Widgets\Model\WidgetArea;
 use WidgetSets\Model\WidgetSet;
@@ -3152,9 +3152,8 @@ class Product extends DataObject implements PermissionProvider
      * @since 04.02.2016
      */
     public function onBeforeWrite()
-    {
+    {       
         parent::onBeforeWrite();
-        
         if ($this->ProductGroup()) {
             $translations = Tools::get_translations($this->ProductGroup());
             if ($translations) {
@@ -4235,7 +4234,7 @@ class Product extends DataObject implements PermissionProvider
      * 
      * @return DBHTMLText
      */
-    public function forTemplate(string $templateAddition = '') : DBHTMLText
+    public function forTemplate(string $templateAddition = '') : string
     {
         $addition  = empty($templateAddition) ? '' : "_{$templateAddition}";
         $templates = SSViewer::get_templates_by_class(static::class, $addition, __CLASS__);

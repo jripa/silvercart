@@ -32,8 +32,8 @@ use SilverStripe\Forms\GridField\GridFieldFilterHeader;
 use SilverStripe\Forms\ReadonlyField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Core\Extension as DataExtension;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\Filters\ExactMatchFilter;
@@ -1485,7 +1485,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * @since 04.07.2019
      */
     public function onBeforeWrite() {
-        parent::onBeforeWrite();
+
         if (!self::currentAnonymousCustomer()
          && empty($this->owner->CustomerNumber)
         ) {

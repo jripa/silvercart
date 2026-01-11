@@ -7,7 +7,7 @@ use SilverCart\Admin\Forms\GridField\GridFieldPopupTrigger;
 use SilverCart\Model\Order\Order;
 use SilverCart\View\Printer\Printer;
 use SilverStripe\Forms\GridField\GridField;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 
 /**
  * Batch action to print an order.

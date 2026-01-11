@@ -10,8 +10,8 @@ use SilverCart\Checkout\CheckoutStep3;
 use SilverCart\Dev\Tools;
 use SilverCart\Model\Customer\Customer;
 use SilverCart\Model\Pages\CartPageController;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\View\ViewableData;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ModelData as ViewableData;
 use SilverStripe\Control\Controller;
 use SilverStripe\Security\Member;
 

@@ -3,8 +3,8 @@
 namespace SilverCart\Model\Pages;
 
 use SilverCart\Dev\Tools;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ArrayData;
 
 /**
  * holder for customers private area.

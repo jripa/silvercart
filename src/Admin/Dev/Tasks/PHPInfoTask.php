@@ -5,6 +5,8 @@ namespace SilverCart\Admin\Dev\Tasks;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\Security\Permission;
+use Symfony\Component\Console\Input\InputInterface;
+use SilverStripe\PolyExecution\PolyOutput;
 
 /**
  * Provides a task to show the phpinfo() output.
@@ -31,7 +33,7 @@ class PHPInfoTask extends BuildTask {
      * 
      * @var string
      */
-    protected $title = 'PHP Info Task';
+    protected string $title = 'PHP Info Task';
 
     /**
      * Describe the implications the task has, and the changes it makes. Accepts 
@@ -39,7 +41,7 @@ class PHPInfoTask extends BuildTask {
      * 
      * @var string
      */
-    protected $description = 'Task to show the PHP info output.';
+    protected static string $description = 'Task to show the PHP info output.';
     
     /**
      * Runs this task.
@@ -48,10 +50,23 @@ class PHPInfoTask extends BuildTask {
      * 
      * @return void
      */
-    public function run($request) {
+    public function run_old($request) {
         if (Permission::check('ADMIN')) {
             phpinfo();
         }
+    }
+
+    protected function execute(InputInterface $input, PolyOutput $output): int
+    {
+        if (Permission::check('ADMIN')) {
+            ob_start();
+            phpinfo();
+            $phpinfo = ob_get_clean();
+            $output->writeln($phpinfo);
+            return 0;
+        }
+        $output->writeln('Permission denied. ADMIN permission required to run this task.');
+        return 1;
     }
 
 }

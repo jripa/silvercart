@@ -4,7 +4,7 @@ namespace SilverCart\Extensions\Model\CookieConsent;
 
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 
 /**
  * Broarm CookieConsent extension for SilverStripe SiteTree.
@@ -18,7 +18,7 @@ use SilverStripe\ORM\DataExtension;
  * 
  * @property \SilverStripe\CMS\Model\SiteTree $owner Owner
  */
-class BroarmSiteTreeExtension extends DataExtension
+class BroarmSiteTreeExtension extends Extension
 {
     /**
      * DB attributes.

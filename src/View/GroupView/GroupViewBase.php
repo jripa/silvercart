@@ -4,7 +4,7 @@ namespace SilverCart\View\GroupView;
 
 use SilverCart\View\GroupView\GroupViewHandler;
 use SilverStripe\Control\Director;
-use SilverStripe\View\ViewableData;
+use SilverStripe\Model\ModelData;
 
 /**
  * Provides the base logic for a group view type.
@@ -16,7 +16,7 @@ use SilverStripe\View\ViewableData;
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class GroupViewBase extends ViewableData {
+class GroupViewBase extends ModelData {
 
     /**
      * Short code to use for the view

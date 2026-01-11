@@ -6,9 +6,9 @@ use SilverCart\Dev\Tools;
 use SilverCart\Admin\Controllers\ModelAdmin;
 use SilverCart\Model\BlacklistEntry;
 use SilverCart\Model\ContactMessage;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 
 /**
  * ModelAdmin for ContactMessages

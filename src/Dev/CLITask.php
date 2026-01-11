@@ -11,10 +11,10 @@ use SilverCart\Model\ShopEmail;
 use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Config\Config as SSConfig;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBText;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use ZipArchive;
 
 /**

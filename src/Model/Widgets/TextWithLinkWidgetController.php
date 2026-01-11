@@ -4,7 +4,7 @@ namespace SilverCart\Model\Widgets;
 
 use SilverCart\Model\Widgets\TextWidgetController;
 use SilverStripe\Control\HTTP;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\View\SSViewer_FromString;
 
 /**

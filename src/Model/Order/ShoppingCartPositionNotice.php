@@ -4,9 +4,9 @@ namespace SilverCart\Model\Order;
 
 use SilverCart\Dev\Tools;
 use SilverCart\Model\Order\ShoppingCartPosition;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 
 /**
  * Contains a couple of static methods for shopping cart related notices for the

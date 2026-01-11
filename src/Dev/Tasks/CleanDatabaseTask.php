@@ -9,6 +9,8 @@ use SilverCart\Model\Product\Product;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\ORM\DB;
 use SilverStripe\Security\Group;
+use Symfony\Component\Console\Input\InputInterface;
+use SilverStripe\PolyExecution\PolyOutput;
 
 /**
  * Provides a task to remove no more needed objects out of the database.
@@ -42,14 +44,14 @@ class CleanDatabaseTask extends BuildTask
      * 
      * @var string
      */
-    protected $title = 'Clean Shop Database Task';
+    protected string $title = 'Clean Shop Database Task';
     /**
      * Describe the implications the task has, and the changes it makes. Accepts 
      * HTML formatting.
      * 
      * @var string
      */
-    protected $description = 'Task to remove no more needed objects (like anonymous customer data, empty shopping carts, ...) out of the SilverCart shop database.';
+    protected static string $description = 'Task to remove no more needed objects (like anonymous customer data, empty shopping carts, ...) out of the SilverCart shop database.';
     
     /**
      * Runs this task.
@@ -61,7 +63,7 @@ class CleanDatabaseTask extends BuildTask
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 05.09.2018
      */
-    public function run($request)
+    public function runImport(PolyOutput $output): void
     {
         $this->deleteAnonymousCustomers();
         $this->printInfo("");
@@ -70,6 +72,12 @@ class CleanDatabaseTask extends BuildTask
         $this->updateAvailabilityByStock();
         $this->printInfo("");
     }
+    
+    protected function execute(InputInterface $input, PolyOutput $output): int
+      {
+            $this->runImport($output);
+            return 0;
+      }
     
     /**
      * Removes anonymous customers out of database.

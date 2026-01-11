@@ -45,7 +45,7 @@ use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
 use SilverStripe\Forms\HeaderField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TextField;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBHTMLText;
@@ -56,7 +56,7 @@ use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Security;
-use SilverStripe\View\ViewableData;
+use SilverStripe\Model\ModelData as ViewableData;
 
 /**
  * abstract for an order.
@@ -2979,6 +2979,7 @@ class Order extends DataObject implements PermissionProvider
     protected function onBeforeWrite() : void
     {
         parent::onBeforeWrite();
+        
         if (empty ($this->OrderNumber)) {
             $this->OrderNumber = NumberRange::useReservedNumberByIdentifier('OrderNumber');
         }
@@ -3448,7 +3449,7 @@ class Order extends DataObject implements PermissionProvider
      * 
      * @return DBHTMLText
      */
-    public function forTemplate(string $templateAddition = '') : DBHTMLText
+    public function forTemplate(string $templateAddition = '') : string
     {
         $addition = empty($templateAddition) ? '' : "_{$templateAddition}";
         return $this->renderWith(static::class . $addition);

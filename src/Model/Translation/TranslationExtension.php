@@ -7,7 +7,7 @@ use SilverCart\Admin\Model\Config;
 use SilverCart\Model\Product\ProductTranslation;
 use SilverCart\Model\Translation\TranslationTools;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension as DataExtension;
 
 /** 
  * Adds methods that are common to all language classes e.g. ProductTranslation

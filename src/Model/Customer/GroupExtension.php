@@ -10,7 +10,7 @@ use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\GridField\GridField;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension as DataExtension;
 use SilverStripe\Security\Group;
 
 /**

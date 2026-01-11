@@ -5,6 +5,7 @@ namespace SilverCart\ORM\FieldType;
 use NumberFormatter;
 use SilverCart\Admin\Model\Config;
 use SilverCart\Forms\FormFields\MoneyField;
+use SilverStripe\Forms\FormField;
 
 /**
  * This is an extended Money Field to modify scaffolding and add some functions.
@@ -36,7 +37,7 @@ class DBMoney extends \SilverStripe\ORM\FieldType\DBMoney
      * 
      * @return float
      */
-    public function getAmount()
+    public function getAmount(): mixed
     {
         $amount = parent::getAmount();
         $this->extend('updateAmount', $amount);
@@ -48,7 +49,7 @@ class DBMoney extends \SilverStripe\ORM\FieldType\DBMoney
      * 
      * @return string
      */
-    public function getCurrency()
+    public function getCurrency(): ?string
     {
         $currency = parent::getCurrency();
         if (empty($currency)) {
@@ -93,7 +94,7 @@ class DBMoney extends \SilverStripe\ORM\FieldType\DBMoney
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 25.10.2017
      */
-    public function scaffoldFormField($title = null, $params = null)
+    public function scaffoldFormField(?string $title = null, array $params = []): ?FormField
     {
         return MoneyField::create($this->getName(), $title)
             ->setLocale($this->getLocale());

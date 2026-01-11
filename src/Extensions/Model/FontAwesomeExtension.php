@@ -5,7 +5,7 @@ namespace SilverCart\Extensions\Model;
 use BucklesHusky\FontAwesomeIconPicker\Forms\FAPickerField;
 use SilverCart\Dev\Tools;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension as DataExtension;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 
 /**

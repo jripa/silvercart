@@ -14,7 +14,7 @@ use SilverCart\Model\Widgets\WidgetTools;
 use SilverCart\ORM\DataObjectExtension;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 
 /**
  * Provides an image slider powered by AnythingSlider.

@@ -4,7 +4,7 @@ namespace SilverCart\Security;
 
 use SilverCart\Model\Forms\FormField;
 use SilverStripe\Core\Convert;
-use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator as RequiredFields;
 use SilverStripe\Forms\GridField\GridFieldDetailForm_ItemRequest;
 
 /**

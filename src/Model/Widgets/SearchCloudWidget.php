@@ -4,7 +4,7 @@ namespace SilverCart\Model\Widgets;
 
 use SilverCart\Model\SearchQuery;
 use SilverCart\Model\Widgets\Widget;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 
 /**
  * Provides a search tag cloud as a widget.

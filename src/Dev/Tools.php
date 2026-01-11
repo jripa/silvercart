@@ -13,7 +13,7 @@ use SilverStripe\Control\Session;
 use SilverStripe\Core\Config\Config as SilverStripeConfig;
 use SilverStripe\Forms\FormField;
 use SilverStripe\i18n\i18n;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBHTMLText;

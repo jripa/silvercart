@@ -5,8 +5,8 @@ namespace SilverCart\View\GroupView;
 use SilverCart\Model\Pages\ProductGroupHolder;
 use SilverCart\Model\Pages\ProductGroupPage;
 use SilverCart\View\GroupView\GroupViewHandler;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Core\Extension as DataExtension;
 
 /**
  * Decorator for PageTypes which have grouped views. Provides a group view

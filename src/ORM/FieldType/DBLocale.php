@@ -8,14 +8,15 @@ use SilverCart\Model\Translation\TranslationTools;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\i18n\i18n;
+use SilverStripe\Forms\FormField;
 
 /**
  * This is an extended Money Field to modify scaffolding and add some functions.
  *
  * @package SilverCart
  * @subpackage ORM_FieldType
- * @author Sebastian Diel <sdiel@pixeltricks.de>
- * @since 10.10.2017
+ * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+ * @since 10.10.2017, 10.01.2026
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
@@ -33,7 +34,9 @@ class DBLocale extends \SilverStripe\ORM\FieldType\DBLocale {
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 20.03.2013
      */
-    public function scaffoldFormField($title = null, $params = null) {
+    public function scaffoldFormField(?string $title = null, array $params = []): ?FormField
+    {
+        parent::scaffoldFormField($title, $params);
         if (is_null($title)) {
             $title = _t(Config::class . '.TRANSLATION', 'Translation');
         }

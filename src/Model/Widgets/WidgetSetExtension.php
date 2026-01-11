@@ -5,7 +5,7 @@ namespace SilverCart\Model\Widgets;
 use SilverCart\Admin\Forms\GridField\GridFieldPublishAction;
 use SilverCart\ORM\DataObjectExtension;
 use SilverStripe\Forms\GridField\GridField;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension as DataExtension;
 use SilverStripe\ORM\FieldType\DBBoolean;
 
 /**

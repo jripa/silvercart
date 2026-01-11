@@ -6,7 +6,7 @@ use SilverCart\Model\Customer\Customer;
 use SilverCart\Model\Order\NumberRange;
 use SilverCart\Model\Order\Order;
 use SilverCart\Model\Order\ShoppingCart;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
 

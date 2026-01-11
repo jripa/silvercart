@@ -14,7 +14,7 @@ use ReflectionMethod;
  * @copyright 2021 pixeltricks GmbH
  * @license see license file in modules root directory
  * 
- * @property \SilverStripe\View\ViewableData $owner Owner
+ * @property \SilverStripe\Model\ModelData $owner Owner
  */
 trait ExtensibleExtension
 {

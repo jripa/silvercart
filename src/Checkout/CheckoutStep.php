@@ -4,7 +4,7 @@ namespace SilverCart\Checkout;
 
 use ReflectionClass;
 use SilverCart\Checkout\Checkout;
-use SilverStripe\View\ViewableData;
+use SilverStripe\Model\ModelData as ViewableData;
 use SilverStripe\Control\Controller;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\View\SSViewer;
@@ -151,7 +151,7 @@ class CheckoutStep extends ViewableData
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 16.11.2017
      */
-    public function forTemplate() : DBHTMLText
+    public function forTemplate() : string
     {
         return $this->renderWith($this->getTemplates());
     }

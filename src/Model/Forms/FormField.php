@@ -287,6 +287,7 @@ class FormField extends DataObject
     protected function onBeforeWrite() : void
     {
         parent::onBeforeWrite();
+        
         if (empty($this->Name)) {
             $this->generateFormFieldName();
         }
@@ -584,7 +585,7 @@ class FormField extends DataObject
      * 
      * @return DBHTMLText
      */
-    public function forTemplate() : DBHTMLText
+    public function forTemplate() : string
     {
         return $this->getFormField()->forTemplate();
     }

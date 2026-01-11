@@ -211,7 +211,7 @@ class PaymentStatus extends DataObject
      */
     protected function onBeforeWrite() : void
     {
-        parent::onBeforeWrite();
+        parent::onBeforeWrite();    
         $defaultStatus = self::get_default(false);
         if (!$defaultStatus) {
             $defaultStatus = $this;

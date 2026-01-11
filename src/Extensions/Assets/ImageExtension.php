@@ -8,7 +8,7 @@ use SilverStripe\Assets\Folder;
 use SilverStripe\Assets\Image;
 use SilverStripe\Assets\Image_Backend;
 use SilverStripe\Core\Convert;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension as DataExtension;
 use SilverStripe\Versioned\Versioned;
 
 /**

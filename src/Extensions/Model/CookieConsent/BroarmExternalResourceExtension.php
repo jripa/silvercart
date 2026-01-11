@@ -5,7 +5,7 @@ namespace SilverCart\Extensions\Model\CookieConsent;
 use Broarm\CookieConsent\CookieConsent;
 use Broarm\CookieConsent\Model\CookieGroup;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension as DataExtension;
 
 /**
  * Broarm CookieConsent extension for SilverCart ExternalResource.

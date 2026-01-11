@@ -21,14 +21,14 @@ use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\HiddenField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\i18n\i18n;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\Security\Permission;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\View\HTML;
 use TractorCow\Fluent\Extension\FluentDirectorExtension;
 use TractorCow\Fluent\State\FluentState;
@@ -260,9 +260,9 @@ class Page extends SiteTree
      * @since 07.10.2014
      */
     protected function onBeforeWrite()
-    {
+    { 
         parent::onBeforeWrite();
-        
+
         $request = Controller::curr()->getRequest();
         /* @var $request HTTPRequest */
         if ($request->postVar('ID') == $this->ID

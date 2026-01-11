@@ -2,7 +2,7 @@
 
 namespace SilverCart\Model\Widgets;
 
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverCart\Model\Widgets\WidgetTools;
 
 /**

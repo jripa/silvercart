@@ -5,7 +5,7 @@ namespace SilverCart\Extensions\TractorCow\Fluent\Model;
 use Broarm\CookieConsent\Model\CookieGroup;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\i18n\i18n;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use SilverStripe\Versioned\Versioned;
 use TractorCow\Fluent\Model\Locale;
 use TractorCow\Fluent\State\FluentState;
@@ -21,7 +21,7 @@ use TractorCow\Fluent\State\FluentState;
  * 
  * @property Locale $owner Owner
  */
-class LocaleExtension extends DataExtension
+class LocaleExtension extends Extension
 {
     /**
      * Adds a default locale if not done yet.

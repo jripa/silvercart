@@ -253,7 +253,8 @@ class Manufacturer extends DataObject
      */
     public function onBeforeWrite() : void
     {
-        parent::onBeforeWrite();
+        parent::onBeforeWrite();;
+
         if (empty ($this->Title)) {
             return;
         }

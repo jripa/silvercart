@@ -7,7 +7,7 @@ use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Pages\MyAccountHolder;
 use SilverStripe\Control\Controller;
 use SilverStripe\ORM\FieldType\DBText;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 
 /**
  * Child of customer area; overview of all addresses;

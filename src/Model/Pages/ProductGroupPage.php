@@ -25,15 +25,15 @@ use SilverStripe\Forms\FormField;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\ToggleCompositeField;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DB;
-use SilverStripe\ORM\PaginatedList;
+use SilverStripe\Model\List\PaginatedList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\FieldType\DBText;
 use SilverStripe\ORM\Queries\SQLSelect;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use WidgetSets\Model\WidgetSet;
 
 /**
@@ -1316,7 +1316,7 @@ class ProductGroupPage extends \Page
             $productGroupHolder = ProductGroupHolder::get()->first();
             $this->ParentID     = $productGroupHolder->ID;
         }
-        parent::onBeforeWrite();
+         parent::onBeforeWrite();
     }
     
     /**

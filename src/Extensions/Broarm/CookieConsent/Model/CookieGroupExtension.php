@@ -3,7 +3,7 @@
 namespace SilverCart\Extensions\Broarm\CookieConsent\Model;
 
 use Broarm\CookieConsent\Model\CookieGroup;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension as DataExtension;
 use TractorCow\Fluent\Model\Locale;
 use TractorCow\Fluent\State\FluentState;
 
@@ -45,7 +45,6 @@ class CookieGroupExtension extends DataExtension
      */
     public function onBeforeWrite() : void
     {
-        parent::onBeforeWrite();
         if ((int) $this->owner->Sort === 0) {
             $this->owner->Sort = CookieGroup::get()->max('Sort') + 1;
         }

@@ -158,7 +158,7 @@ class Tax extends DataObject
      */
     protected function onBeforeWrite() : void
     {
-        parent::onBeforeWrite();
+         parent::onBeforeWrite();    
         $defaultTaxRate = self::getDefault();
         if (!$defaultTaxRate) {
             $defaultTaxRate = $this;

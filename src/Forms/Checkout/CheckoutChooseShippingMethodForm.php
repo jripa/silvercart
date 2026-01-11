@@ -8,7 +8,7 @@ use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Pages\CheckoutStep;
 use SilverCart\Model\Shipment\ShippingMethod;
 use SilverStripe\Forms\FormAction;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\Map;
 use SilverStripe\ORM\SS_List;

@@ -11,7 +11,7 @@ use SilverCart\Model\Order\ShoppingCart;
 use SilverCart\Model\Order\ShoppingCartPositionNotice;
 use SilverCart\Model\Product\Product;
 use SilverStripe\Control\Controller;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBDecimal;
 use SilverStripe\ORM\FieldType\DBHTMLText;

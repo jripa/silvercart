@@ -10,11 +10,11 @@ use SilverCart\Model\Widgets\WidgetController;
 use SilverCart\Model\Widgets\WidgetTools;
 use SilverCart\Model\Widgets\Widget;
 use SilverStripe\CMS\Controllers\ModelAsController;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\ORM\SS_List;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 
 /**
  * ProductGroupItemsWidget Controller.

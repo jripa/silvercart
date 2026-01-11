@@ -6,7 +6,7 @@ use SilverCart\Dev\Tools;
 use SilverCart\Model\Order\OrderStatus;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\OptionsetField;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension as DataExtension;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 
 /**

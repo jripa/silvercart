@@ -14,6 +14,9 @@ use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Dev\BuildTask;
 use SilverStripe\Versioned\Versioned;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
 
 /**
  * Provides a task to assign the uploaded product images.
@@ -40,14 +43,14 @@ class ProductImageImportTask extends BuildTask
      * 
      * @var string
      */
-    protected $title = 'Import SilverCart Product Images';
+    protected string $title = 'Import SilverCart Product Images';
     /**
      * Describe the implications the task has, and the changes it makes. Accepts 
      * HTML formatting.
      * 
      * @var string
      */
-    protected $description = 'Task to import SilverCart product images. By '
+    protected static string $description = 'Task to import SilverCart product images. By '
             . 'default, images should be stored in <strong><i>/public/assets/unassigned-product-images</i></strong>.<br/>'
             . ' The importer will run through the files and assign the images by'
             . ' file name. The file name should be equal with the product number.<br/>'
@@ -164,11 +167,12 @@ class ProductImageImportTask extends BuildTask
      * 
      * @return void
      */
-    public function run($request) : void
+    public function runImport(PolyOutput $output) : void
     {
         self::$log_file_name = 'ProductImageImportTask';
         if (self::is_running()) {
-            $this->printInfo('quit, import is already running.');
+            //$this->printInfo('quit, import is already running.');
+            $output->writeln('quit, import is already running.');
             return;
         }
         $this->markAsInstalled();
@@ -288,6 +292,12 @@ class ProductImageImportTask extends BuildTask
         }
         $this->unmarkAsRunning();
     }
+
+      protected function execute(InputInterface $input, PolyOutput $output): int
+      {
+        $this->runImport($output);
+        return Command::SUCCESS;
+      }
     
     protected function importFileData(array $fileData, int &$importedCount, array &$found, array &$notFound, bool $isImageImport = true) : void
     {

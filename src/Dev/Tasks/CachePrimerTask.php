@@ -7,6 +7,9 @@ use SilverCart\Dev\Tools;
 use SilverStripe\Control\Director;
 use SilverStripe\Dev\BuildTask;
 use SimpleXMLElement;
+use Symfony\Component\Console\Input\InputInterface;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Command\Command;
 
 /**
  * Task to prime a SilverCart based sites cache.
@@ -34,14 +37,14 @@ class CachePrimerTask extends BuildTask
      * 
      * @var string
      */
-    protected $title = 'Shop Cache Primer Task';
+    protected string $title = 'Shop Cache Primer Task';
     /**
      * Describe the implications the task has, and the changes it makes. Accepts 
      * HTML formatting.
      * 
      * @var string
      */
-    protected $description = 'Task to create a cached version of every published page available through the Google Sitemap.';
+    protected static string$description = 'Task to create a cached version of every published page available through the Google Sitemap.';
     /**
      * The count of URLs to call
      *
@@ -95,9 +98,10 @@ class CachePrimerTask extends BuildTask
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 13.09.2018
      */
-    public function run($request)
+    public function runImport(PolyOutput $output): void
     {
-        $this->printInfo("Running Cache Primer...");
+        //$this->printInfo("Running Cache Primer...");
+        $output->writeln("Running Cache Primer...");
         $this->initArgs();
         
         $url           = $this->getUrlToPrimeCacheFor();
@@ -110,11 +114,19 @@ class CachePrimerTask extends BuildTask
             exit();
         }
         
-        $this->printInfo("Priming cache for {$url} [locale(s): {$localesString}].");
+        //$this->printInfo("Priming cache for {$url} [locale(s): {$localesString}].");
+        $output->writeln("Priming cache for {$url} [locale(s): {$localesString}].");
         
         foreach ($locales as $locale) {
             $this->primeForLocale($locale);
         }
+    }
+
+    protected function execute(InputInterface $input, PolyOutput $output): int
+    {
+        
+        $this->runImport($output);
+        return Command::SUCCESS;
     }
     
     protected function primeForLocale($locale)

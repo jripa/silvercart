@@ -5,9 +5,9 @@ namespace SilverCart\Model\Pages;
 use SilverCart\Dev\Tools;
 use SilverCart\Model\Pages\DownloadPage;
 use SilverStripe\Control\Controller;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\FieldType\DBText;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 
 /**
  * DownloadPageHolder.

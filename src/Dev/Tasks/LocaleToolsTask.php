@@ -10,6 +10,11 @@ use SilverStripe\Core\ClassInfo;
 use SilverStripe\Core\Config\Config;
 use SilverStripe\i18n\i18n;
 use SilverStripe\ORM\DataObject;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
+
 
 class LocaleToolsTask extends BuildTask
 {
@@ -26,14 +31,14 @@ class LocaleToolsTask extends BuildTask
      * 
      * @var string
      */
-    protected $title = 'Locale Tools';
+    protected string$title = 'Locale Tools';
     /**
      * Describe the implications the task has, and the changes it makes. Accepts 
      * HTML formatting.
      * 
      * @var string
      */
-    protected $description = 'Task to provide some locale base dev tools.';
+    protected static string $description = 'Task to provide some locale base dev tools.';
     /**
      * 
      *
@@ -58,12 +63,73 @@ class LocaleToolsTask extends BuildTask
      * 
      * @return void
      * 
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 27.09.2019
+     * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+     * @since 09.01.2026
      */
-    public function run($request) : void
+    public function runImport(HTTPRequest $request): void
     {
         $this->handleAction($request);
+    }
+
+    /**
+     * Executes the task from CLI.
+     * 
+     * @param InputInterface $input Input
+     * @param PolyOutput     $output Output
+     * 
+     * @return int
+     * 
+     * @author Jiri Ripa <jripa@pixeltricks.de>
+     * @since 09.01.2026
+     */
+    protected function execute(InputInterface $input, PolyOutput $output): int
+    {
+        // Action/IDs aus CLI Optionen (oder Defaults)
+        $action  = $input->getOption('action') ?: '';      // z.B. addMissingLocaleEntries
+        $id      = $input->getOption('id') ?: '';          // optional
+        $otherId = $input->getOption('otherId') ?: '';     // optional
+
+        // Segment aus Config (bei dir: sc-locale-tools)
+        $segment = (string) $this->config()->get('segment');
+
+        // URL exakt so, wie handleAction() sie erwartet
+        // Wichtig: segment muss als eigenes Path-Element vorkommen!
+        $path = "dev/tasks/{$segment}";
+        if ($action !== '') {
+            $path .= "/{$action}";
+        }
+        if ($id !== '') {
+            $path .= "/{$id}";
+        }
+        if ($otherId !== '') {
+            $path .= "/{$otherId}";
+        }
+
+        // POST-Daten (für deine Form-Handler)
+        $post = [
+            'SourceLocale' => (string) ($input->getOption('source') ?? ''),
+            'TargetLocale' => (string) ($input->getOption('target') ?? ''),
+        ];
+
+        $request = new HTTPRequest('POST', $path, [], $post);
+
+        // Das macht die komplette Action-Dispatch-Logik deines Traits
+        $this->handleAction($request);
+
+        // handleAction() macht exit(); – falls du das später entfernst:
+        return Command::SUCCESS;
+    }
+
+    protected function configure(): void
+    {
+        parent::configure();
+
+        $this->addOption('action', null, InputOption::VALUE_OPTIONAL, 'Allowed action', '');
+        $this->addOption('id', null, InputOption::VALUE_OPTIONAL, 'Optional id', '');
+        $this->addOption('otherId', null, InputOption::VALUE_OPTIONAL, 'Optional other id', '');
+
+        $this->addOption('source', null, InputOption::VALUE_OPTIONAL, 'Source locale (e.g. de_DE)', '');
+        $this->addOption('target', null, InputOption::VALUE_OPTIONAL, 'Target locale (e.g. en_US)', '');
     }
     
     /**
@@ -76,8 +142,21 @@ class LocaleToolsTask extends BuildTask
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 27.09.2019
      */
-    public function runDefault(HTTPRequest $request) : void
+    public function runDefault(HTTPRequest $request): void
     {
+        $source = $request->postVar('SourceLocale');
+        $target = $request->postVar('TargetLocale');
+
+        if (PHP_SAPI === 'cli') {
+            if (!$source || !$target) {
+                echo "Usage: --action=addMissingLocaleEntries --source=de_DE --target=en_US\n";
+                return;
+            }
+            $this->addMissingLocaleEntries($request);
+            return;
+        }
+
+        // Web wie gehabt
         $this->printLine();
         $this->printMessage($this->getDescription());
         $this->printLine();

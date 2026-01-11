@@ -3,7 +3,7 @@
 namespace SilverCart\Extensions\Security;
 
 use SilverCart\Dev\Tools;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension as DataExtension;
 
 /**
  * Extension for SilverStripe LoginAttempt

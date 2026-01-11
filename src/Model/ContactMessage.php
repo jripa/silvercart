@@ -186,6 +186,7 @@ class ContactMessage extends DataObject
     protected function onBeforeWrite() : void
     {
         parent::onBeforeWrite();
+            
         if (!$this->exists()) {
             $this->IsSpam = BlacklistEntry::isSpam($this->Message)
                     || ((int) self::config()->mark_as_spam_after_repeating > 0

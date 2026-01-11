@@ -27,10 +27,10 @@ use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ToggleCompositeField;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Core\Extension;
 use SilverStripe\ORM\DB;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 use SilverStripe\SiteConfig\SiteConfig;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
@@ -46,7 +46,7 @@ use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class SiteConfigExtension extends DataExtension
+class SiteConfigExtension extends Extension
 {
     use \SilverCart\Core\ExtensibleExtension;
     /**
@@ -168,7 +168,7 @@ class SiteConfigExtension extends DataExtension
     /**
      * Workaround to add a custom callback method for ShopState if possible.
      * 
-     * @param \SilverStripe\View\ViewableData $owner Owner
+     * @param \SilverStripe\Model\ModelData $owner Owner
      */
     public function setOwner($owner) : void
     {
@@ -675,7 +675,6 @@ class SiteConfigExtension extends DataExtension
      */
     public function onBeforeWrite()
     {
-        parent::onBeforeWrite();
         $request     = Controller::curr()->getRequest();
         $colorScheme = $request->postVar('ColorScheme');
         if (is_string($colorScheme)) {
@@ -694,7 +693,7 @@ class SiteConfigExtension extends DataExtension
      */
     public function onAfterWrite_deprecated()
     {
-        parent::onAfterWrite();
+        //parent::onAfterWrite();
         if (is_null(self::$duplicate_config_locale)) {
             self::$duplicate_config_locale = $this->owner->Locale;
             $changedFields = $this->owner->getChangedFields();

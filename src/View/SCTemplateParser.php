@@ -2,7 +2,7 @@
 
 namespace SilverCart\View;
 
-use SilverStripe\View\SSTemplateParser;
+use SilverStripe\TemplateEngine\SSTemplateParser;
 
 /**
  * Extends the original SSTemplateParser to provide a configuration property to disable

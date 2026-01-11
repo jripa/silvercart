@@ -688,7 +688,7 @@ class OrderPosition extends DataObject
      * 
      * @return DBHTMLText
      */
-    public function forTemplate(string $templateAddition = '') : DBHTMLText
+    public function forTemplate(string $templateAddition = '') : string
     {
         $addition = empty($templateAddition) ? '' : "_{$templateAddition}";
         return $this->renderWith(static::class . $addition);

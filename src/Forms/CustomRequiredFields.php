@@ -7,7 +7,7 @@ use SilverCart\Model\Pages\Page;
 use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FileField;
 use SilverStripe\Forms\FormField;
-use SilverStripe\Forms\RequiredFields;
+use SilverStripe\Forms\Validation\RequiredFieldsValidator as RequiredFields;
 use SilverStripe\ORM\ValidationResult;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;

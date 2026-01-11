@@ -217,6 +217,7 @@ class Zone extends DataObject {
      */
     protected function onBeforeWrite() {
         parent::onBeforeWrite();
+
         if (array_key_exists('UseAllCountries', $_POST)) {
             $countries = Country::get();
             foreach ($countries as $country) {

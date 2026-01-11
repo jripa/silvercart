@@ -4,7 +4,10 @@ namespace SilverCart\Dev\Tasks;
 
 use SilverCart\Dev\ProductCsvBulkLoader;
 use SilverCart\Model\Product\Product;
-use SilverStripe\Control\CliController;
+use SilverStripe\Dev\BuildTask;
+use SilverStripe\PolyExecution\PolyOutput;
+use Symfony\Component\Console\Input\InputInterface;
+
 
 /**
  * Does an import for a specified file.
@@ -24,7 +27,7 @@ use SilverStripe\Control\CliController;
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class ProductImportTask extends CliController {
+class ProductImportTask extends BuildTask {
     
     /**
      * This method gets called from sake.
@@ -36,7 +39,7 @@ class ProductImportTask extends CliController {
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 12.10.2017
      */
-    public function process() {
+    protected function execute(InputInterface $input, PolyOutput $output): int {
         $file = false;
         $bulkLoader = ProductCsvBulkLoader::class;
 
@@ -63,6 +66,7 @@ class ProductImportTask extends CliController {
         
         return true;
     }
+    
     
     /**
      * Imports a CSV file.

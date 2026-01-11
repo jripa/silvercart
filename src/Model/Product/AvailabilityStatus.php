@@ -352,7 +352,7 @@ class AvailabilityStatus extends DataObject
      */
     protected function onBeforeWrite()
     {
-        parent::onBeforeWrite();
+         parent::onBeforeWrite();
         if ($this->SetForNegativeStock) {
             $statusList = AvailabilityStatus::get()->filter(['SetForNegativeStock' => 1])->exclude(['ID' => $this->ID]);
             if ($statusList->exists()) {

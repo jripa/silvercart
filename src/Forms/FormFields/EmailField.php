@@ -2,6 +2,8 @@
 
 namespace SilverCart\Forms\FormFields;
 
+use SilverStripe\Core\Validation\ValidationResult;
+
 /**
  * Text input field with validation for correct email format according to RFC 2822.
  * A copy of SilverStripe\Forms\EmailField but extends from 
@@ -42,26 +44,29 @@ class EmailField extends TextField
      *
      * @return string
      */
-    public function validate($validator)
+    public function validate(): ValidationResult
     {
-        $this->value = trim($this->value);
+        $result = ValidationResult::create();
+
+        $this->value = trim((string) $this->value);
 
         $pattern = '^[a-z0-9!#$%&\'*+/=?^_`{|}~-]+(?:\\.[a-z0-9!#$%&\'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$';
 
         // Escape delimiter characters.
         $safePattern = str_replace('/', '\\/', $pattern);
 
-        if ($this->value && !preg_match('/' . $safePattern . '/i', $this->value)) {
-            $validator->validationError(
-                $this->name,
+        if ($this->value !== '' && !preg_match('/' . $safePattern . '/i', $this->value)) {
+            $result->addFieldError(
+                $this->getName(), // oder $this->name, je nach deiner Klasse
                 _t('SilverStripe\\Forms\\EmailField.VALIDATION', 'Please enter an email address'),
                 'validation'
             );
-
-            return false;
         }
 
-        return true;
+        // Extensions/Traits wie in SS6 üblich
+        $this->extend('updateValidate', $result);
+
+        return $result;
     }
 
     /**

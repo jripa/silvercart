@@ -36,7 +36,7 @@ class MoneyField extends SilverStripeMoneyField
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 25.10.2017
      */
-    protected function buildCurrencyField() {
+    protected function buildCurrencyField(bool $forceTextField = false) {
         if ($this->getCurrencyIsReadonly()) {
             $field = HiddenField::create("{$this->getName()}[Currency]");
             $field->setValue(Config::DefaultCurrency());

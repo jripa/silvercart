@@ -4,7 +4,7 @@ namespace SilverCart\Extensions\Assets\Storage;
 
 use SilverStripe\Assets\Flysystem\FlysystemAssetStore;
 use SilverStripe\Assets\Flysystem\ProtectedAssetAdapter;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension as DataExtension;
 
 /**
  * Extension for SilverStripe DBFile.

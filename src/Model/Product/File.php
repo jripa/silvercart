@@ -229,7 +229,7 @@ class File extends DataObject
      * @return void
      */
     protected function onBeforeWrite() {
-        parent::onBeforeWrite();
+         parent::onBeforeWrite();
         if ($this->File()->exists()
          && empty($this->Title)
         ) {

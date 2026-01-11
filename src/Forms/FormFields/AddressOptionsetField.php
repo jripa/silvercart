@@ -4,8 +4,8 @@ namespace SilverCart\Forms\FormFields;
 
 use SilverCart\Model\Customer\Address;
 use SilverStripe\Forms\OptionsetField;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ArrayData;
 
 /** 
  * A formfield for the payment checkout step that can render additional

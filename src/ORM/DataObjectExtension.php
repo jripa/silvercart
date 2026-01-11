@@ -10,7 +10,7 @@ use SilverCart\Model\Translation\TranslationTools;
 use SilverStripe\CMS\Model\RedirectorPage;
 use SilverStripe\Control\Controller;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 
@@ -24,7 +24,7 @@ use SilverStripe\ORM\DB;
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class DataObjectExtension extends DataExtension {
+class DataObjectExtension extends Extension {
     
     /**
      * Handles UseAsRootForMainNavigation property (can only be set for a single 

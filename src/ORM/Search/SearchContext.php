@@ -8,8 +8,8 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\SelectField;
 use SilverStripe\ORM\FieldType\DBDate;
 use SilverStripe\ORM\FieldType\DBDatetime;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\ArrayData;
 
 /**
  * Provides the ability to search between two dates.

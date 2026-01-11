@@ -799,6 +799,7 @@ class Address extends DataObject implements PermissionProvider
     protected function onBeforeWrite() : void
     {
         parent::onBeforeWrite();
+        
         if ($this->IsPackstation) {
             $this->Street       = '';
             $this->StreetNumber = '';
@@ -1289,7 +1290,7 @@ class Address extends DataObject implements PermissionProvider
      * 
      * @return string 
      */
-    public function getField($field)
+    public function getField($field) : ?string
     {
         $parentField = parent::getField($field);
         if (!is_null($parentField)
@@ -1373,7 +1374,7 @@ class Address extends DataObject implements PermissionProvider
      * 
      * @return DBHTMLText
      */
-    public function forTemplate(string $templateAddition = null, string $headline = null, string $cssClasses = null) : DBHTMLText
+    public function forTemplate(string $templateAddition = null, string $headline = null, string $cssClasses = null) : string
     {
         $template = Address::class;
         if ($templateAddition !== null) {

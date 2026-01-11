@@ -199,7 +199,7 @@ class Carrier extends DataObject
      */
     protected function onBeforeWrite()
     {
-        parent::onBeforeWrite();
+        parent::onBeforeWrite(); 
         if (!empty($this->TrackingLinkBase)
          && strpos($this->TrackingLinkBase, '{TrackingCode}') === false) {
             $this->TrackingLinkBase .= '{TrackingCode}';

@@ -4,7 +4,7 @@ namespace SilverCart\Extensions\ORM;
 
 use SilverStripe\Core\Extension;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\PaginatedList;
+use SilverStripe\Model\List\PaginatedList;
 
 /**
  * Extension for PaginatedList.

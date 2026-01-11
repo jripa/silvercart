@@ -13,12 +13,12 @@ use SilverStripe\Control\Email\Email;
 use SilverStripe\Core\Extensible;
 use SilverStripe\Core\Manifest\VersionProvider;
 use SilverStripe\i18n\i18n;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DatabaseAdmin;
 use SilverStripe\ORM\DB;
 use SilverStripe\Security\Member;
 use SilverStripe\SiteConfig\SiteConfig;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 
 /**
  * The class SilverCart\Admin\Model\Config is the Handler for central configurations of

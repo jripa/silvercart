@@ -16,11 +16,11 @@ use SilverCart\Model\Product\ProductTranslation;
 use SilverStripe\Control\HTTPRequest;
 use SilverStripe\Core\Convert;
 use SilverStripe\ErrorPage\ErrorPage;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\PaginatedList;
+use SilverStripe\Model\List\PaginatedList;
 use SilverStripe\Versioned\Versioned;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 
 /**
  * SearchResultsPage Controller class.
@@ -358,6 +358,7 @@ class SearchResultsPageController extends ProductGroupPageController
         if (empty($searchQuery)) {
             $searchResultProducts = PaginatedList::create(ArrayList::create());
         } elseif (empty($useExtensionResults)) {
+            $searchResultProducts = null;
             $productTable = Tools::get_table_name(Product::class);
             $productTranslationTable = Tools::get_table_name(ProductTranslation::class);
             $this->listFilters['original'] = sprintf('
@@ -462,6 +463,8 @@ class SearchResultsPageController extends ProductGroupPageController
             $searchResultProducts = PaginatedList::create($searchResultProductsRaw, $this->getRequest());
             $searchResultProducts->setPageStart($SQL_start);
             $searchResultProducts->setPageLength($productsPerPage);
+        } else {
+            $searchResultProducts = PaginatedList::create(ArrayList::create());
         }
         
         $this->searchResultProducts  = $searchResultProducts;

@@ -8,8 +8,8 @@ use SilverCart\Model\Pages\Page as SilverCartPage;
 use SilverCart\Model\Pages\ProductGroupHolder;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Controller;
-use SilverStripe\ORM\ArrayList;
-use SilverStripe\ORM\PaginatedList;
+use SilverStripe\Model\List\ArrayList;
+use SilverStripe\Model\List\PaginatedList;
 
 /**
  * ProductGroupHolder Controller class.

@@ -11,7 +11,7 @@ use SilverCart\Model\Shipment\Zone;
 use SilverCart\ORM\FieldType\DBMoney;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\SS_List;
@@ -383,6 +383,7 @@ class Country extends DataObject
     public function onBeforeWrite() : void
     {
         parent::onBeforeWrite();
+        
         if (!$this->IsPrioritive) {
             $this->DisplayPosition = 0;
         } elseif ($this->DisplayPosition == 0) {

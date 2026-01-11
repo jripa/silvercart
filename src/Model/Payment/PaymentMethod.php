@@ -52,7 +52,7 @@ use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\i18n\i18n;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBMoney;
 use SilverStripe\ORM\Filters\ExactMatchFilter;
@@ -1302,7 +1302,7 @@ class PaymentMethod extends DataObject
                 $this->Name = $this->getPaymentChannelName($paymentChannel);
             }
         }
-        parent::onBeforeWrite();
+         parent::onBeforeWrite();
     }
 
     /**

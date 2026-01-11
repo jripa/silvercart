@@ -5,7 +5,7 @@ namespace SilverCart\ORM;
 use SilverCart\Model\Translation\TranslationExtension;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormField;
-use SilverStripe\ORM\DataExtension;
+use SilverStripe\Core\Extension;
 use SilverStripe\ORM\DataObject;
 
 /**
@@ -18,7 +18,7 @@ use SilverStripe\ORM\DataObject;
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class DataObjectCacheExtension extends DataExtension {
+class DataObjectCacheExtension extends Extension {
     
     /**
      * Determines whether self::onAfterWrite() is in progress to prevent a

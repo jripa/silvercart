@@ -4,6 +4,7 @@ namespace SilverCart\Forms\FormFields;
 
 use ReCaptcha\ReCaptcha;
 use SilverStripe\Forms\FormField;
+use SilverStripe\Core\Validation\ValidationResult;
 
 /**
  * A Google reCAPTCHA field
@@ -126,20 +127,26 @@ class GoogleRecaptchaField extends FormField
      *
      * @return bool
      *
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 16.09.2019
+     * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jri@pixeltricks.de>
+     * @since 09.01.2026
      */
-    public function validate($validator) : bool
+    public function validate(): ValidationResult
     {
+        $result = ValidationResult::create();
+
         $valid = self::verifyRequest();
+
         if (!$valid) {
-            $validator->validationError(
+            $result->addFieldError(
                 $this->getName(),
                 _t(self::class . '.Verify', 'Please verify that you are not a robot.'),
-                "validation",
-                false
+                'validation'
             );
         }
-        return $valid;
+
+        // optional, falls Extensions genutzt werden
+        $this->extend('updateValidate', $result);
+
+        return $result;
     }
 }

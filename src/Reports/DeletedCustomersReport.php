@@ -7,10 +7,10 @@ use SilverCart\Model\Customer\DeletedCustomer;
 use SilverCart\Model\Customer\DeletedCustomerReason;
 use SilverCart\Model\Pages\Page;
 use SilverCart\Model\Product\Product;
-use SilverStripe\ORM\ArrayList;
+use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DB;
 use SilverStripe\Reports\Report;
-use SilverStripe\View\ArrayData;
+use SilverStripe\Model\ArrayData;
 
 /**
  * Report to show reasons for customer deletions.

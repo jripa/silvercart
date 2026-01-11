@@ -40,7 +40,7 @@ use SilverCart\View\GroupView\GroupViewTile;
 use SilverStripe\Admin\LeftAndMain;
 use SilverStripe\Admin\SecurityAdmin;
 use SilverStripe\AssetAdmin\Controller\AssetAdmin;
-use SilverStripe\CMS\Controllers\CMSPagesController;
+use SilverStripe\CMS\Controllers\CMSMain as CMSPagesController;
 use SilverStripe\CMS\Controllers\ContentController;
 use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Reports\ReportAdmin;
