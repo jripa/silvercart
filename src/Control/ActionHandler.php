@@ -466,12 +466,13 @@ class ActionHandler extends Controller
         $productGroupID = (int) $request->param('ID');
         $productGroup   = SiteTree::get()->byID($productGroupID);
         $locale = $request->getVar('locale');
+        $fluentLocale = FluentState::singleton()->getLocale();
+        
         if (!$productGroup) {
             return DBHTMLText::create()->setValue('');
         }
-
-        //$currentLocal = FluentState::singleton()->getLocale();
-        $currentLocale = $locale;
+         
+        $currentLocale = $locale ? $locale : $fluentLocale;
         i18n::set_locale($currentLocale);
         return FluentState::singleton()->withState(function (FluentState $state) use ($productGroup, $currentLocale) {
                 $state->setLocale($currentLocale);

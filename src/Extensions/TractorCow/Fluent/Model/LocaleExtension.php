@@ -41,7 +41,9 @@ class LocaleExtension extends Extension
             $locale->write();
             Locale::clearCached();
             $locale->publishSiteTree();
-            CookieGroup::singleton()->requireDefaultRecords();
+            if (class_exists(CookieGroup::class)) {
+                CookieGroup::singleton()->requireDefaultRecords();
+            }
         }
     }
 
