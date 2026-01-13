@@ -227,10 +227,9 @@ class DataObjectExtension extends Extension {
     public static function getCMSFields(DataObject $dataObject, $neighbourFieldOfTranslationFields = null, $insertLangugeFieldsAfter = true, $tabbed = true) {
         $params = array(
             'includeRelations'  => $dataObject->isInDB(),
-            'tabbed'            => $tabbed,
-            'ajaxSafe'          => true,
+            'tabbed'            => $tabbed
         );
-        $restrictFields = array();
+        $restrictFields = [];
         $dataObject->extend('updateRestrictCMSFields', $restrictFields);
         if (!empty($restrictFields)) {
             $params['restrictFields'] = $restrictFields;
@@ -242,16 +241,23 @@ class DataObjectExtension extends Extension {
             $languageFields = TranslationTools::prepare_cms_fields($dataObject->getTranslationClassName());
             foreach ($languageFields as $languageField) {
                 if (!is_null($neighbourFieldOfTranslationFields)) {
-                    if ($insertLangugeFieldsAfter) {
-                        $tabbedFields->insertAfter($languageField, $neighbourFieldOfTranslationFields);
-                        
-                        /*
-                         * Change the name of the field the insert the next field
-                         * Otherwise the sort order would be inverted
-                         */
-                        $neighbourFieldOfTranslationFields = $languageField->getName();
+                    $anchor = $neighbourFieldOfTranslationFields;
+
+                    if (is_string($anchor)) {
+                        $anchor = $tabbedFields->dataFieldByName($anchor) ?? $tabbedFields->fieldByName($anchor);
+                    }
+
+                    if ($anchor) {
+                        if ($insertLangugeFieldsAfter) {
+                            $tabbedFields->insertAfter($languageField, $anchor);
+                        } else {
+                            $tabbedFields->insertBefore($languageField, $anchor);
+                        }
+
+                        // Für das nächste Feld: Anchor ist das Feldobjekt selbst (SS6-safe)
+                        $neighbourFieldOfTranslationFields = $languageField;
                     } else {
-                        $tabbedFields->insertBefore($languageField, $neighbourFieldOfTranslationFields);
+                        $tabbedFields->addFieldToTab('Root.Main', $languageField);
                     }
                 } else {
                     $tabbedFields->addFieldToTab('Root.Main', $languageField);
@@ -288,24 +294,25 @@ class DataObjectExtension extends Extension {
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 13.02.2013
      */
-    public static function scaffoldFormFields(DataObject $dataObject, $_params = null) {
+    public static function scaffoldFormFields(DataObject $dataObject, $_params = null)
+    {
         $params = array_merge(
-                array(
-                    'tabbed' => false,
-                    'includeRelations' => false,
-                    'restrictFields' => false,
-                    'fieldClasses' => false,
-                    'ajaxSafe' => false
-                ),
-                (array) $_params
+            [
+                'tabbed' => false,
+                'includeRelations' => false,
+                'restrictFields' => [],   // SS6: array statt false
+                'fieldClasses' => [],     // sinnvoll ebenfalls array statt false (siehe unten)
+            ],
+            (array) $_params
         );
 
         $fs = new FormScaffolder($dataObject);
-        $fs->tabbed             = $params['tabbed'];
-        $fs->includeRelations   = $params['includeRelations'];
-        $fs->restrictFields     = $params['restrictFields'];
-        $fs->fieldClasses       = $params['fieldClasses'];
-        $fs->ajaxSafe           = $params['ajaxSafe'];
+        $fs->tabbed           = (bool) $params['tabbed'];
+        $fs->includeRelations = (bool) $params['includeRelations'];
+
+        // SS6: must be array
+        $fs->restrictFields   = (array) ($params['restrictFields'] ?? []);
+        $fs->fieldClasses     = (array) ($params['fieldClasses'] ?? []);
 
         return $fs->getFieldList();
     }

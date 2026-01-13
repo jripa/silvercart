@@ -7,7 +7,8 @@ use SilverCart\Admin\Model\Config;
 use SilverCart\Model\Product\ProductTranslation;
 use SilverCart\Model\Translation\TranslationTools;
 use SilverStripe\Forms\FieldList;
-use SilverStripe\Core\Extension as DataExtension;
+use SilverStripe\Core\Extension;
+use SilverStripe\ORM\DataObject;
 
 /** 
  * Adds methods that are common to all language classes e.g. ProductTranslation
@@ -20,7 +21,7 @@ use SilverStripe\Core\Extension as DataExtension;
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
-class TranslationExtension extends DataExtension {
+class TranslationExtension extends Extension {
     
     /**
      * Extends the database fields
@@ -47,11 +48,10 @@ class TranslationExtension extends DataExtension {
      *
      * @return void 
      * 
-     * @author Roland Lehmann <rlehmann@pixeltricks.de>, Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 04.05.2012
+     * @author Roland Lehmann <rlehmann@pixeltricks.de>, Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+     * @since 04.05.2012, 11.01.2026
      */
     public function updateFieldLabels(&$labels) {
-        parent::updateFieldLabels($labels);
         $labels['Locale'] = _t(ProductTranslation::class . '.LOCALE', 'Language');
     }
     

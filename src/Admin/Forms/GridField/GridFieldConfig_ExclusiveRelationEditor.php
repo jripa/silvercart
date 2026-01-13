@@ -34,8 +34,8 @@ class GridFieldConfig_ExclusiveRelationEditor extends GridFieldConfig {
      * 
      * @return void
      *
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 13.02.2013
+     * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+     * @since 08.03.2013, 12.01.2026
      */
     public function __construct($itemsPerPage = null) {
 
@@ -49,10 +49,6 @@ class GridFieldConfig_ExclusiveRelationEditor extends GridFieldConfig {
         $this->addComponent(new GridFieldDeleteAction());
         $this->addComponent($pagination = new GridFieldPaginator($itemsPerPage));
         $this->addComponent(new GridFieldDetailForm());
-
-        $sort->setThrowExceptionOnBadDataType(false);
-        $filter->setThrowExceptionOnBadDataType(false);
-        $pagination->setThrowExceptionOnBadDataType(false);
     }
 
 }

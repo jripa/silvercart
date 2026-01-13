@@ -184,7 +184,7 @@ class ProductGroupPage extends \Page
      *
      * @var boolean
      */
-    protected $manufacturers = null;
+    protected ?ArrayList $manufacturers = null;
     /**
      * Contains the number of all active Products for this page for
      * caching purposes.
@@ -538,7 +538,7 @@ class ProductGroupPage extends \Page
                         $fieldGroup,
                     ]
             )->setHeadingLevel(4)->setStartClosed(true);
-            $fields->insertAfter($displaySettingsToggle, 'Content');
+            $fields->insertAfter('Content',$displaySettingsToggle);
 
             if ($this->drawCMSFields()) {
                 $productAdminLink     = Director::baseURL().'admin/silvercart-products';
@@ -562,7 +562,7 @@ class ProductGroupPage extends \Page
                     'ManageWidgetsButton',
                     "<a href=\"{$widgetSetAdminLink}\">{$manageWidgetsLabel}</a>"
                 );
-                $fields->insertAfter($manageWidgetsButton, 'WidgetSetContent');
+                $fields->insertAfter('WidgetSetContent', $manageWidgetsButton);
             }
 
             if ($fields->dataFieldByName('LastEditedForCache') instanceof FormField) {
@@ -773,10 +773,10 @@ class ProductGroupPage extends \Page
      *
      * @return ArrayList
      */
-    public function getManufacturers() : ArrayList
+    public function getManufacturers()
     {
         if (is_null($this->manufacturers)) {
-            $manufacturers = [];
+
             foreach ($this->getProducts() as $product) {
                 if ($product->Manufacturer()->exists()
                  && !in_array($product->Manufacturer()->Title, $manufacturers)

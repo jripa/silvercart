@@ -3,7 +3,6 @@
 namespace SilverCart\Model\Customer;
 
 use SilverCart\Dev\Tools;
-use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Customer\Country;
 use SilverCart\Model\Customer\Customer;
 use SilverCart\Model\Order\Order;
@@ -1457,7 +1456,7 @@ class Address extends DataObject implements PermissionProvider
      * 
      * @return int
      */
-    public function PlainTextLineCount(string $headLine = null) : int
+    public function PlainTextLineCount(string $headLine = '') : int
     {
         return count(explode(PHP_EOL, $this->renderPlainText($headLine)));
     }

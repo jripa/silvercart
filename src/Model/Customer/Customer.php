@@ -1509,8 +1509,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      */
     public function onAfterWrite()
     {
-        parent::onAfterWrite();
-
         if ($this->owner->ShoppingCartID === null) {
             $cart = ShoppingCart::create();
             $cart->write();
@@ -1554,7 +1552,6 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * @since 10.10.2011
      */
     public function onAfterDelete() {
-        parent::onAfterDelete();
         
         if ($this->owner->ShoppingCartID !== null) {
             $cart = ShoppingCart::get()->byID($this->owner->ShoppingCartID);

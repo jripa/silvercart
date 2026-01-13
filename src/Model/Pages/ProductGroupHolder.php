@@ -16,7 +16,7 @@ use SilverStripe\Forms\TextField;
 use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\Forms\TreeDropdownField;
 use SilverStripe\i18n\i18n;
-use SilverStripe\ORM\Map;
+use SilverStripe\Model\List\Map;
 
 /**
  * Page to display a group of products.
@@ -202,8 +202,8 @@ class ProductGroupHolder extends \Page
                     ]
             )->setHeadingLevel(4)->setStartClosed(true);
 
-            $fields->insertAfter($redirectionSettingsToggle, 'Content');
-            $fields->insertAfter($displaySettingsToggle, 'Content');
+            $fields->insertAfter('Content', $redirectionSettingsToggle);
+            $fields->insertAfter('Content', $displaySettingsToggle);
         });
         $this->getCMSFieldsIsCalled = true;
         return parent::getCMSFields();

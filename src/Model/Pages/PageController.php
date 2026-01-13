@@ -79,13 +79,16 @@ class PageController extends ContentController
      * 
      * @return void
      *
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 17.10.2017
+     * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+     * @since 17.10.2017, 11.01.2026
      */
     public function __construct($dataRecord = null)
     {
-        i18n::config()->merge('default_locale', Tools::current_locale());
-        i18n::set_locale(Tools::current_locale());
+        $currLocale = Tools::current_locale();
+
+        i18n::config()->set('default_locale', $currLocale);
+        i18n::set_locale($currLocale);
+
         parent::__construct($dataRecord);
     }
     

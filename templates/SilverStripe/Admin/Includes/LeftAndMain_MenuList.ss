@@ -12,7 +12,7 @@
             </a>
             <ul class="cms-menu__list collapse">
             <% loop ModelAdmins %>
-                <li class="{$LinkingMode} <% if $first %>first<% end_if %>" rel="menu-section-{$MenuCode.LowerCase}">
+                <li class="{$LinkingMode}<% if $first %> first<% end_if %>" rel="menu-section-{$MenuCode.LowerCase}">
                     <a href="$Link">
                         <!-- span class="icon icon-16 icon-{$Code.LowerCase}">&nbsp;</span -->
                         <% if IconClass %>

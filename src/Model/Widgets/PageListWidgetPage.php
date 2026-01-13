@@ -84,22 +84,47 @@ class PageListWidgetPage extends DataExtension {
      *
      * @return void
      *
-     * @author Sascha Koehler <skoehler@pixeltricks.de>, Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 04.04.2013
+     * @author Sascha Koehler <skoehler@pixeltricks.de>, Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+     * @since 04.04.2013, 11.01.2026
      */
-    public function updateCMSFields(FieldList $fields) {
+    public function updateCMSFields(FieldList $fields): void
+    {
+        $tab = 'Root.Widgets';
+
+        // Baue die Felderliste nur aus Feldern auf, die noch nicht existieren
+        $innerFields = [];
+
+        $innerFields[] = LiteralField::create(
+            'widgetInfoTabExplanation',
+            '<div class="field">' . $this->owner->fieldLabel('widgetInfoTabInfo') . '</div>'
+        );
+
+        if (!$fields->dataFieldByName('widgetPriority')) {
+            $innerFields[] = TextField::create('widgetPriority', $this->owner->fieldLabel('widgetPriority'));
+        }
+        if (!$fields->dataFieldByName('widgetTitle')) {
+            $innerFields[] = TextField::create('widgetTitle', $this->owner->fieldLabel('widgetTitle'));
+        }
+        if (!$fields->dataFieldByName('widgetText')) {
+            $innerFields[] = HTMLEditorField::create('widgetText', $this->owner->fieldLabel('widgetText'));
+        }
+        if (!$fields->dataFieldByName('widgetImage')) {
+            $innerFields[] = UploadField::create('widgetImage', $this->owner->fieldLabel('widgetImage'));
+        }
+
+        if (count($innerFields) < 2) {
+            return;
+        }
+
         $widgetInfoField = ToggleCompositeField::create(
-                'widgetInfoTab',
-                $this->owner->fieldLabel('widgetInfoTab'),
-                array(
-                    new LiteralField(   'widgetInfoTabExplanation',             '<div class="field">' . $this->owner->fieldLabel('widgetInfoTabInfo') . '</div>'),
-                    new TextField(      'widgetPriority',                       $this->owner->fieldLabel('widgetPriority')),
-                    new TextField(      'widgetTitle',                          $this->owner->fieldLabel('widgetTitle')),
-                    new HTMLEditorField('widgetText',                           $this->owner->fieldLabel('widgetText')),
-                    new UploadField(    'widgetImage',                          $this->owner->fieldLabel('widgetImage')),
-                )
+            'widgetInfoTab',
+            $this->owner->fieldLabel('widgetInfoTab'),
+            $innerFields
         )->setHeadingLevel(4);
 
-        $fields->addFieldToTab('Root.Widgets', $widgetInfoField);
+        // Optional: ToggleCompositeField selbst nicht doppelt hinzufügen
+        if (!$fields->fieldByName($tab . '.widgetInfoTab')) {
+            $fields->addFieldToTab($tab, $widgetInfoField);
+        }
     }
 }

@@ -6,9 +6,10 @@ use SilverCart\Model\Customer\CountryTranslation;
 
 $sql = 'SELECT DISTINCT Locale FROM ' . CountryTranslation::config()->get('table_name');
 $result = \SilverStripe\ORM\DB::query($sql);
-$first = $result->first();
+$row = $result->record();   // gibt den nächsten Datensatz zurück
+
 if ($result->numRecords() > 0) {
-    $existingLocale = $first['Locale'];
+    $existingLocale = $row['Locale'] ?? null;
     $targetLocale   = Tools::current_locale();
     Country::create_translations($existingLocale, $targetLocale);
 }

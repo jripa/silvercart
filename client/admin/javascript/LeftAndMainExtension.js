@@ -1,4 +1,88 @@
 (function($) {
+
+        $(document).on('click', '.cms-menu__list > li > a', function (e) {
+            const $li = $(this).closest('li');
+            const $submenu = $li.children('ul.cms-menu__list');
+
+            // Nur wenn es ein Submenü gibt
+            if ($submenu.length) {
+                e.preventDefault();   // ❗ Navigation blockieren
+                e.stopPropagation();
+
+                // Optional: andere Menüs schließen
+                /*
+                $('.cms-menu__list > li.opened')
+                    .not($li)
+                    .removeClass('opened')
+                    .children('ul.cms-menu__list')
+                    .slideUp(200);
+                */
+
+                // Toggle aktuelles Menü
+                $li.toggleClass('opened');
+
+                if ($li.hasClass('opened')) {
+                    $submenu.slideDown(200);
+                } else {
+                    $submenu.slideUp(200);
+                }
+            }
+        });
+/*
+        $('.cms-menu.collapsed .collapsed-flyout li').on('click', function () {
+            $('.cms-menu li.current').removeClass('current');
+            $('#' + $(this).attr('rel')).addClass('current');
+        });
+        */
+        
+        $('li[aria-controls="Root_PrintPreviewTab"]').on('click', function() {
+            $('iframe.print-preview').height($('.cms-content-fields').height() - 54);
+        });
+
+        $('.hover-image-preview').on('hover', function(e) {
+            var imageURL = $(this).data('img-src');
+            if (e.type === 'mouseenter') {
+                if ($('#hover-image-preview-box').length === 0) {
+                    $('body').append('<div id="hover-image-preview-box"><img/></div>');
+                    $('#hover-image-preview-box').hide();
+                    $('#hover-image-preview-box').css({
+                        maxWidth : '1000px',
+                        maxheight : '500px',
+                        position: 'absolute',
+                        zIndex: '100'
+                    });
+                    $('#hover-image-preview-box img').css({
+                        width: 'auto',
+                        height: 'auto',
+                        maxWidth: '100%',
+                        maxHeight: '100%',
+                        boxShadow: '0px 0px 10px #555555',
+                        padding: '20px',
+                        backgroundColor: '#ffffff'
+                    });
+                }
+                $('#hover-image-preview-box').css({
+                    top: e.pageY - 10,
+                    left: e.pageX + 30,
+                    bottom: 'auto'
+                });
+                if (e.pageY > window.innerHeight / 2) {
+                    $('#hover-image-preview-box').css({
+                        bottom: window.innerHeight - e.pageY - 10,
+                        left: e.pageX + 30,
+                        top: 'auto'
+                    });
+                }
+                $('#hover-image-preview-box img').attr('src', imageURL);
+                $('#hover-image-preview-box').show();
+            } else if (e.type === 'mouseleave') {
+                $('#hover-image-preview-box').hide();
+            }
+        });
+        $('.hover-image-preview').on('click', function(e) {
+            $('#hover-image-preview-box').hide();
+        });
+
     $(document).on('click', '.silvercart-permanent-notification .btn-close', function() {
         $(this).closest('.silvercart-permanent-notification').fadeOut();
     });
@@ -69,61 +153,5 @@
             }
         });
         
-        $('.opened .collapse li').live('click', function() {
-            $('.opened.current').removeClass('current');
-            $('#' + $(this).attr('rel')).addClass('current');
-        });
-        $('.cms-menu.collapsed .collapsed-flyout li').live('click', function() {
-            $('.cms-menu li.current').removeClass('current');
-            $('#' + $(this).attr('rel')).addClass('current');
-        });
-        
-        $('li[aria-controls="Root_PrintPreviewTab"]').live('click', function() {
-            $('iframe.print-preview').height($('.cms-content-fields').height() - 54);
-        });
-
-        $('.hover-image-preview').live('hover', function(e) {
-            var imageURL = $(this).data('img-src');
-            if (e.type === 'mouseenter') {
-                if ($('#hover-image-preview-box').length === 0) {
-                    $('body').append('<div id="hover-image-preview-box"><img/></div>');
-                    $('#hover-image-preview-box').hide();
-                    $('#hover-image-preview-box').css({
-                        maxWidth : '1000px',
-                        maxheight : '500px',
-                        position: 'absolute',
-                        zIndex: '100'
-                    });
-                    $('#hover-image-preview-box img').css({
-                        width: 'auto',
-                        height: 'auto',
-                        maxWidth: '100%',
-                        maxHeight: '100%',
-                        boxShadow: '0px 0px 10px #555555',
-                        padding: '20px',
-                        backgroundColor: '#ffffff'
-                    });
-                }
-                $('#hover-image-preview-box').css({
-                    top: e.pageY - 10,
-                    left: e.pageX + 30,
-                    bottom: 'auto'
-                });
-                if (e.pageY > window.innerHeight / 2) {
-                    $('#hover-image-preview-box').css({
-                        bottom: window.innerHeight - e.pageY - 10,
-                        left: e.pageX + 30,
-                        top: 'auto'
-                    });
-                }
-                $('#hover-image-preview-box img').attr('src', imageURL);
-                $('#hover-image-preview-box').show();
-            } else if (e.type === 'mouseleave') {
-                $('#hover-image-preview-box').hide();
-            }
-        });
-        $('.hover-image-preview').live('click', function(e) {
-            $('#hover-image-preview-box').hide();
-        });
     });
 }(jQuery));

@@ -3,6 +3,7 @@
 namespace SilverCart\Dev;
 
 use ReflectionClass;
+use Exception;
 use SilverCart\Admin\Model\Config;
 use SilverCart\Model\Customer\Address;
 use SilverCart\Model\Pages\Page;
@@ -184,7 +185,7 @@ class Tools
      * 
      * @return DBHTMLText
      */
-    public static function string2html(string $string = null) : DBHTMLText
+    public static function string2html(string $string = "") : DBHTMLText
     {
         return StringTools::string2html((string) $string);
     }
@@ -199,7 +200,7 @@ class Tools
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 10.04.2014
      */
-    public static function string2urlSegment(string $originalString = null) : string
+    public static function string2urlSegment(string $originalString = "") : string
     {
         return StringTools::string2urlSegment((string) $originalString);
     }
@@ -661,6 +662,10 @@ class Tools
             $isBackendEnvironment = false;
 
             $controller = Controller::curr();
+            // error on CLI  sake dev/build flush=1
+            if (!$controller || ! $controller instanceof Controller) {
+                return false;
+            }
             $request    = $controller->getRequest();
 
             if (strpos($request->getURL(), 'admin/') === 0 ||
@@ -704,6 +709,10 @@ class Tools
      */
     public static function getPageHierarchy($currPage)
     {
+        if (!$currPage) {
+            return 'Page doesnt exists';
+        }
+
         if (!array_key_exists('SiteTree_'.$currPage->ID, self::$pageHierarchy)) {
             $level      = 0;
             $hierarchy  = [

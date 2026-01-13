@@ -728,7 +728,7 @@ class RequireDefaultRecords
         if (!Country::get()->exists()) {
             require_once(__DIR__ . '/RequireDefaultCountries.php');
             list($lang,$iso) = explode('_', i18n::get_locale());
-            $country = Country::get()->filter('ISO2', $iso)->first();
+            $country = Country::get()->filter('ISO2', $iso)->limit(1) ?? null;
             if ($country instanceof Country
              && $country->exists()
             ) {
@@ -743,8 +743,8 @@ class RequireDefaultRecords
      * 
      * @return void
      * 
-     * @author Roland Lehmann <rlehmann@pixeltricks.de>, Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 06.02.2013
+     * @author Roland Lehmann <rlehmann@pixeltricks.de>, Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+     * @since 06.02.2013, 11.01.2026
      */
     public function requireDefaultRecords()
     {
@@ -764,7 +764,7 @@ class RequireDefaultRecords
         self::createTestConfiguration();
         self::createTestData();
         
-        $defaultTax = Tax::get()->filter('isDefault', 1)->first();
+        $defaultTax = Tax::get()->filter('isDefault', 1)->limit(1)->first();
         if (!($defaultTax instanceof Tax)
          || !$defaultTax->exists()
         ) {

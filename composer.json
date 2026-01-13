@@ -4,7 +4,14 @@
     "description": "The SilverCart ecommerce module for SilverStripe",
     "homepage": "http://www.silvercart.org",
     "license": "LGPL-3.0",
-    "keywords": ["silverstripe", "silvercart", "ecommerce", "shop","webshop","online shop"],
+    "keywords": [
+        "silverstripe",
+        "silvercart",
+        "ecommerce",
+        "shop",
+        "webshop",
+        "online shop"
+    ],
     "authors": [
         {
             "name": "SilverCart",
@@ -20,9 +27,9 @@
         "google/recaptcha": "^1.2"
     },
     "require-dev": {},
-       "suggest": {
-         "tractorcow/silverstripe-fluent": "Optional: multilingual support (use SS6-compatible version)",
-         "silverstripe/widgets": "Add if you need widget support (check SS6 compatibility)"
+    "suggest": {
+        "tractorcow/silverstripe-fluent": "Optional: multilingual support (use SS6-compatible version)",
+        "silverstripe/widgets": "Add if you need widget support (check SS6 compatibility)"
     },
     "extra": {
         "expose": [

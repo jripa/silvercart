@@ -49,7 +49,7 @@ use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Model\List\PaginatedList;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\ORM\FieldType\DBDate;
 use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBHTMLText;
@@ -1039,7 +1039,7 @@ class Product extends DataObject implements PermissionProvider
             'MetaDescription'                      => _t(Product::class . '.METADESCRIPTION', 'meta description'),
             'Weight'                               => _t(Product::class . '.WEIGHT', 'weight'),
             'MetaTitle'                            => _t(Product::class . '.METATITLE', 'meta title'),
-            'PackagingContent'                     => _t(ProductPage::class . '.PACKAGING_CONTENT', 'Content'),
+            'PackagingContent'                     => _t(Product::class . '.PACKAGING_CONTENT', 'Content'),
             'ProductNumberShop'                    => _t(Product::class . '.PRODUCTNUMBER', 'Item number'),
             'ProductNumberShort'                   => _t(Product::class . '.PRODUCTNUMBER_SHORT', 'Item no.'),
             'ProductNumberManufacturer'            => _t(Product::class . '.PRODUCTNUMBER_MANUFACTURER', 'product number (manufacturer)'),
@@ -1627,10 +1627,10 @@ class Product extends DataObject implements PermissionProvider
             $productGroupMirrorPagesField->setTreeBaseID($productGroupHolderID);
 
             $fields->removeByName('ProductGroupMirrorPages');
-            $fields->insertBefore($silvercartProductGroupDropdown, 'ProductNumberGroup');
-            $fields->insertAfter($productGroupMirrorPagesField, 'ProductGroupID');
+            $fields->insertBefore('ProductNumberGroup', $silvercartProductGroupDropdown);
+            $fields->insertAfter('ProductGroupID', $productGroupMirrorPagesField);
         } else {
-            $fields->insertBefore($silvercartProductGroupDropdown, 'ProductNumberGroup');
+            $fields->insertBefore('ProductNumberGroup', $silvercartProductGroupDropdown);
         }
     }
 
@@ -1682,9 +1682,9 @@ class Product extends DataObject implements PermissionProvider
         )->setHeadingLevel(4)->setStartClosed(false);
         $fields->removeByName('isActive');
         $fields->removeByName('IsNotBuyable');
-        $fields->insertBefore($baseDataToggle, 'Title');
+        $fields->insertBefore('Title',$baseDataToggle);
         if ($this->exists()) {
-            $fields->insertAfter(CheckboxField::create('RefreshCache', $this->fieldLabel('RefreshCache')), 'isActive');
+            $fields->insertAfter('isActive', CheckboxField::create('RefreshCache', $this->fieldLabel('RefreshCache')));
         }
 
         $availabilityGroup  = FieldGroup::create('AvailabilityGroup', '', $fields);
@@ -1702,7 +1702,7 @@ class Product extends DataObject implements PermissionProvider
                     $availabilityGroup,
                 ]
         )->setHeadingLevel(4)->setStartClosed(false);
-        $fields->insertAfter($availabilityGroupToggle, 'ProductBaseDataToggle');
+        $fields->insertAfter('ProductBaseDataToggle', $availabilityGroupToggle);
         
         $descriptionToggle = ToggleCompositeField::create(
                 'ProductDescriptionToggle',
@@ -1716,7 +1716,7 @@ class Product extends DataObject implements PermissionProvider
         $fields->removeByName('Title');
         $fields->removeByName('ShortDescription');
         $fields->removeByName('LongDescription');
-        $fields->insertAfter($descriptionToggle, 'AvailabilityGroupToggle');
+        $fields->insertAfter('AvailabilityGroupToggle', $descriptionToggle);
         
         $timeGroup = FieldGroup::create('TimeGroup', '', $fields);
         $timeGroup->push(        $fields->dataFieldByName('ReleaseDate'));
@@ -1732,7 +1732,7 @@ class Product extends DataObject implements PermissionProvider
                     $timeGroup,
                 ]
         )->setHeadingLevel(4)->setStartClosed(true);
-        $fields->insertAfter($timeGroupToggle, 'ProductDescriptionToggle');
+        $fields->insertAfter('ProductDescriptionToggle', $timeGroupToggle);
         
         $miscGroup = FieldGroup::create('MiscGroup', '', $fields);
         $manufactuerField = $fields->dataFieldByName('ManufacturerID');
@@ -1757,7 +1757,7 @@ class Product extends DataObject implements PermissionProvider
                     $miscGroup,
                 ]
         )->setHeadingLevel(4)->setStartClosed(true);
-        $fields->insertAfter($miscGroupToggle, 'TimeGroupToggle');
+        $fields->insertAfter('TimeGroupToggle', $miscGroupToggle);
     }
 
     /**
@@ -1797,7 +1797,7 @@ class Product extends DataObject implements PermissionProvider
         $pricesGroup->push($fields->dataFieldByName('TaxID'));
         
         $this->extend('updateFieldsForPrices', $pricesGroup, $fields);
-        $fields->insertAfter($pricesGroup, 'ProductNumberGroup');
+        $fields->insertAfter('ProductNumberGroup', $pricesGroup);
     }
 
     /**
@@ -1809,17 +1809,20 @@ class Product extends DataObject implements PermissionProvider
      */
     public function getFieldsForSeo($fields) : void
     {
+        $seoFields = array_filter([
+            $fields->dataFieldByName('MetaTitle'),
+            $fields->dataFieldByName('MetaDescription'),
+        ]);
+      if ($seoFields) {
         $seoToggle = ToggleCompositeField::create(
                 'SEOToggle',
                 $this->fieldLabel('SEO'),
-                [
-                    $fields->dataFieldByName('MetaTitle'),
-                    $fields->dataFieldByName('MetaDescription'),
-                ]
+                $seoFields
         )->setHeadingLevel(4)->setStartClosed(true);
         $fields->removeByName('MetaTitle');
         $fields->removeByName('MetaDescription');
-        $fields->insertAfter($seoToggle, 'ProductDescriptionToggle');
+        $fields->insertAfter('ProductDescriptionToggle', $seoToggle);
+      }
     }
 
     /**
@@ -1839,7 +1842,7 @@ class Product extends DataObject implements PermissionProvider
         if (class_exists('\Symbiote\GridFieldExtensions\GridFieldOrderableRows')) {
             $imageGridField->getConfig()->addComponent(new \Symbiote\GridFieldExtensions\GridFieldOrderableRows('SortOrder'));
         } elseif (class_exists('\UndefinedOffset\SortableGridField\Forms\GridFieldSortableRows')) {
-            $imageGridField->getConfig()->addComponent(new \UndefinedOffset\SortableGridField\Forms\GridFieldSortableRows('SortOrder'));
+            //$imageGridField->getConfig()->addComponent(new \UndefinedOffset\SortableGridField\Forms\GridFieldSortableRows('SortOrder'));
         }
         
         $imageUploadField = ImageUploadField::create('UploadImages', $this->fieldLabel('AddImage'));

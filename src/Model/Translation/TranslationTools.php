@@ -130,9 +130,11 @@ class TranslationTools {
      * 
      * @author Sebastian Diel <sdiel@pixeltricks.de>,
      *         Roland Lehmann <rlehmann@pixeltricks.de>
+     *         Jiri Ripa <jripa@pixeltricks.de>
      * @since 09.07.2014
+     * @since 11.01.2026
      */
-    public static function prepare_cms_fields($className, $restrictFields = false) {
+    public static function prepare_cms_fields($className, $restrictFields = []) {
         if (is_object($className)) {
             $className = get_class($className);
         }

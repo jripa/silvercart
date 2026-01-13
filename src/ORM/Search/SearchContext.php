@@ -16,8 +16,8 @@ use SilverStripe\Model\ArrayData;
  *
  * @package SilverCart
  * @subpackage ORM_Search
- * @author Sebastian Diel <sdiel@pixeltricks.de>
- * @since 11.10.2017
+ * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+ * @since 11.10.2017, 11.01.2026
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
@@ -35,10 +35,14 @@ class SearchContext extends \SilverStripe\ORM\Search\SearchContext {
 
         if ($fields) {
             $dates = array ();
-
+            
             foreach ($fields as $field) {
-                $type = get_class(singleton($this->modelClass)->obj($field->getName()));
-                if ($type == DBDate::class || $type == DBDatetime::class) {
+                $dbField = singleton($this->modelClass)->obj($field->getName());
+                if (!$dbField) {
+                        continue;
+                    }
+
+                if ($dbField instanceof DBDate || $dbField instanceof DBDatetime) {
                     $dates[] = $field;
                 }
             }

@@ -5,7 +5,7 @@
 </form>
 <script>
 $(document).ready(function() {
-    $('select[name="ExistingOrder"]').live('change', function() {
+    $('select[name="ExistingOrder"]').on('change', function() {
         $('#SupportExistingOrder').val($(this).val());
         $('#SupportRevocationForm').submit();
     });
