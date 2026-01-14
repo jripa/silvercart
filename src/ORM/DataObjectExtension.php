@@ -39,7 +39,8 @@ class DataObjectExtension extends Extension {
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 07.10.2014
      */
-    public function onBeforeVersionedPublish($fromStage, $toStage, $createNewVersion) {
+    public function onBeforeVersionedPublish(string $fromStage, string $toStage, ?bool $createNewVersion = null): void 
+    {
         if ($toStage == 'Live') {
             if ($this->owner instanceof Page &&
                 $this->owner->UseAsRootForMainNavigation) {
@@ -246,15 +247,18 @@ class DataObjectExtension extends Extension {
                     if (is_string($anchor)) {
                         $anchor = $tabbedFields->dataFieldByName($anchor) ?? $tabbedFields->fieldByName($anchor);
                     }
+                    
 
                     if ($anchor) {
+                       
                         if ($insertLangugeFieldsAfter) {
                             $tabbedFields->insertAfter($languageField, $anchor);
+  
                         } else {
                             $tabbedFields->insertBefore($languageField, $anchor);
+                            
                         }
 
-                        // Für das nächste Feld: Anchor ist das Feldobjekt selbst (SS6-safe)
                         $neighbourFieldOfTranslationFields = $languageField;
                     } else {
                         $tabbedFields->addFieldToTab('Root.Main', $languageField);

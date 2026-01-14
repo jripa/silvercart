@@ -16,7 +16,8 @@ use SilverStripe\ORM\HasManyList;
  * @package SilverCart
  * @subpackage Model_Product
  * @author Sebastian Diel <sdiel@pixeltricks.de>
- * @since 29.09.2017
+ *         Jiri Ripa <jripa@pixeltricks.de>
+ * @since 14.01.2026
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  * 
@@ -90,12 +91,11 @@ class QuantityUnit extends DataObject
     public function getCMSFields() {
         $fields = DataObjectExtension::getCMSFields($this);
 
-        $fields->insertAfter(
+        $fields->insertAfter('numberOfDecimalPlaces',
             new LiteralField(
                 'ExplanationToDecimalPlaces',
                 '<p class="silvercart-formfield-label"><i>' . $this->fieldLabel('ExplanationToDecimalPlaces') . '</i></p>'
-            ),
-            'numberOfDecimalPlaces'
+            )     
         );
         
         return $fields;

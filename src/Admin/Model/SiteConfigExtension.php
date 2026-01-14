@@ -670,13 +670,21 @@ class SiteConfigExtension extends Extension
      * 
      * @return void
      *
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 09.02.2016
+     * @author Jiri Ripa <jripa@pixeltricks.de>,
+     *         Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 14.01.2026
      */
     public function onBeforeWrite()
     {
-        $request     = Controller::curr()->getRequest();
+        $controller = Controller::curr();
+
+        if (!$controller) {
+            return; // CLI / dev/build
+        }
+
+        $request     = $controller->getRequest();
         $colorScheme = $request->postVar('ColorScheme');
+        
         if (is_string($colorScheme)) {
             $this->owner->ColorScheme = $colorScheme;
         }

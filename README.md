@@ -5,9 +5,10 @@ SilverCart E-Commerce module for SilverStripe CMS Framework
 
 * Sebastian Diel <sdiel@pixeltricks.de>
 * Ramon Kupper <rkupper@pixeltricks.de>
+* Jiri Ripa  <jripa@pixeltricks.de>
 
 ## Requirements
-* SilverStripe CMS 4.7.0+
+* SilverStripe CMS 6.1.0+
 * SilverStripe Fluent 4.5+
 * SilverStripe Widgets 2.0+
 * SilverCart WidgetSets 4.1+

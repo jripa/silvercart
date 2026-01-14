@@ -39,8 +39,8 @@ use SilverStripe\Model\ModelData as ViewableData;
  *
  * @package SilverCart
  * @subpackage Model_Order
- * @author Sebastian Diel <sdiel@pixeltricks.de>
- * @since 27.09.2017
+ * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+ * @since 27.09.2017, 12.01.2026
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  * 
@@ -1357,11 +1357,11 @@ class ShoppingCart extends DataObject
      * If no country is given, the HTTP POST request will be checked for a 
      * transmitted country ID.
      * 
-     * @param Country $country Country
+     * @param Country|null $country Country
      * 
      * @return $this
      */
-    public function setShippingCountry(Country $country = null) : ShoppingCart
+    public function setShippingCountry(?Country $country = null) : ShoppingCart
     {
         $this->shippingCountry = $country;
         Customer::setCurrentShippingCountry($country);
@@ -2213,7 +2213,7 @@ class ShoppingCart extends DataObject
      */
     public function setShippingMethodID(int $shippingMethodId) : void
     {
-        $this->ShippingMethodID = $shippingMethodId;
+        $this->shippingMethodID = $shippingMethodId;
     }
 
     /**
@@ -2225,7 +2225,7 @@ class ShoppingCart extends DataObject
      */
     public function setPaymentMethodID(int $paymentMethodId) : void
     {
-        $this->PaymentMethodID = $paymentMethodId;
+        $this->paymentMethodID = $paymentMethodId;
     }
 
     /**
@@ -2237,7 +2237,7 @@ class ShoppingCart extends DataObject
     {
         $positionTable = Tools::get_table_name(ShoppingCartPosition::class);
         $records       = DB::query("SELECT COUNT(Pos.ID) AS NumberOfPositions FROM {$positionTable} Pos WHERE Pos.ShoppingCartID = {$this->ID}");
-        $record        = $records->nextRecord();
+        $record        = $records->value();
         if ($record
          && $record['NumberOfPositions'] > 0
         ) {

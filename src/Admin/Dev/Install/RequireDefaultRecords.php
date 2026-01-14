@@ -531,16 +531,18 @@ class RequireDefaultRecords
         $dataPrivacyStatementPage->write();
         $dataPrivacyStatementPage->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
         
-        
-        if (!CookieConsent::config()->create_default_pages
-         && !CookiePolicyPage::get()->exists()
-        ) {
-            $cookiePolicyPage           = CookiePolicyPage::create();
-            $cookiePolicyPage->ParentID = $legalNavigationHolder->ID;
-            $cookiePolicyPage->write();
-            $cookiePolicyPage->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
-            $cookiePolicyPage->flushCache();
-            DB::alteration_message('Cookie Policy page created', 'created');
+        if (class_exists(CookiePolicyPage::class)) {
+
+            if (!CookieConsent::config()->create_default_pages
+            && !CookiePolicyPage::get()->exists()
+            ) {
+                $cookiePolicyPage           = CookiePolicyPage::create();
+                $cookiePolicyPage->ParentID = $legalNavigationHolder->ID;
+                $cookiePolicyPage->write();
+                $cookiePolicyPage->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+                $cookiePolicyPage->flushCache();
+                DB::alteration_message('Cookie Policy page created', 'created');
+            } 
         }
 
         // Sub pages of service node
@@ -876,6 +878,15 @@ class RequireDefaultRecords
             self::createTestTaxRates();
             // get ProductGroupHolder and tax rate
             $productGroupHolder = ProductGroupHolder::get()->first();
+            if (!$productGroupHolder instanceof ProductGroupHolder
+             || !$productGroupHolder->exists()
+            ) {
+                 $productGroupHolder = ProductGroupHolder::create();
+                 $productGroupHolder->Title      = _t('Shop');
+                 $productGroupHolder->URLSegment = _t('shop');
+                 $productGroupHolder->write();
+                 $productGroupHolder->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
+            }
             $taxRateID          = Tax::get()->filter('Rate', '19')->first()->ID;
 
             //create a manufacturer

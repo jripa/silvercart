@@ -135,7 +135,11 @@ class Tools
      */
     public static function Session()
     {
-        return Controller::curr()->getRequest()->getSession();
+        $request = Controller::curr()?->getRequest();
+        if (!$request) {
+            return; // CLI / dev/build
+        }
+        return $request->getSession();
     }
     
     /**

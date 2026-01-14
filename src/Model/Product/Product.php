@@ -1644,9 +1644,11 @@ class Product extends DataObject implements PermissionProvider
     public function getFieldsForWidgets($fields) : void
     {
         $widgetAreaFields = WidgetSet::scaffold_widget_area_fields_for($this);
-        $fields->addFieldsToTab('Root.Widgets', $widgetAreaFields);
+        
+        if ($widgetAreaFields !== null) {
+            $fields->addFieldsToTab('Root.Widgets', $widgetAreaFields->toArray());
+        }
     }
-
     /**
      * Adds or modifies the fields for the Main tab
      *
@@ -1654,7 +1656,7 @@ class Product extends DataObject implements PermissionProvider
      * 
      * @return void
      */
-    public function getFieldsForMain($fields) : void
+    public function getFieldsForMain($fields): void
     {
         $fields->dataFieldByName('StockQuantityOverbookable')->setTitle($this->fieldLabel('StockQuantityOverbookableShort'));
         $fields->dataFieldByName('StockQuantityExpirationDate')->addExtraClass("date");
@@ -1666,98 +1668,108 @@ class Product extends DataObject implements PermissionProvider
             'Months'    => $this->fieldLabel('Months'),
         ];
         $fields->dataFieldByName('PurchaseTimeUnit')->setSource($purchaseTimeUnitSource);
-        
+
         $productNumberGroup = FieldGroup::create('ProductNumberGroup', '', $fields);
         $productNumberGroup->push($fields->dataFieldByName('ProductNumberShop'));
         $productNumberGroup->push($fields->dataFieldByName('ProductNumberManufacturer'));
         $productNumberGroup->push($fields->dataFieldByName('EANCode'));
+        $isActiveField =  $fields->dataFieldByName('isActive');
+        /******** Basic Data Toggle *******/
         $baseDataToggle = ToggleCompositeField::create(
-                'ProductBaseDataToggle',
-                $this->fieldLabel('BasicData'),
-                [
-                    $fields->dataFieldByName('isActive'),
-                    $fields->dataFieldByName('IsNotBuyable'),
-                    $productNumberGroup,
-                ]
+            'ProductBaseDataToggle',
+            $this->fieldLabel('BasicData'),
+            [
+                $isActiveField,
+                $fields->dataFieldByName('IsNotBuyable'),
+                $productNumberGroup,
+            ]
         )->setHeadingLevel(4)->setStartClosed(false);
-        $fields->removeByName('isActive');
-        $fields->removeByName('IsNotBuyable');
-        $fields->insertBefore('Title',$baseDataToggle);
-        if ($this->exists()) {
-            $fields->insertAfter('isActive', CheckboxField::create('RefreshCache', $this->fieldLabel('RefreshCache')));
-        }
 
+        /******** Availability FieldGroup *******/
         $availabilityGroup  = FieldGroup::create('AvailabilityGroup', '', $fields);
-        $availabilityGroup->push(           $fields->dataFieldByName('AvailabilityStatusID'));
-        $availabilityGroup->breakAndPush(   $fields->dataFieldByName('PurchaseMinDuration'));
-        $availabilityGroup->push(           $fields->dataFieldByName('PurchaseMaxDuration'));
-        $availabilityGroup->push(           $fields->dataFieldByName('PurchaseTimeUnit'));
-        $availabilityGroup->breakAndPush(   $fields->dataFieldByName('StockQuantity'));
-        $availabilityGroup->push(           $fields->dataFieldByName('StockQuantityOverbookable'));
-        $availabilityGroup->push(           $fields->dataFieldByName('StockQuantityExpirationDate'));
+        $availabilityGroup->push($fields->dataFieldByName('AvailabilityStatusID'));
+        $availabilityGroup->breakAndPush($fields->dataFieldByName('PurchaseMinDuration'));
+        $availabilityGroup->push($fields->dataFieldByName('PurchaseMaxDuration'));
+        $availabilityGroup->push($fields->dataFieldByName('PurchaseTimeUnit'));
+        $availabilityGroup->breakAndPush($fields->dataFieldByName('StockQuantity'));
+        $availabilityGroup->push($fields->dataFieldByName('StockQuantityOverbookable'));
+        $availabilityGroup->push($fields->dataFieldByName('StockQuantityExpirationDate'));
         $availabilityGroupToggle = ToggleCompositeField::create(
-                'AvailabilityGroupToggle',
-                $this->fieldLabel('AvailabilityStatus'),
-                [
-                    $availabilityGroup,
-                ]
+            'AvailabilityGroupToggle',
+            $this->fieldLabel('AvailabilityStatus'),
+            [
+                $availabilityGroup,
+            ]
         )->setHeadingLevel(4)->setStartClosed(false);
-        $fields->insertAfter('ProductBaseDataToggle', $availabilityGroupToggle);
         
-        $descriptionToggle = ToggleCompositeField::create(
-                'ProductDescriptionToggle',
-                $this->fieldLabel('LongDescription'),
-                [
-                    $fields->dataFieldByName('Title'),
-                    $fields->dataFieldByName('ShortDescription'),
-                    $fields->dataFieldByName('LongDescription'),
-                ]
-        )->setHeadingLevel(4)->setStartClosed(false);
+        /******** Description FieldGroup *******/
+        $titleField = $fields->dataFieldByName('Title');
+        $shortDescriptionField = $fields->dataFieldByName('ShortDescription');
+        $longDescriptionField = $fields->dataFieldByName('LongDescription');
         $fields->removeByName('Title');
         $fields->removeByName('ShortDescription');
         $fields->removeByName('LongDescription');
-        $fields->insertAfter('AvailabilityGroupToggle', $descriptionToggle);
-        
+        $descriptionToggle = ToggleCompositeField::create(
+            'ProductDescriptionToggle',
+            $this->fieldLabel('LongDescription'),
+            array_filter([
+                $titleField,
+                $shortDescriptionField,
+                $longDescriptionField,
+            ])
+        )->setHeadingLevel(4)->setStartClosed(false);
+
+        /******** Time FieldGroup *******/
         $timeGroup = FieldGroup::create('TimeGroup', '', $fields);
-        $timeGroup->push(        $fields->dataFieldByName('ReleaseDate'));
+        $timeGroup->push($fields->dataFieldByName('ReleaseDate'));
         $timeGroup->pushAndBreak(LiteralField::create('ReleaseDateInfo', '<br/><br/>' . $this->fieldLabel('ReleaseDateInfo')));
-        $timeGroup->push(        $fields->dataFieldByName('LaunchDate'));
+        $timeGroup->push($fields->dataFieldByName('LaunchDate'));
         $timeGroup->pushAndBreak(LiteralField::create('LaunchDateInfo', '<br/><br/>' . $this->fieldLabel('LaunchDateInfo')));
-        $timeGroup->push(        $fields->dataFieldByName('SalesBanDate'));
+        $timeGroup->push($fields->dataFieldByName('SalesBanDate'));
         $timeGroup->pushAndBreak(LiteralField::create('SalesBanDateInfo', '<br/><br/>' . $this->fieldLabel('SalesBanDateInfo')));
         $timeGroupToggle = ToggleCompositeField::create(
-                'TimeGroupToggle',
-                $this->fieldLabel('TimeGroup'),
-                [
-                    $timeGroup,
-                ]
+            'TimeGroupToggle',
+            $this->fieldLabel('TimeGroup'),
+            [
+                $timeGroup,
+            ]
         )->setHeadingLevel(4)->setStartClosed(true);
-        $fields->insertAfter('ProductDescriptionToggle', $timeGroupToggle);
-        
+
+        /******** Misc FieldGroup *******/
         $miscGroup = FieldGroup::create('MiscGroup', '', $fields);
         $manufactuerField = $fields->dataFieldByName('ManufacturerID');
+        $siteConfig = SiteConfig::current_site_config();
+        $miscGroup->breakAndPush($fields->dataFieldByName('ExcludeFromPaymentDiscounts'));
+        $miscGroup->breakAndPush($fields->dataFieldByName('PackagingQuantity'));
+        $miscGroup->pushAndBreak($fields->dataFieldByName('QuantityUnitID'));
+        $miscGroup->breakAndPush($fields->dataFieldByName('Weight'));
+        $miscGroup->push(LiteralField::create('WeightInfo', "<br/><br/>{$siteConfig->WeightUnitNice}"));
+        $miscGroup->breakAndPush($fields->dataFieldByName('Length'));
+        $miscGroup->push($fields->dataFieldByName('Width'));
+        $miscGroup->push($fields->dataFieldByName('Height'));
+        $miscGroup->push(LiteralField::create('DimensionInfo', "<br/><br/>{$siteConfig->DimensionUnitNice}"));
+        $miscGroup->breakAndPush($fields->dataFieldByName('ProductConditionID'));
+        $miscGroupToggle = ToggleCompositeField::create(
+            'MiscGroupToggle',
+            $this->fieldLabel('MiscGroup'),
+            [$miscGroup]
+        )->setHeadingLevel(4)->setStartClosed(true);
+      
+        $fields->addFieldToTab('Root.Main', $baseDataToggle, 'Title');
+        $fields->insertAfter('ProductBaseDataToggle', $availabilityGroupToggle);
+        $fields->insertAfter('AvailabilityGroupToggle', $descriptionToggle);
+        $fields->insertAfter('ProductDescriptionToggle', $timeGroupToggle);
+        $fields->insertAfter('TimeGroupToggle', $miscGroupToggle);
+
+        $fields->remove($isActiveField);
+        $fields->removeByName('IsNotBuyable');
+        if ($this->exists()) {
+            $fields->insertAfter('isActive', CheckboxField::create('RefreshCache', $this->fieldLabel('RefreshCache')));
+       }
+
         if (!is_null($manufactuerField)) {
             $miscGroup->pushAndBreak($manufactuerField);
         }
-        $siteConfig = SiteConfig::current_site_config();
-        $miscGroup->breakAndPush(   $fields->dataFieldByName('ExcludeFromPaymentDiscounts'));
-        $miscGroup->breakAndPush(   $fields->dataFieldByName('PackagingQuantity'));
-        $miscGroup->pushAndBreak(   $fields->dataFieldByName('QuantityUnitID'));
-        $miscGroup->breakAndPush(   $fields->dataFieldByName('Weight'));
-        $miscGroup->push(           LiteralField::create('WeightInfo', "<br/><br/>{$siteConfig->WeightUnitNice}"));
-        $miscGroup->breakAndPush(   $fields->dataFieldByName('Length'));
-        $miscGroup->push(           $fields->dataFieldByName('Width'));
-        $miscGroup->push(           $fields->dataFieldByName('Height'));
-        $miscGroup->push(           LiteralField::create('DimensionInfo', "<br/><br/>{$siteConfig->DimensionUnitNice}"));
-        $miscGroup->breakAndPush(   $fields->dataFieldByName('ProductConditionID'));
-        $miscGroupToggle = ToggleCompositeField::create(
-                'AvailabilityGroupToggle',
-                $this->fieldLabel('MiscGroup'),
-                [
-                    $miscGroup,
-                ]
-        )->setHeadingLevel(4)->setStartClosed(true);
-        $fields->insertAfter('TimeGroupToggle', $miscGroupToggle);
     }
 
     /**
@@ -1807,22 +1819,22 @@ class Product extends DataObject implements PermissionProvider
      * 
      * @return void
      */
-    public function getFieldsForSeo($fields) : void
+    public function getFieldsForSeo($fields): void
     {
         $seoFields = array_filter([
             $fields->dataFieldByName('MetaTitle'),
             $fields->dataFieldByName('MetaDescription'),
         ]);
-      if ($seoFields) {
-        $seoToggle = ToggleCompositeField::create(
+        if ($seoFields) {
+            $seoToggle = ToggleCompositeField::create(
                 'SEOToggle',
                 $this->fieldLabel('SEO'),
                 $seoFields
-        )->setHeadingLevel(4)->setStartClosed(true);
-        $fields->removeByName('MetaTitle');
-        $fields->removeByName('MetaDescription');
-        $fields->insertAfter('ProductDescriptionToggle', $seoToggle);
-      }
+            )->setHeadingLevel(4)->setStartClosed(true);
+            $fields->removeByName('MetaTitle');
+            $fields->removeByName('MetaDescription');
+            $fields->insertAfter('ProductDescriptionToggle', $seoToggle);
+        }
     }
 
     /**

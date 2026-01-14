@@ -57,12 +57,13 @@ class ProductCsvBulkLoader extends CsvBulkLoader {
      * 
      * @author Sebastian Diel <sdiel@pixeltricks.de>,
      *         Sascha Koehler <skoehler@pixeltricks.de>
-     * @since 23.04.2018
+     *         Jiri Ripa <jripa@pixeltricks.de>
+     * @since  14.01.2026
      */
     public function load($filepath) {
         $this->extend('onBeforeLoad', $filepath);
         ini_set('max_execution_time', 3600);
-        increase_memory_limit_to('256M');
+        ini_set('memory_limit', '256M');
 
         //get all instances of the to be imported data object 
         if ($this->deleteExistingRecords) {
@@ -78,7 +79,7 @@ class ProductCsvBulkLoader extends CsvBulkLoader {
             $ids = $q->execute()->column('ID');
 
             foreach ($ids as $id) {
-                $obj = DataObject::get_by_id($this->objectClass, $id);
+                $obj = DataObject::get($this->objectClass)->setUseCache(true)->byID($id);
                 $obj->delete();
                 $obj->destroy();
                 unset($obj);

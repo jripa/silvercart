@@ -125,10 +125,10 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * 
      * @return void
      */
-    public static function setCurrentShippingCountry(Country $country = null) : void
+    public static function setCurrentShippingCountry(?Country $country = null): void
     {
         if (!($country instanceof Country)
-         && Controller::has_curr()
+         && Controller::curr() instanceof Controller
         ) {
             $ctrl = Controller::curr();
             if ($ctrl->hasMethod('getShippingAddress')) {
@@ -436,6 +436,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * 
      * @author Roland Lehmann <rlehmann@pixeltricks.de>,
      *         Sebastian Diel <sdiel@pixeltricks.de>
+     *         Ji
      * @since 13.01.2014
      */
     public function updateCMSFields(FieldList $fields) : void
@@ -475,7 +476,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
                 $cartField->removeAddable();
                 $cartField->removeLinkable();
                 $cartField->getConfig()->removeComponentsByType(GridFieldDeleteAction::class);
-                $fields->insertBefore($cartField, 'Locale');
+                $fields->insertBefore('Locale', $cartField);
             }
             if (!$this->owner->PaymentMethods()->exists()) {
                 $fields->removeByName('PaymentMethods');
