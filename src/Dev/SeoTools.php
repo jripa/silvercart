@@ -60,7 +60,8 @@ class SeoTools extends Tools
      */
     public static function defaultMetaDescriptionFor($page)
     {
-        return self::trimMetaDescription(self::string2html($page->Content)->Plain());
+        $pageContent = $page->Content ?? '';
+        return self::trimMetaDescription(self::string2html($pageContent)->Plain());
     }
     
     /**

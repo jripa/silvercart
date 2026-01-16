@@ -34,7 +34,7 @@ trait OrderCheckoutStep
     /**
      * Orders.
      *
-     * @var \SilverStripe\ORM\ArrayList
+     * @var \use SilverStripe\Model\List\ArrayList
      */
     protected $orders = null;
     /**

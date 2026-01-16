@@ -255,7 +255,7 @@ class ShoppingCartPosition extends DataObject
      * 
      * @return DBMoney
      */
-    public function getPrice(bool $forSingleProduct = false, string $priceType = null) : DBMoney
+    public function getPrice(bool $forSingleProduct = false, string $priceType = '') : DBMoney
     {
         $this->extend('onBeforeUpdatePrice', $forSingleProduct, $priceType);
         $priceKey = (string) $forSingleProduct . '-' . (string) $priceType;
@@ -425,7 +425,7 @@ class ShoppingCartPosition extends DataObject
      *         Roland Lehmann <rlehmann@pixeltricks.de>
      * @since 23.04.2018
      */
-    public function isQuantityIncrementableBy($quantity = 1, Product $product = null) : bool
+    public function isQuantityIncrementableBy($quantity = 1, ?Product $product = null) : bool
     {
         if (!array_key_exists((int) $quantity, $this->isQuantityIncrementableByList)) {
             if (is_null($product)) {

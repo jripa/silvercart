@@ -222,7 +222,7 @@ class OrderAdmin extends ModelAdmin
      * Adds some additional order tabs to have a fast way to filter orders by
      * important order or payment status.
      * 
-     * @return \SilverStripe\ORM\ArrayList
+     * @return \use SilverStripe\Model\List\ArrayList
      */
     protected function getManagedModelTabs() : ArrayList
     {

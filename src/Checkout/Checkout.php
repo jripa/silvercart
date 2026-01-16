@@ -435,7 +435,11 @@ class Checkout extends ViewableData
      */
     public static function clear_session() : void
     {
-        $sessionData = Tools::Session()->get(self::SESSION_KEY);
+            $session = Tools::Session();
+            if (is_null($session)) {
+                return; //CLI
+            }
+            $sessionData = $session->get(self::SESSION_KEY);
         if (!is_null($sessionData)) {
             Tools::Session()->set(self::SESSION_KEY, null);
             Tools::saveSession();

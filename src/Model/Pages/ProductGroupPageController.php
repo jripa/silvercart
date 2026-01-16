@@ -1167,15 +1167,61 @@ class ProductGroupPageController extends PageController
      */
     public function getViewer($action)
     {
-        $viewer = parent::getViewer($action);
         if ($this->isProductDetailView()) {
-            $templates = $viewer->templates();
-            $viewer    = new SSViewer([
-                'SilverCart\Model\Pages\ProductGroupPage_detail',
-                basename($templates['main'], '.ss'),
-            ]);
+            $fallbackTemplates = $this->getControllerTemplatesFor($action);
+            $templates = array_merge(
+                ['SilverCart\\Model\\Pages\\ProductGroupPage_detail'],
+                $fallbackTemplates
+            );
+
+            return SSViewer::create($templates);
         }
-        return $viewer;
+
+        return parent::getViewer($action);
+    }
+
+    /**
+     * Build the controller template list using the same rules as Controller::getViewer().
+     *
+     * @param string $action
+     * @return array
+     */
+    protected function getControllerTemplatesFor(?string $action): array
+    {
+        if (isset($this->templates[$action]) && $this->templates[$action]) {
+            $templates = $this->templates[$action];
+        } elseif (isset($this->templates['index']) && $this->templates['index']) {
+            $templates = $this->templates['index'];
+        } elseif ($this->template) {
+            $templates = $this->template;
+        } else {
+            $actionSuffix = ($action && $action !== 'index') ? '_' . $action : '';
+            $templatesFound = [];
+
+            if ($this->dataRecord instanceof SiteTree) {
+                $templatesFound[] = $this->dataRecord->getViewerTemplates($actionSuffix);
+            }
+            $templatesFound[] = SSViewer::get_templates_by_class(
+                static::class,
+                $actionSuffix,
+                \SilverStripe\Control\Controller::class
+            );
+            if ($this->dataRecord instanceof SiteTree) {
+                $templatesFound[] = $this->dataRecord->getViewerTemplates();
+            }
+            $templatesFound[] = SSViewer::get_templates_by_class(
+                static::class,
+                '',
+                \SilverStripe\Control\Controller::class
+            );
+
+            return array_merge(...$templatesFound);
+        }
+
+        if (is_string($templates)) {
+            return [$templates];
+        }
+        return $templates ?: [];
     }
     
     /**

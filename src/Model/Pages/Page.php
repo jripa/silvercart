@@ -263,7 +263,10 @@ class Page extends SiteTree
     { 
         parent::onBeforeWrite();
 
-        $request = Controller::curr()->getRequest();
+        $request = Controller::curr()?->getRequest();
+        if (!$request) {
+            return; // CLI / dev/build
+        }
         /* @var $request HTTPRequest */
         if ($request->postVar('ID') == $this->ID
          && $request->postVar('UseAsRootForMainNavigation') == '1'

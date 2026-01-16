@@ -657,7 +657,7 @@ class ShoppingCart extends DataObject
      *
      * @return bool
      */
-    public static function removeProduct(array $data, ShoppingCartPosition &$deletedPosition = null) : bool
+    public static function removeProduct(array $data, ?ShoppingCartPosition &$deletedPosition = null) : bool
     {
         $error  = true;
         $member = Customer::currentUser();
@@ -720,7 +720,7 @@ class ShoppingCart extends DataObject
      *
      * @return float
      */
-    public function getQuantity(int $productId = null) : float
+    public function getQuantity(?int $productId = null) : float
     {
         $positions = $this->ShoppingCartPositions();
         $quantity  = 0;
@@ -1311,7 +1311,7 @@ class ShoppingCart extends DataObject
      * 
      * @return ShippingMethod|null
      */
-    public function getCheapestShippingMethod(Country $country = null) : ?ShippingMethod
+    public function getCheapestShippingMethod(?Country $country = null) : ?ShippingMethod
     {
         $this->setShippingCountry($country);
         $address = Address::create();
@@ -2237,7 +2237,7 @@ class ShoppingCart extends DataObject
     {
         $positionTable = Tools::get_table_name(ShoppingCartPosition::class);
         $records       = DB::query("SELECT COUNT(Pos.ID) AS NumberOfPositions FROM {$positionTable} Pos WHERE Pos.ShoppingCartID = {$this->ID}");
-        $record        = $records->value();
+        $record = iterator_to_array($records)[0] ?? null;
         if ($record
          && $record['NumberOfPositions'] > 0
         ) {

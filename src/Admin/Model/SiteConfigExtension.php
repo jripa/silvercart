@@ -718,6 +718,14 @@ class SiteConfigExtension extends Extension
             }
         }
     }
+
+    /**
+     * add Default records on 
+     */
+    public function onRequireDefaultRecords()
+    {
+        RequireDefaultRecords::require_default_records();
+    }
     
     /**
      * Restores the config parameters out of the old SilvercartConfig object.

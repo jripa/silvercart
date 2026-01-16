@@ -8,6 +8,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
 use SilverStripe\Security\Member;
+use SilverStripe\Control\Director;
 
 /**
  * Abstract for a range of numbers (ordernumbers, customernumbers, invoicenumbers, etc.).
@@ -233,7 +234,7 @@ class NumberRange extends DataObject
             DB::query("UNLOCK TABLES");
         }
         
-        $firstRow          = $results->first();
+        $firstRow          = $results->record();
         $this->ActualCount = $firstRow['ActualCount'];
         return $this->getActualNumber();
     }
@@ -248,6 +249,9 @@ class NumberRange extends DataObject
      */
     public function reserveNewNumber() : string
     {
+        if (Director::is_cli()) {
+            return "";
+        }
         if (!Tools::Session()->get("Reserved{$this->Identifier}")) {
             Tools::Session()->set("Reserved{$this->Identifier}", $this->getNewNumber());
             Tools::saveSession();
@@ -265,6 +269,9 @@ class NumberRange extends DataObject
      */
     public function useReservedNumber() : string
     {
+        if (Director::is_cli()) {
+            return "";
+        }
         $reservedNumber = $this->reserveNewNumber();
         Tools::Session()->clear('Reserved' . $this->Identifier);
         Tools::saveSession();

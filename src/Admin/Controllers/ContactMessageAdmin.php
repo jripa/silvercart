@@ -107,7 +107,7 @@ class ContactMessageAdmin extends ModelAdmin
     /**
      * Adds some additional tabs.
      * 
-     * @return \SilverStripe\ORM\ArrayList
+     * @return \use SilverStripe\Model\List\ArrayList
      */
     protected function getManagedModelTabs() : ArrayList
     {

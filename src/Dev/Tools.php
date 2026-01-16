@@ -1111,7 +1111,7 @@ class Tools
     /**
      * Returns the available content locales.
      * 
-     * @return \SilverStripe\ORM\ArrayList
+     * @return \use SilverStripe\Model\List\ArrayList
      *
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 25.04.2018
@@ -1175,7 +1175,7 @@ class Tools
         $translations = [];
         if ($original->hasMethod('Locales')) {
             $locales = $original->Locales();
-            /* @var $locales \SilverStripe\ORM\ArrayList */
+            /* @var $locales \use SilverStripe\Model\List\ArrayList */
             foreach ($locales as $locale) {
                 /* @var $locale ArrayData */
                 $translation = self::get_translation($original, $locale->Locale);

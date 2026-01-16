@@ -68,6 +68,7 @@ use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\Versioned\Versioned;
 use SilverStripe\Widgets\Model\WidgetArea;
 use WidgetSets\Model\WidgetSet;
+use SilverCart\Prepayment\Model\Prepayment;
 
 /**
  * Collects all default records to avoid redundant code when it comes to relations.
@@ -684,7 +685,7 @@ class RequireDefaultRecords
         if ($errorPages->exists()) {
             Config::$forceLoadingOfDefaultLayout = true;
             foreach ($errorPages as $errorPage) {
-                $errorPage->doPublish();
+                $errorPage->publishRecursive();
             }
             Config::$forceLoadingOfDefaultLayout = false;
         }
@@ -714,7 +715,7 @@ class RequireDefaultRecords
      */
     public static function require_default_records()
     {
-        // self::singleton()->requireDefaultRecords();
+         self::singleton()->requireDefaultRecords();
     }
     
     /**
@@ -749,7 +750,7 @@ class RequireDefaultRecords
      * @since 06.02.2013, 11.01.2026
      */
     public function requireDefaultRecords()
-    {
+    { 
         self::require_default_countries();
         $this->createDefaultGroups();
         $this->createDefaultConfig();
@@ -764,6 +765,7 @@ class RequireDefaultRecords
         $this->extend('updateDefaultRecords', $rootPage);
 
         self::createTestConfiguration();
+
         self::createTestData();
         
         $defaultTax = Tax::get()->filter('isDefault', 1)->limit(1)->first();
@@ -882,8 +884,8 @@ class RequireDefaultRecords
              || !$productGroupHolder->exists()
             ) {
                  $productGroupHolder = ProductGroupHolder::create();
-                 $productGroupHolder->Title      = _t('Shop');
-                 $productGroupHolder->URLSegment = _t('shop');
+                 $productGroupHolder->Title      = _t('SilverCart.SHOP_TITLE', 'Shop');
+                 $productGroupHolder->URLSegment = 'shop';
                  $productGroupHolder->write();
                  $productGroupHolder->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
             }
@@ -1394,7 +1396,10 @@ class RequireDefaultRecords
                     $productImage->FileHash     = $fileHash;
                     $productImage->ParentID     = $imageFolder->ID;
                     $productImage->write();
-                    $productImage->doPublish();
+                    if ($productImage->hasExtension(Versioned::class)) {
+                        $productImage->publishRecursive();
+                    }
+
 
                     $silvercartImage = \SilverCart\Model\Product\Image::create();
                     $silvercartImage->ProductID = $productItem->ID;
@@ -1459,7 +1464,9 @@ class RequireDefaultRecords
             $widgetFrontPageContent1->setField('Sort', 2);
             $widgetFrontPageContent1->write();
             $widgetSetFrontPageContentArea->Widgets()->add($widgetFrontPageContent1);
-            $widgetFrontPageContent1->doPublish();
+            if ($widgetFrontPageContent1->hasExtension(Versioned::class)) {
+                $widgetFrontPageContent1->publishSingle();
+            }
             
             $widgetFrontPageContent2 = ProductGroupItemsWidget::create();
             $widgetFrontPageContent2->setField('FrontTitle', _t(RequireDefaultRecords::class . '.WIDGETSET_FRONTPAGE_CONTENT2_TITLE', 'Other Modules'));
@@ -1478,7 +1485,9 @@ class RequireDefaultRecords
             $widgetFrontPageContent2->setField('Sort', 3);
             $widgetFrontPageContent2->write();
             $widgetSetFrontPageContentArea->Widgets()->add($widgetFrontPageContent2);
-            $widgetFrontPageContent2->doPublish();
+            if ($widgetFrontPageContent2->hasExtension(Versioned::class)) {
+                $widgetFrontPageContent2->publishSingle();
+            }
             
             $widgetFrontPageContent3 = ImageSliderWidget::create();
             $widgetFrontPageContent3->setField('buildArrows', 0);
@@ -1509,7 +1518,9 @@ class RequireDefaultRecords
             $teaserImage->FileHash     = $fileHash;
             $teaserImage->ParentID     = $imageFolder->ID;
             $teaserImage->write();
-            $teaserImage->doPublish();
+            if ($teaserImage->hasExtension(Versioned::class)) {
+                $teaserImage->publishRecursive();
+            }
 
             $slideImage = ImageSliderImage::create();
             $slideImage->setField('ImageID', $teaserImage->ID);
@@ -1536,7 +1547,9 @@ class RequireDefaultRecords
             }
             
             $widgetFrontPageContent3->slideImages()->add($slideImage);
-            $widgetFrontPageContent3->doPublish();
+            if ($widgetFrontPageContent3->hasExtension(Versioned::class)) {
+                $widgetFrontPageContent3->publishRecursive();
+            }
 
             $widgetFrontPageSidebar1 = ProductGroupItemsWidget::create();
             $widgetFrontPageSidebar1->setField('numberOfProductsToShow', 3);
@@ -1552,19 +1565,25 @@ class RequireDefaultRecords
             $widgetFrontPageSidebar1->setField('Sort', 0);
             $widgetFrontPageSidebar1->write();
             $widgetSetFrontPageSidebarArea->Widgets()->add($widgetFrontPageSidebar1);
-            $widgetFrontPageSidebar1->doPublish();
+            if ($widgetFrontPageSidebar1->hasExtension(Versioned::class)) {
+                $widgetFrontPageSidebar1->publishRecursive();
+            }
             
             $widgetFrontPageSidebar2 = ShoppingCartWidget::create();
             $widgetFrontPageSidebar2->setField('Sort', 1);
             $widgetFrontPageSidebar2->write();
             $widgetSetFrontPageSidebarArea->Widgets()->add($widgetFrontPageSidebar2);
-            $widgetFrontPageSidebar2->doPublish();
+            if ($widgetFrontPageSidebar2->hasExtension(Versioned::class)) {
+                $widgetFrontPageSidebar2->publishRecursive();
+            }
             
             $widgetFrontPageSidebar3 = LoginWidget::create();
             $widgetFrontPageSidebar3->setField('Sort', 2);
             $widgetFrontPageSidebar3->write();
             $widgetSetFrontPageSidebarArea->Widgets()->add($widgetFrontPageSidebar3);
-            $widgetFrontPageSidebar3->doPublish();
+            if ($widgetFrontPageSidebar3->hasExtension(Versioned::class)) {
+                $widgetFrontPageSidebar3->publishRecursive();
+            }
             
             // product group page widgets
             $widgetProductGroupPageSidebar1 = ProductGroupItemsWidget::create();
@@ -1581,19 +1600,25 @@ class RequireDefaultRecords
             $widgetProductGroupPageSidebar1->setField('Sort', 0);
             $widgetProductGroupPageSidebar1->write();
             $widgetSetProductGroupPagesSidebarArea->Widgets()->add($widgetProductGroupPageSidebar1);
-            $widgetProductGroupPageSidebar1->doPublish();
+            if ($widgetProductGroupPageSidebar1->hasExtension(Versioned::class)) {
+                $widgetProductGroupPageSidebar1->publishRecursive();
+            }
 
             $widgetProductGroupPageSidebar2 = ShoppingCartWidget::create();
             $widgetProductGroupPageSidebar2->setField('Sort', 1);
             $widgetProductGroupPageSidebar2->write();
             $widgetSetProductGroupPagesSidebarArea->Widgets()->add($widgetProductGroupPageSidebar2);
-            $widgetProductGroupPageSidebar2->doPublish();
+            if ($widgetProductGroupPageSidebar2->hasExtension(Versioned::class)) {
+                $widgetProductGroupPageSidebar2->publishRecursive();
+            }
 
             $widgetProductGroupPageSidebar3 = LoginWidget::create();
             $widgetProductGroupPageSidebar3->setField('Sort', 2);
             $widgetProductGroupPageSidebar3->write();
             $widgetSetProductGroupPagesSidebarArea->Widgets()->add($widgetProductGroupPageSidebar3);
-            $widgetProductGroupPageSidebar3->doPublish();
+            if ($widgetProductGroupPageSidebar3->hasExtension(Versioned::class)) {
+                $widgetProductGroupPageSidebar3->publishRecursive();
+            }
             
             return true;
         }
@@ -1732,14 +1757,14 @@ class RequireDefaultRecords
                 $zoneDomestic = Zone::get()->byID(1);
                 $zoneDomestic->Countries()->add($country);
                 
-                if (class_exists('SilverCart\\Prepayment\\Model\\PaymentPrepayment')) {
+                if (class_exists('SilverCart\\Prepayment\\Model\\Prepayment')) {
                     // create if not exists, activate and relate payment method
-                    $paymentMethod = \SilverCart\Prepayment\Model\PaymentPrepayment::get()->first();
+                    $paymentMethod = Prepayment::get()->first();
                     if (!$paymentMethod) {
                         $paymentMethodHandler = PaymentMethod::create();
                         $paymentMethodHandler->requireDefaultRecords();
                     }
-                    $paymentMethod = \SilverCart\Prepayment\Model\PaymentPrepayment::get()->first();
+                    $paymentMethod =  Prepayment::get()->first();
                     $paymentMethod->isActive = true;
                     $paymentStatusOpen = PaymentStatus::get()->filter('Code', 'open')->first();
                     if ($paymentStatusOpen) {

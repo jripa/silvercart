@@ -13,7 +13,7 @@ use SilverStripe\CMS\Controllers\ModelAsController;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\Model\ArrayData;
 
 /**

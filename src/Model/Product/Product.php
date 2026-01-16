@@ -2599,6 +2599,7 @@ class Product extends DataObject implements PermissionProvider
     {
         $linkIdentifier = $this->ID;
         $this->extend('updatelinkIdentifier', $linkIdentifier);
+        $groupLink = rtrim($groupLink, '/') . '/';
         return "{$groupLink}{$linkIdentifier}/{$urlSegment}";
     }
     
