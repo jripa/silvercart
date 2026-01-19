@@ -105,7 +105,7 @@ class Checkout extends ViewableData
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 16.11.2017
      */
-    public function __construct(Controller $controller = null)
+    public function __construct(?Controller $controller = null)
     {
         parent::__construct();
         if (is_null($controller)) {
@@ -155,7 +155,7 @@ class Checkout extends ViewableData
      * 
      * @return $this
      */
-    public function setStepList(array $stepList = null) : Checkout
+    public function setStepList(?array $stepList = []) : Checkout
     {
         $this->stepList = (array) $stepList;
         return $this;
@@ -320,10 +320,10 @@ class Checkout extends ViewableData
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 16.04.2018
      */
-    public function resetCurrentStep(string $currentStepName = null) : Checkout
+    public function resetCurrentStep(string $currentStepName = '') : Checkout
     {
         $this->currentStep = null;
-        if (!is_null($currentStepName)) {
+        if ($currentStepName !=='') {
             $this->setCurrentStepName($currentStepName);
         }
         return $this;
@@ -456,7 +456,7 @@ class Checkout extends ViewableData
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 23.11.2017
      */
-    public function canAccess(Member $member = null) : bool
+    public function canAccess(?Member $member = null) : bool
     {
         $canAccess = false;
         if (is_null($member)) {
@@ -634,7 +634,7 @@ class Checkout extends ViewableData
      * 
      * @return Checkout
      */
-    public function setData(array $data = null) : Checkout
+    public function setData(array $data = []) : Checkout
     {
         $this->data = $data;
         return $this;
@@ -699,7 +699,7 @@ class Checkout extends ViewableData
      * 
      * @return Checkout
      */
-    public function setCompletedSteps(array $completedSteps = null) : Checkout
+    public function setCompletedSteps(?array $completedSteps = []) : Checkout
     {
         if (!is_array($completedSteps)) {
             $completedSteps = [];

@@ -17,6 +17,7 @@ use SilverStripe\i18n\i18n;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\DB;
+use SilverStripe\ORM\FieldType\DBDatetime;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\Security;
@@ -954,7 +955,7 @@ class Tools
         $dateNice           = self::getDateNice($date);
         $dateTimestamp      = strtotime($date);
         $timeNiceFormat     = '%H:%M';
-        $timeNice           = strftime($timeNiceFormat, $dateTimestamp) . ' ' .  _t(Tools::class . '.Oclock', "o'clock");
+        $timeNice           = self::formatDateWithLocale($timeNiceFormat, $dateTimestamp) . ' ' .  _t(Tools::class . '.Oclock', "o'clock");
         $dateWithTimeNice   = $dateNice . ' ' . $timeNice;
         return $dateWithTimeNice;
     }
@@ -991,9 +992,40 @@ class Tools
         if ($withWeekDay) {
             $dateNiceFormat = '%A, ' . $dateNiceFormat;
         }
-        $dateNice = strftime($dateNiceFormat, $dateTimestamp);
+        $dateNice = self::formatDateWithLocale($dateNiceFormat, $dateTimestamp);
         self::switchLocale();
         return $dateNice;
+    }
+
+    /**
+     * Replaces strftime formatting with ICU-based formatting.
+     *
+     * @param string $strftimeFormat strftime-like format string
+     * @param int    $timestamp      Unix timestamp
+     *
+     * @return string
+     */
+    public static function formatDateWithLocale(string $strftimeFormat, int $timestamp) : string
+    {
+        if (strpos($strftimeFormat, '%') === false) {
+            return $strftimeFormat;
+        }
+        $icuDateFormat = strtr($strftimeFormat, [
+            '%d' => 'dd',
+            '%m' => 'MM',
+            '%y' => 'yy',
+            '%Y' => 'yyyy',
+            '%H' => 'HH',
+            '%M' => 'mm',
+            '%S' => 'ss',
+            '%A' => 'EEEE',
+            '%a' => 'EEE',
+            '%B' => 'MMMM',
+            '%b' => 'MMM',
+        ]);
+        return DBDatetime::create()
+            ->setValue(date('Y-m-d H:i:s', $timestamp))
+            ->Format($icuDateFormat, self::current_locale());
     }
     
     /**

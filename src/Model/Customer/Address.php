@@ -1373,10 +1373,10 @@ class Address extends DataObject implements PermissionProvider
      * 
      * @return DBHTMLText
      */
-    public function forTemplate(string $templateAddition = null, string $headline = null, string $cssClasses = null) : string
+    public function forTemplate(string $templateAddition = "", string $headline = "", string $cssClasses = "") : string
     {
         $template = Address::class;
-        if ($templateAddition !== null) {
+        if ($templateAddition !== "") {
             $template = "{$template}_{$templateAddition}";
         }
         return $this->renderWith($template, [
@@ -1396,9 +1396,9 @@ class Address extends DataObject implements PermissionProvider
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 07.09.2018
      */
-    public function render(string $headline = null, string $cssClasses = null) : DBHTMLText
+    public function render(string $headline = "", string $cssClasses = "") : DBHTMLText
     {
-        return $this->forTemplate(null, $headline, $cssClasses);
+        return DBHTMLText::create()->setValue($this->forTemplate('', $headline, $cssClasses));
     }
 
     /**
@@ -1411,11 +1411,11 @@ class Address extends DataObject implements PermissionProvider
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 09.07.2019
      */
-    public function renderPlainText(string $headLine = null) : string
+    public function renderPlainText(string $headLine = "") : string
     {
         $plainText = '';
         if ($this->exists()) {
-            if (!is_null($headLine)) {
+            if (($headLine) !== "") {
                 $plainText .= $headLine . PHP_EOL;
             }
             if (!empty($this->TaxIdNumber)) {

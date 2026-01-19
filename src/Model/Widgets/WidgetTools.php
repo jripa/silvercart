@@ -21,8 +21,8 @@ use SilverStripe\Forms\ {
     TreeDropdownField
 };
 use SilverStripe\i18n\i18n;
-use SilverStripe\ORM\Map;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\List\Map;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\View\Requirements;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 

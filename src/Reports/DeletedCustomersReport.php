@@ -113,7 +113,8 @@ class DeletedCustomersReport extends Report
                 'title'      => _t(Page::class . '.MONTH', 'Month'),
                 'formatting' => function ($value, $item) use ($report) {
                     Tools::switchLocale(false);
-                    $month = strftime('%B', strtotime(date("Y-{$item->Month}-01")));
+                    $month = Tools::formatDateWithLocale('%B', strtotime(date("Y-{$item->Month}-01")));
+                   // $month = strftime('%B', strtotime(date("Y-{$item->Month}-01")));
                     Tools::switchLocale(false);
                     return sprintf(
                         '<a class="grid-field__link" href="%s" title="%s">%s</a>',

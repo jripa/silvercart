@@ -56,6 +56,7 @@ use SilverStripe\Security\Member;
 use SilverStripe\Security\Permission;
 use SilverStripe\Security\PermissionProvider;
 use SilverStripe\Security\Security;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Model\ModelData as ViewableData;
 
 /**
@@ -125,6 +126,7 @@ class Order extends DataObject implements PermissionProvider
     const PERMISSION_EDIT       = 'SILVERCART_ORDER_EDIT';
     const PERMISSION_DELETE     = 'SILVERCART_ORDER_DELETE';
     const PERMISSION_VIEW       = 'SILVERCART_ORDER_VIEW';
+
 
     /**
      * attributes
@@ -651,10 +653,10 @@ class Order extends DataObject implements PermissionProvider
         $fields = parent::scaffoldSearchFields($_params);
         
         $fields->dataFieldByName('OrderStatusID')
-                ->setSource(OrderStatus::get()->map()->toArray())
+                ->setSource(OrderStatus::get())
                 ->setEmptyString(Tools::field_label('PleaseChoose'));
         $fields->dataFieldByName('PaymentStatusID')
-                ->setSource(PaymentStatus::get()->map()->toArray())
+                ->setSource(PaymentStatus::get())
                 ->setEmptyString(Tools::field_label('PleaseChoose'));
         
         $order                 = Order::singleton();
@@ -982,10 +984,11 @@ class Order extends DataObject implements PermissionProvider
                     ->push(LiteralField::create(
                             'PrintPreviewField',
                             sprintf(
-                                '<iframe width="100%%" height="100%%" border="0" src="%s" class="print-preview"></iframe>',
+                                '<iframe width="100%%" height="100%%" border="0" src="%s" class="print-preview min-vh-100 d-flex flex-column"></iframe>',
                                 Printer::getPrintInlineURL($this)
                             )
             ));
+            
 
             if (!empty($this->PaymentReferenceID)) {
                 $fields->dataFieldByName('PaymentReferenceID')->setReadonly(true);
@@ -1021,7 +1024,9 @@ class Order extends DataObject implements PermissionProvider
      */
     public function setCMSFieldsView($fields)
     {
-        $fields->dataFieldByName('ShippingMethodID')->setSource(ShippingMethod::get()->map('ID', 'TitleWithCarrier')->toArray());
+        $fields->dataFieldByName('ShippingMethodID')
+            ->setSource(ShippingMethod::get())
+            ->setLabelField('TitleWithCarrier');
         
         $fields->insertBefore('AmountTotal', $handlingGroup = FieldGroup::create('Handling'));
         $fields->insertBefore('AmountTotal', $dateGroup = FieldGroup::create('Date'));
@@ -1057,6 +1062,7 @@ class Order extends DataObject implements PermissionProvider
         $fields->removeByName('HasAcceptedRevocationInstruction');
         $fields->removeByName('IsSeen');
         $fields->removeByName('OrderNumber');
+        $fields->removeByName('WeightUnit');
         return $this;
     }
     
@@ -1159,7 +1165,7 @@ class Order extends DataObject implements PermissionProvider
         $message = _t(Order::class . '.ResendOrderConfirmationDone', 'Sent confirmation email to {email}', [
             'email' => $this->CustomersEmail,
         ]);
-        $form->sessionMessage($message, \SilverStripe\ORM\ValidationResult::TYPE_GOOD, \SilverStripe\ORM\ValidationResult::CAST_HTML);
+        $form->sessionMessage($message, ValidationResult::TYPE_GOOD, ValidationResult::CAST_HTML);
         return $itemRequest->edit(Controller::curr()->getRequest());
     }
     
@@ -1336,7 +1342,7 @@ class Order extends DataObject implements PermissionProvider
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 18.04.20118
      */
-    public function createFromShoppingCart(ShoppingCart $shoppingCart = null)
+    public function createFromShoppingCart(?ShoppingCart $shoppingCart = null)
     {
         $member = Customer::currentUser();
         if ($member instanceof Member) {
@@ -1364,7 +1370,7 @@ class Order extends DataObject implements PermissionProvider
                  && $shippingFee->exists()
                  && $shippingFee->Tax()->exists()
                 ) {
-                    $this->TaxRateShipment   = $shippingFee->getTaxRate();
+                    $this->TaxRateShipment   = (int) $shippingFee->getTaxRate();
                     $this->TaxAmountShipment = $shippingFee->getTaxAmount();
                 }
             }
@@ -1377,7 +1383,7 @@ class Order extends DataObject implements PermissionProvider
                  && $paymentFee->exists()
                 ) {
                     if ($paymentFee->Tax()->exists()) {
-                        $this->TaxRatePayment   = $paymentFee->Tax()->getTaxRate();
+                        $this->TaxRatePayment   = (int) $paymentFee->Tax()->getTaxRate();
                         $this->TaxAmountPayment = $paymentFee->getTaxAmount();
                     }
                     $this->HandlingCostPayment->setAmount($paymentFee->amount->getAmount());
@@ -1508,7 +1514,7 @@ class Order extends DataObject implements PermissionProvider
      *         Sascha Koehler <skoehler@pixeltricks.de>
      * @since 15.11.2014
      */
-    public function convertShoppingCartPositionsToOrderPositions(ShoppingCart $shoppingCart = null)
+    public function convertShoppingCartPositionsToOrderPositions(?ShoppingCart $shoppingCart = null)
     {
         if ($this->extend('updateConvertShoppingCartPositionsToOrderPositions')) {
             return true;
@@ -1689,7 +1695,7 @@ class Order extends DataObject implements PermissionProvider
             if ($paymentFee instanceof HandlingCost
              && $paymentFee->exists()
             ) {
-                $this->TaxRatePayment   = $paymentFee->Tax()->getTaxRate();
+                $this->TaxRatePayment   = (int) $paymentFee->Tax()->getTaxRate();
                 $this->TaxAmountPayment = $paymentFee->getTaxAmount();
                 $this->HandlingCostPayment->setAmount($paymentFee->amount->getAmount());
                 $this->HandlingCostPayment->setCurrency($paymentFee->amount->getCurrency());
@@ -1947,7 +1953,7 @@ class Order extends DataObject implements PermissionProvider
      */
     public function setHasAcceptedRevocationInstruction($status)
     {
-        $this->HasAcceptedRevocationInstruction = $status;
+        $this->setField('HasAcceptedRevocationInstruction', $status);
         return $this;
     }
     
@@ -1960,7 +1966,7 @@ class Order extends DataObject implements PermissionProvider
      */
     public function setHasAcceptedTermsAndConditions($status)
     {
-        $this->HasAcceptedTermsAndConditions = $status;
+        $this->setField('HasAcceptedTermsAndConditions', $status);
         return $this;
     }
 
@@ -1980,7 +1986,7 @@ class Order extends DataObject implements PermissionProvider
             $shippingFee = $selectedShippingMethod->getShippingFee();
             $this->ShippingMethodID    = $selectedShippingMethod->ID;
             $this->ShippingFeeID       = $shippingFee->ID;
-            $this->TaxRateShipment     = $shippingFee->getTaxRate();
+            $this->TaxRateShipment     = (int) $shippingFee->getTaxRate();
             $this->TaxAmountShipment   = $shippingFee->getTaxAmount();
             $this->HandlingCostShipment->setAmount($shippingFee->getPriceAmount());
             $this->HandlingCostShipment->setCurrency(Config::DefaultCurrency());
@@ -1993,15 +1999,16 @@ class Order extends DataObject implements PermissionProvider
      *
      * @return float
      */
-    public function getTax()
+    public function getTax(): DBMoney
     {
         $tax = 0.0;
 
         foreach ($this->OrderPositions() as $orderPosition) {
-            $tax += $orderPosition->TaxTotal;
+            $tax += (float) $orderPosition->TaxTotal;
         }
 
-        $taxObj = DBMoney::create('Tax');
+        $taxObj = DBMoney::create();
+        $taxObj->setName('Tax');
         $taxObj->setAmount($tax);
         $taxObj->setCurrency(Config::DefaultCurrency());
 
@@ -2073,9 +2080,12 @@ class Order extends DataObject implements PermissionProvider
      *
      * @return DBMoney
      */
-    public function getPositionsPriceNet()
+    public function getPositionsPriceNet(): DBMoney
     {
-        $priceNet = $this->getPositionsPriceGross()->getAmount() - $this->getTax(true,true,true)->getAmount();
+        $gross = (float) $this->getPositionsPriceGross()->getAmount();
+        $tax   = (float) $this->getTax()->getAmount();
+
+        $priceNet = $gross - $tax;
 
         $priceNetObj = DBMoney::create();
         $priceNetObj->setAmount($priceNet);
@@ -2743,6 +2753,7 @@ class Order extends DataObject implements PermissionProvider
      */
     public function OrderDetailTable()
     {
+
         $viewableData = ViewableData::create();
         $template     = '';
 

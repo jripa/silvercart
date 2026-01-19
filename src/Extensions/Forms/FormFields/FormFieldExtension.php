@@ -26,7 +26,8 @@ class FormFieldExtension extends Extension
      *
      * @var bool
      */
-    public $validationFailed = false;
+    protected bool $validationFailed = false;
+
     /**
      * Determines whether the field is required (forces).
      *
@@ -64,6 +65,7 @@ class FormFieldExtension extends Extension
      */
     public function getValidationFailed() : bool
     {
+   
         return (bool) $this->owner->validationFailed;
     }
 
@@ -74,9 +76,11 @@ class FormFieldExtension extends Extension
      * 
      * @return FormField
      */
-    public function setValidationFailed(bool $validationFailed) : FormField
+    public function setValidationFailed(bool $validationFailed): FormField
     {
-        $this->owner->validationFailed = $validationFailed;
+        if (method_exists($this->owner, 'setValidationFailed')) {
+            $this->owner->setValidationFailed($validationFailed);
+        }
         return $this->owner;
     }
     
@@ -197,7 +201,7 @@ class FormFieldExtension extends Extension
      *
      * @return array
      */
-    protected function _templates(string $customTemplate = null, string $customTemplateSuffix = null) : array
+    protected function _templates(string $customTemplate = '', string $customTemplateSuffix = '') : array
     {
         $templates = SSViewer::get_templates_by_class(get_class($this->owner), $customTemplateSuffix);
         // Prefer any custom template
@@ -221,7 +225,7 @@ class FormFieldExtension extends Extension
         if (strpos($suffix, '_') !== 0) {
             $suffix = "_{$suffix}";
         }
-        return $this->_templates(null, $suffix);
+        return $this->_templates('', $suffix);
     }
 
     /**

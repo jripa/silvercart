@@ -150,9 +150,9 @@ trait OrderCheckoutStep
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 12.04.2018
      */
-    public function initOrder(array $checkoutData = null) : object
+    public function initOrder(array $checkoutData = []) : object
     {
-        if (is_null($checkoutData)) {
+        if (empty($checkoutData)) {
             $checkoutData = $this->getCheckout()->getData();
         }
         if (array_key_exists('Order', $checkoutData)) {
@@ -178,7 +178,7 @@ trait OrderCheckoutStep
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 12.04.2018
      */
-    public function placeOrder(array $checkoutData = null) : object
+    public function placeOrder(array $checkoutData = []) : object
     {
         $order = $this->getOrder();
         if (($order instanceof Order
@@ -187,7 +187,7 @@ trait OrderCheckoutStep
         ) {
             return $this;
         }
-        if (is_null($checkoutData)) {
+        if (empty($checkoutData)) {
             $checkoutData = $this->getCheckout()->getData();
         }
         $customer = Security::getCurrentUser();
@@ -248,10 +248,10 @@ trait OrderCheckoutStep
      *
      * @return \SilverCart\Model\Order\Order
      *
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
+     * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
      * @since 29.09.2018
      */
-    public function createOrder(string $customerEmail = null, array $checkoutData = null, string $customerNote = null, ShoppingCart $shoppingCart = null) : Order
+    public function createOrder(string $customerEmail = '', array $checkoutData = [], string $customerNote = '', ?ShoppingCart $shoppingCart = null) : Order
     {
         $order = Order::create();
         $this->extend('onBeforeCreateOrder', $order, $customerEmail, $checkoutData, $customerNote);
@@ -276,7 +276,7 @@ trait OrderCheckoutStep
      * 
      * @return ArrayList|null
      */
-    public function createOrders(string $customerEmail = null, array $checkoutData = null, string $customerNote = null) : ?ArrayList
+    public function createOrders(string $customerEmail = '', array $checkoutData = [], string $customerNote = '') : ?ArrayList
     {
         $orders = null;
         $this->extend('onBeforeCreateOrders', $orders, $customerEmail, $checkoutData, $customerNote);

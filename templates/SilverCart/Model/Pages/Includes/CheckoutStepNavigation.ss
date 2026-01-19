@@ -13,6 +13,7 @@
             </div>
         </td>
     <% end_if %>
+    <!--
     <% loop $CheckoutSteps %>
         <% if $IsVisible %>
         <td <% if $IsCurrentStep %>class="current-step"<% end_if %>>
@@ -30,6 +31,7 @@
         </td>
         <% end_if %>
     <% end_loop %>
+     -->
     </tr>
 </table>
     <% end_with %>

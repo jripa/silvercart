@@ -23,10 +23,10 @@ use SilverStripe\Forms\LiteralField;
 use SilverStripe\i18n\i18n;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\Model\ArrayData;
 use SilverStripe\View\Requirements;
 use SilverStripe\View\SSViewer;
-use SilverStripe\View\SSViewer_FromString;
+use SilverStripe\TemplateEngine\SSTemplateEngine;
+use SilverStripe\View\ViewLayerData;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**
@@ -508,9 +508,9 @@ class ShopEmail extends DataObject
      * 
      * @return string
      */
-    public function getTemplateNameTitle(string $templateName = null) : string
+    public function getTemplateNameTitle(string $templateName = '') : string
     {
-        if (is_null($templateName)) {
+        if ($templateName !=='') {
             $templateName = $this->TemplateName;
         }
         return (string) self::get_template_name_title($templateName);
@@ -523,10 +523,10 @@ class ShopEmail extends DataObject
      * 
      * @return string
      */
-    public static function get_template_name_title(string $templateName = null) : string
+    public static function get_template_name_title(string $templateName = '') : string
     {
         $templateNameTitle = '';
-        if (!empty($templateName)) {
+        if ($templateName !=='') {
             $templateNameTitle = _t(static::class . ".TemplateName_{$templateName}", $templateName);
         }
         return (string) $templateNameTitle;
@@ -542,7 +542,7 @@ class ShopEmail extends DataObject
      *
      * @return bool
      */
-    public static function send(string $identifier, string $to, array $variables = [], array $attachments = null, string $locale = null, array $additionalRecipients = []) : bool
+    public static function send(string $identifier, string $to, array $variables = [], ?array $attachments = [], string $locale = '', array $additionalRecipients = []) : bool
     {
         $originalLocale = null;
         if ($locale !== null) {
@@ -583,10 +583,12 @@ class ShopEmail extends DataObject
         $frontendThemes = SSViewer::config()->themes;
         $adminThemes    = SSViewer::get_themes();
         SSViewer::set_themes($frontendThemes);
-        $subject = HTTP::absoluteURLs(SSViewer_FromString::create($rawSubject)->process(ArrayData::create($variables)));
+        $subject = HTTP::absoluteURLs(
+            SSTemplateEngine::create()->renderString($rawSubject, ViewLayerData::create($variables))
+        );
         $variables['ShopEmailSubject'] = $subject;
         $htmlText = $email->customise($variables)->renderWith(['SilverCart/Email/' . $identifier, 'SilverCart/Email/ShopEmail']);
-        if (SSViewer::hasTemplate(['SilverCart/Email/Layout/' . $identifier . 'Plain'])) {
+        if (SSTemplateEngine::create()->hasTemplate(['SilverCart/Email/Layout/' . $identifier . 'Plain'])) {
             $plainText = $email->customise($variables)->renderWith(['SilverCart/Email/' . $identifier . 'Plain', 'SilverCart/Email/ShopEmailPlain']);
         } else {
             $plainText = strip_tags($htmlText);
@@ -652,7 +654,7 @@ class ShopEmail extends DataObject
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 31.08.2018
      */
-    public static function send_email($recipient, string $subject, string $content, array $attachments = null) : bool
+    public static function send_email($recipient, string $subject, string $content, ?array $attachments = []) : bool
     {
         if (Director::isDev()) {
             $devEmailRecipient = self::config()->get('dev_email_recipient');
@@ -682,7 +684,7 @@ class ShopEmail extends DataObject
             $content
         );
         $email->setFrom(Config::EmailSender(), Config::EmailSenderName());
-        if (!is_null($attachments)) {
+        if (is_array($attachments) && !empty($attachments)) {
             self::attachFiles($email, $attachments);
         }
         return $email->send();

@@ -8,9 +8,10 @@ use SilverStripe\Forms\CheckboxField;
 use SilverStripe\Forms\FileField;
 use SilverStripe\Forms\FormField;
 use SilverStripe\Forms\Validation\RequiredFieldsValidator as RequiredFields;
-use SilverStripe\ORM\ValidationResult;
+use SilverStripe\Core\Validation\ValidationResult;
 use SilverStripe\Security\Member;
 use SilverStripe\Security\Security;
+use SilverCart\Admin\Model\Config;
 
 /**
  * custom form definition.
@@ -633,6 +634,7 @@ class CustomRequiredFields extends RequiredFields
             }
         } else {
             // assume a string or integer
+                
             $isFilledIn = (strlen($value)) ? true : false;
         }
 

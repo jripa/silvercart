@@ -3638,7 +3638,8 @@ class Product extends DataObject implements PermissionProvider
 
             if ($this->StockQuantityExpirationDate) {
                 $curDate        = new DateTime();
-                $expirationDate = new DateTime(strftime($this->StockQuantityExpirationDate));
+                $expirationDate = new DateTime((string) $this->StockQuantityExpirationDate);
+
 
                 if ($this->isStockQuantityOverbookable()
                  && $this->StockQuantity <= 0

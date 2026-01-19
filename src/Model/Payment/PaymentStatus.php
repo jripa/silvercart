@@ -44,15 +44,21 @@ class PaymentStatus extends DataObject
      * 
      * @return PaymentStatus
      */
-    public static function get_default($withFallback = true) : ?PaymentStatus
+    public static function get_default($withFallback = true): ?PaymentStatus
     {
         $default = self::get()->filter('IsDefault', true)->first();
-        if ($withFallback
-         && (!($default instanceof PaymentStatus)
-          || !$default->exists())
+        if (
+            $withFallback
+            && (!($default instanceof PaymentStatus)
+                || !$default->exists())
         ) {
-            $default = self::get()->first();
-            $default->write();
+            $default = self::get_by_code(self::STATUS_CODE_OPEN);
+            if (
+                !($default instanceof PaymentStatus)
+                || !$default->exists()
+            ) {
+                $default = self::get()->first();
+            }
         }
         return $default;
     }

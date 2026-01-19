@@ -102,5 +102,6 @@ class CheckoutStep6 extends CheckoutStep
         ) {
             return $customer->getCart();
         }
+         return $customer->getCart();
     }
 }

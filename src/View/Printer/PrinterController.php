@@ -38,8 +38,12 @@ class PrinterController extends PageController
         $params         = $request->allParams();
         $dataObjectName = str_replace('-', '\\', $params['DataObjectName']);
         $dataObjectID   = $params['DataObjectID'];
-        
-        if (strpos($request->getVar('url'), 'silvercart-print-many') !== false) {
+        $url = (string) $request->getVar('url');
+        if ($url === '') {
+            $url = $request->getURL();
+        }
+
+        if (strpos($url, 'silvercart-print-many') !== false) {
             $dataObjectIDs  = explode('-', $dataObjectID);
             $output         = Printer::getPrintManyOutput($dataObjectName, $dataObjectIDs);
             if (!empty($output)) {
@@ -48,7 +52,8 @@ class PrinterController extends PageController
             }
             $this->redirect(Director::baseURL());
         } else {
-            $dataObject = DataObject::get_by_id($dataObjectName, $dataObjectID);
+           // $dataObject = DataObject::get_by_id($dataObjectName, $dataObjectID);
+            $dataObject = DataObject::get($dataObjectName)->setUseCache(true)->byID($dataObjectID);
             if ($dataObject
              && $dataObject->canView()
             ) {

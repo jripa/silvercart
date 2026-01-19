@@ -252,7 +252,8 @@ class SearchResultsPage extends ProductGroupPage
         if (!is_null($searchQueryByRequest)) {
             $searchQuery = $searchQueryByRequest;
         } else {
-            $searchQuery = trim(Tools::Session()->get(self::SESSION_KEY_SEARCH_QUERY));
+            $sessionQuery = Tools::Session()->get(self::SESSION_KEY_SEARCH_QUERY) ?? '';
+            $searchQuery = trim($sessionQuery);
         }
         return $searchQuery;
     }
@@ -277,7 +278,8 @@ class SearchResultsPage extends ProductGroupPage
      */
     public static function getCurrentSearchCategory() : string
     {
-        return trim(Tools::Session()->get(self::SESSION_KEY_SEARCH_CATEGORY));
+        $session = Tools::Session()->get(self::SESSION_KEY_SEARCH_CATEGORY) ?? '';
+        return trim($session);
     }
     
     /**
@@ -300,7 +302,8 @@ class SearchResultsPage extends ProductGroupPage
      */
     public static function getCurrentSearchContext() : string
     {
-        return trim(Tools::Session()->get(self::SESSION_KEY_SEARCH_CONTEXT));
+        $session = Tools::Session()->get(self::SESSION_KEY_SEARCH_CONTEXT) ?? '';
+        return trim($session);
     }
     
     /**

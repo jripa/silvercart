@@ -62,8 +62,12 @@ class OrderStatus extends DataObject
          && (!($default instanceof OrderStatus)
           || !$default->exists())
         ) {
-            $default = self::get()->first();
-            $default->write();
+            $default = self::get_by_code(self::STATUS_CODE_NEW);
+            if (!($default instanceof OrderStatus)
+             || !$default->exists()
+            ) {
+                $default = self::get()->first();
+            }
         }
         return $default;
     }

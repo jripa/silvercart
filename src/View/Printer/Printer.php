@@ -3,7 +3,7 @@
 namespace SilverCart\View\Printer;
 
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\ORM\Map;
 use SilverStripe\View\Requirements;
 

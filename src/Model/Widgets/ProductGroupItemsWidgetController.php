@@ -75,11 +75,12 @@ class ProductGroupItemsWidgetController extends WidgetController
         if (!$this->ProductGroupPageID) {
             return false;
         }
+        $productGroupItemsWidget = new ProductGroupItemsWidget();
         if (!$this->numberOfProductsToFetch) {
-            $this->numberOfProductsToFetch = ProductGroupItemsWidget::$defaults['numberOfProductsToFetch'];
+            $this->numberOfProductsToFetch = $productGroupItemsWidget->defaults['numberOfProductsToFetch'];
         }
         if (!$this->numberOfProductsToShow) {
-            $this->numberOfProductsToShow = ProductGroupItemsWidget::$defaults['numberOfProductsToShow'];
+            $this->numberOfProductsToShow = $productGroupItemsWidget->defaults['numberOfProductsToShow'];
         }
         if ($this->numberOfProductsToFetch < $this->numberOfProductsToShow) {
             $this->numberOfProductsToFetch = $this->numberOfProductsToShow;

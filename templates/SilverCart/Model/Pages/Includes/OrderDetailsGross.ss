@@ -28,7 +28,7 @@
         <% end_loop %>
 
         <!-- sub total without fees and charges -->
-        <% loop $getTaxableAmountGrossWithoutFees(false,false) %>
+        <% with $getTaxableAmountGrossWithoutFees(false,false) %>
         <tr class="new-block">
             <td class="mobile-hide-sm">&nbsp;</td>
             <td class="mobile-hide-sm">&nbsp;</td>
@@ -37,7 +37,7 @@
             <td class="desc-col"><strong><%t SilverCart\Model\Pages\Page.VALUE_OF_GOODS 'Value of goods' %></strong></td>
             <td class="text-right price-col">{$Amount.Nice}</td>
         </tr>
-        <% end_loop %>
+    <% end_with %>
 
         <% if $HasChargePositionsForProduct %>
             <!-- charges and discounts for product value -->
@@ -52,7 +52,7 @@
             <% end_loop %>
 
             <!-- sub total without fees with product charges -->
-            <% loop getTaxableAmountGrossWithoutFees(true,false) %>
+            <% with $getTaxableAmountGrossWithoutFees(true,false) %>
                 <tr class="new-block">
                     <td class="mobile-hide-sm">&nbsp;</td>
                     <td class="mobile-hide-sm">&nbsp;</td>
@@ -61,7 +61,7 @@
                     <td class="text-right desc-col"><strong><%t SilverCart\Model\Pages\Page.SUBTOTAL 'Subtotal' %></strong></td>
                     <td class="text-right price-col"><strong>{$Amount.Nice}</strong></td>
                 </tr>
-            <% end_loop %>
+            <% end_with %>
 
             <!-- tax rates for sub total without fees -->
             <% loop getTaxRatesWithoutFees(true,false) %>
@@ -88,7 +88,7 @@
 
         <% if $OrderChargePositionsTotal %>
             <!-- sub total -->
-            <% loop getTaxableAmountGrossWithFees(true,false) %>
+            <% with $getTaxableAmountGrossWithFees(true,false) %>
                 <tr class="new-block">
                     <td class="mobile-hide-sm">&nbsp;</td>
                     <td class="mobile-hide-sm">&nbsp;</td>
@@ -97,7 +97,7 @@
                     <td class="text-right desc-col"><strong><%t SilverCart\Model\Pages\Page.SUBTOTAL 'Subtotal' %></strong></td>
                     <td class="text-right price-col"><strong>$Amount.Nice</strong></td>
                 </tr>
-            <% end_loop %>
+            <% end_with %>
 
             <!-- tax rates for sub total -->
             <% loop getTaxRatesWithFees(true,false) %>

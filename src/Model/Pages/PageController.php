@@ -442,7 +442,7 @@ class PageController extends ContentController
     {
         $form         = null;
         $translations = Tools::get_translations($this->data());
-        if ($translations instanceof \SilverStripe\ORM\SS_List
+        if ($translations instanceof \SilverStripe\Model\List\SS_List
          && $translations->exists()
         ) {
             $form = ChangeLanguageForm::create($this);

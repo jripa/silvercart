@@ -10,8 +10,8 @@ use SilverCart\Model\Shipment\ShippingMethod;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
-use SilverStripe\ORM\Map;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\List\Map;
+use SilverStripe\Model\List\SS_List;
 
 /**
  * Form to choose the shipping method in checkout.

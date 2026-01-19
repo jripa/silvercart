@@ -216,7 +216,7 @@ class ProductGroupWidget extends Widget
     /**
      * Returns the related product groups.
      * 
-     * @return \SilverStripe\ORM\SS_List
+     * @return \SilverStripe\Model\List\SS_List
      * 
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 27.08.2018

@@ -888,7 +888,7 @@ class ProductGroupPage extends \Page
     /**
      * Returns the products of all children (recursively) of the current product group page.
      *
-     * @return \SilverStripe\ORM\SS_List
+     * @return \SilverStripe\Model\List\SS_List
      */
     public function getProductsFromChildrenList()
     {

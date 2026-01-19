@@ -19,7 +19,7 @@ class SS_ListExtension extends Extension
     /**
      * The object this extension is applied to.
      *
-     * @var \SilverStripe\ORM\SS_List
+     * @var \SilverStripe\Model\List\SS_List
      */
     protected $owner;
     

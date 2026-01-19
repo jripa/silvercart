@@ -61,9 +61,9 @@ class TranslatableDataObjectExtension extends DataExtension
             ) {
                 $fields->addFieldToTab('Root.Main', $languageField);
             } elseif ($insertBefore !== null) {
-                $fields->insertBefore($languageField, $insertBefore);
+                $fields->insertBefore($insertBefore,$languageField);
             } else {
-                $fields->insertAfter($languageField, $insertAfter);
+                $fields->insertAfter($insertAfter, $languageField);
                 /*
                  * Change the name of the field the insert the next field
                  * Otherwise the sort order would be inverted
@@ -93,7 +93,7 @@ class TranslatableDataObjectExtension extends DataExtension
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 04.05.2012
      */
-    public function augmentSQL(SQLSelect $query, DataQuery $dataQuery = null) : void
+    public function augmentSQL(SQLSelect $query, ?DataQuery $dataQuery = null) : void
     {
         $translationTableName = $this->getTranslationTableName();
         if (!$query->isJoinedTo($translationTableName)) {

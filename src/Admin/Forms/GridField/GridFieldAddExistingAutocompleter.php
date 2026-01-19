@@ -47,6 +47,10 @@ class GridFieldAddExistingAutocompleter extends SilverStripeGridFieldAddExisting
         $has_many          = Config::inst()->get($dataClass, 'has_many');
         $many_many         = Config::inst()->get($dataClass, 'many_many');
         $belongs_many_many = Config::inst()->get($dataClass, 'belongs_many_many');
+
+        if (empty($fields) || !is_array($fields)) {
+            return [];
+        }
         
         foreach ($fields as $key => $value) {
             $fieldName = $value;
@@ -70,7 +74,8 @@ class GridFieldAddExistingAutocompleter extends SilverStripeGridFieldAddExisting
                 } elseif (is_array($belongs_many_many) && array_key_exists($relationName, $belongs_many_many)) {
                     unset($fields[$key]);
                 }
-            } elseif (array_key_exists($fieldName, $db)
+            } elseif (is_array($db)
+                   && array_key_exists($fieldName, $db)
                    && strpos($db[$fieldName], 'Boolean') === 0
             ) {
                 unset($fields[$key]);

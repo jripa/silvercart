@@ -3,7 +3,7 @@
 namespace SilverCart\Admin\Forms;
 
 use SilverStripe\Forms\FormField;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\Model\ArrayData;
 

@@ -13,7 +13,7 @@ use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\List\SS_List;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
 /**

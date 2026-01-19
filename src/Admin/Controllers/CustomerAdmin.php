@@ -85,7 +85,7 @@ class CustomerAdmin extends ModelAdmin
     /**
      * Removes anonymous customers out of the list.
      * 
-     * @return \SilverStripe\ORM\SS_List
+     * @return \SilverStripe\Model\List\SS_List
      */
     public function getList() : DataList
     {

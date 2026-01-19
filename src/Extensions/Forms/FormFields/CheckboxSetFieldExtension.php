@@ -4,7 +4,7 @@ namespace SilverCart\Extensions\Forms\FormFields;
 
 use SilverCart\Dev\Tools;
 use SilverStripe\Core\Extension;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\List\SS_List;
 
 /** 
  * Extension for the default SilverStripe\Forms\CheckboxSetField.

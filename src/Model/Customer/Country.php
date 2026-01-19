@@ -14,7 +14,7 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataList;
 use SilverStripe\ORM\DataObject;
-use SilverStripe\ORM\SS_List;
+use SilverStripe\Model\List\SS_List;
 use SilverStripe\ORM\Filters\ExactMatchFilter;
 use SilverStripe\ORM\Filters\PartialMatchFilter;
 
@@ -361,7 +361,7 @@ class Country extends DataObject
                 $content = _t(self::class . '.AlertWarningCreationContent', 'Do you really want to create a new country? If you want to assign one of the {count} existing countries instead, use the "Link Existing" function (upper right corner of the table).', ['count' => self::get()->count()]);
                 $title   = _t(self::class . '.AlertWarningCreationTitle', 'Caution');
                 $creationWarningField = AlertWarningField::create('CreationWarning', $content, "{$title}:");
-                $fields->insertBefore($creationWarningField, 'Title');
+                $fields->insertBefore('Title', $creationWarningField);
             }
             $displayPositionMap = [
                 '0' => Tools::field_label('PleaseChoose'),
@@ -370,7 +370,7 @@ class Country extends DataObject
                 $displayPositionMap[$x] = $x;
             }
             $displayPositionField = DropdownField::create('DisplayPosition', $this->fieldLabel('DisplayPosition'), $displayPositionMap);
-            $fields->insertAfter($displayPositionField, 'IsPrioritive');
+            $fields->insertAfter('IsPrioritive', $displayPositionField);
         });
         return parent::getCMSFields();
     }
@@ -568,7 +568,7 @@ class Country extends DataObject
      * 
      * @return array
      */
-    public static function getPrioritiveDropdownMap(bool $onlyActive = true, string $emptyString = null) : array
+    public static function getPrioritiveDropdownMap(bool $onlyActive = true, string $emptyString = "") : array
     {
         $key = 0;
         if ($onlyActive) {
