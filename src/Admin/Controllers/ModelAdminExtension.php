@@ -5,8 +5,9 @@ namespace SilverCart\Admin\Controllers;
 use SilverCart\Dev\Tools;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Extension;
-use SilverStripe\i18n\i18n;
 use SilverStripe\View\Requirements;
+use TractorCow\Fluent\Extension\FluentDirectorExtension;
+use TractorCow\Fluent\State\FluentState;
 
 /**
  * Decorates the default ModelAdmin to inject some custom javascript.
@@ -33,7 +34,13 @@ class ModelAdminExtension extends Extension
      */
     public function onAfterInit() : void
     {
-        Tools::set_current_locale(i18n::get_locale());
+        $request = $this->owner->getRequest();
+        $localeParam = FluentDirectorExtension::config()->get('query_param');
+        $requestedLocale = $request ? $request->getVar($localeParam) : null;
+        $currentLocale = $requestedLocale ?: FluentState::singleton()->getLocale();
+        if ($currentLocale) {
+            Tools::set_current_locale($currentLocale);
+        }
         if (Director::is_ajax()) {
             return;
         }

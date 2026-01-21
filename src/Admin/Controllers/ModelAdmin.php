@@ -10,6 +10,8 @@ use SilverStripe\Forms\Form;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig;
 use SilverStripe\Forms\GridField\GridFieldExportButton;
+use TractorCow\Fluent\Extension\FluentDirectorExtension;
+use TractorCow\Fluent\State\FluentState;
 
 /**
  * ModelAdmin extension for SilverCart.
@@ -99,6 +101,13 @@ class ModelAdmin extends \SilverStripe\Admin\ModelAdmin
      */
     protected function init()
     {
+        $localeParam = FluentDirectorExtension::config()->get('query_param');
+        $requestedLocale = $this->getRequest()->getVar($localeParam);
+        $currentLocale = $requestedLocale ?: FluentState::singleton()->getLocale();
+        if ($currentLocale) {
+            FluentState::singleton()->setLocale($currentLocale);
+            Tools::set_current_locale($currentLocale);
+        }
         parent::init();
         $this->extend('updateInit');
     }
