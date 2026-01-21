@@ -45,7 +45,7 @@ class ExampleDataController extends Controller
         if (!Customer::is_admin()) {
             $this->httpError(403, 'Access denied');
         }
-        i18n::config()->update('default_locale', Tools::current_locale());
+        i18n::config()->set('default_locale', Tools::current_locale());
         i18n::set_locale(Tools::current_locale());
         $templateName = $request->param('ID');
         print ExampleData::render_example_email($templateName);

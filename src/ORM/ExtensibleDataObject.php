@@ -37,7 +37,7 @@ trait ExtensibleDataObject
      */
     protected function beforeRequireDefaultRecords($callback) : void
     {
-        $this->beforeExtending('requireDefaultRecords', $callback);
+        $this->beforeExtending('onRequireDefaultRecords', $callback);
     }
 
     /**

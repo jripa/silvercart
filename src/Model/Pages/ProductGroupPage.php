@@ -664,12 +664,16 @@ class ProductGroupPage extends \Page
      *
      * @return bool
      * 
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 14.02.2011
+     * @author Sebastian Diel <sdiel@pixeltricks.de>, Jiri Ripa <jripa@pixeltricks.de>
+     * @since 21.01.2026
      */
-    public function hasProductCount($count) : bool
+    public function hasProductCount($count = null) : bool
     {
-        return $this->ActiveProducts()->Count == $count;
+        $activeCount = $this->ActiveProducts()->Count;
+        if ($count === null) {
+            return $activeCount > 0;
+        }
+        return $activeCount == $count;
     }
 
     /**

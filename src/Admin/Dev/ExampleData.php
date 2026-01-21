@@ -19,6 +19,7 @@ use SilverStripe\Control\Director;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\Security\Member;
 use SilverStripe\View\Requirements;
+use SilverCart\Dev\Tools;
 
 /**
  * Provides example data for documentation or example display purposes.
@@ -192,7 +193,7 @@ class ExampleData
      * 
      * @return Tax
      */
-    public static function get_tax(Tax $tax = null) : Tax
+    public static function get_tax(?Tax $tax = null) : Tax
     {
         if (is_null($tax)) {
             $tax = Tax::singleton();
@@ -210,7 +211,7 @@ class ExampleData
      * 
      * @return Address
      */
-    public static function get_address(Address $address = null) : Address
+    public static function get_address(?Address $address = null) : Address
     {
         if (is_null($address)) {
             $address = Address::singleton();
@@ -238,7 +239,7 @@ class ExampleData
      * 
      * @return ContactMessage
      */
-    public static function get_contact_message(ContactMessage $contactMessage = null) : ContactMessage
+    public static function get_contact_message(?ContactMessage $contactMessage = null) : ContactMessage
     {
         if (is_null($contactMessage)) {
             $contactMessage = ContactMessage::singleton();

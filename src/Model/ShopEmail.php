@@ -240,7 +240,7 @@ class ShopEmail extends DataObject
             $exampleEmail      = ExampleData::render_example_email($this->TemplateName);
             if (!empty($exampleEmail)) {
                 $fields->findOrMakeTab('Root.Preview', $this->fieldLabel('Preview'));
-                $frame = '<iframe class="full-height" src="' . Director::absoluteURL('example-data/renderemail/' . $this->TemplateName) . '"></iframe>';
+                $frame = '<iframe class="full-height min-vh-100 d-flex flex-column" src="' . Director::absoluteURL('example-data/renderemail/' . $this->TemplateName) . '"></iframe>';
                 $fields->addFieldToTab('Root.Preview', LiteralField::create('Preview', $frame));
             }
         });
