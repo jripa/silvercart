@@ -172,7 +172,8 @@ class StockItemEntry extends DataObject
     public function getCMSFields() : FieldList
     {
         $this->beforeUpdateCMSFields(function(FieldList $fields) {
-            $productID = $fields->dataFieldByName('ProductID')->Value();
+            $productField = $fields->dataFieldByName('ProductID');
+            $productID = $productField ? $productField->getValue() : $this->ProductID;
             $fields->removeByName('OriginCode');
             $fields->removeByName('MemberID');
             $fields->removeByName('OrderID');

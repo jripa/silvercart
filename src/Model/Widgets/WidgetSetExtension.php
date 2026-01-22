@@ -35,7 +35,8 @@ class WidgetSetExtension extends DataExtension
      * 
      * @return array
      * 
-     * @author Sebastian Diel <sdiel@pixeltricks.de>,
+     * @author Jiri Ripa <jripa@pixeltricks.de>,
+     *         Sebastian Diel <sdiel@pixeltricks.de>,
      *         Patrick Schneider <pschneider@pixeltricks.de>
      * @since 06.10.2018
      */
@@ -44,7 +45,7 @@ class WidgetSetExtension extends DataExtension
         $fields = DataObjectExtension::getCMSFields($this->owner);
         $fields->addFieldsToTab(
             'Root.Main',
-             $this->owner->scaffoldWidgetAreaFields()
+             $this->owner->scaffoldWidgetAreaFields()->toArray()
         );
         
         $widgetsField = $fields->dataFieldByName('Widgets');

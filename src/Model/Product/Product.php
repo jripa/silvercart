@@ -563,13 +563,12 @@ class Product extends DataObject implements PermissionProvider
         $shortDescription = $this->getTranslationFieldValue('ShortDescription');
         if (!$this->getCMSFieldsIsCalled) {
             if (!$includeHtml) {
-                $shortDescription = utf8_encode(html_entity_decode(strip_tags($shortDescription)));
+                $shortDescription = html_entity_decode(strip_tags($shortDescription), ENT_QUOTES | ENT_HTML5, 'UTF-8');
             }
             $this->extend('updateShortDescription', $shortDescription);
         }
         return $shortDescription;
     }
-    
     /**
      * getter for the LongDescription, looks for set translation
      * 
@@ -582,7 +581,7 @@ class Product extends DataObject implements PermissionProvider
         $longDescription = $this->getTranslationFieldValue('LongDescription');
         if (!$this->getCMSFieldsIsCalled) {
             if (!$includeHtml) {
-                $longDescription = utf8_encode(html_entity_decode(strip_tags($longDescription)));
+                $longDescription = html_entity_decode(strip_tags($longDescription), ENT_QUOTES | ENT_HTML5, 'UTF-8');
             }
             $this->extend('updateLongDescription', $longDescription);
         }
