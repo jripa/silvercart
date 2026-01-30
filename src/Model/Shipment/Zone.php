@@ -166,10 +166,11 @@ class Zone extends DataObject {
      */
     public function searchableFields() {
         $searchableFields = array(
-            'ZoneTranslations.Title' => array(
+            'Title' => array(
                 'title' => $this->fieldLabel('Title'),
                 'filter' => PartialMatchFilter::class,
             ),
+            
             'Carriers.ID' => array(
                 'title' => $this->fieldLabel('Carriers'),
                 'filter' => ExactMatchFilter::class,

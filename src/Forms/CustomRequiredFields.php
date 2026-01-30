@@ -331,7 +331,7 @@ class CustomRequiredFields extends RequiredFields
         $fields       = $this->form->Fields();
         $monthField   = $fields->dataFieldByName($baseName . 'Month');
         $yearField    = $fields->dataFieldByName($baseName . 'Year');
-        $birthday     = $yearField->Value() . '-' . $monthField->Value() . '-' . $value;
+        $birthday     = $yearField->getValue() . '-' . $monthField->getValue() . '-' . $value;
 
         if (!Config::CheckMinimumAgeToOrder($birthday)) {
             $error = true;
@@ -828,7 +828,7 @@ class CustomRequiredFields extends RequiredFields
                 !isset($parameters[0]['requirement'])) {
 
                 throw new Exception(
-                    'Field ' . $formField->getName() . ' is misconfigured for "CustomRequiredFields->mustNotEqualDependentOn".'
+                    'Field ' . $formField->getName() . ' is misconfigured for "CustomRequiredFields->' . $method . 'DependentOn".'
                 );
             }
 
@@ -845,7 +845,7 @@ class CustomRequiredFields extends RequiredFields
             }
         } else {
             throw new Exception(
-                'Field ' . $formField->getName() . ' is misconfigured for "CustomRequiredFields->mustNotEqualDependentOn".'
+                'Field ' . $formField->getName() . ' is misconfigured for "CustomRequiredFields->' . $method . 'DependentOn".'
             );
         }
 
@@ -871,8 +871,27 @@ class CustomRequiredFields extends RequiredFields
     public function mustEqual(FormField $formField, $value, $equalFieldName) {
         $error = false;
         $errorMessage = '';
-        $equalFieldValue = $this->form->Fields()->dataFieldByName($equalFieldName)->Value();
-        $equalFieldTitle = $this->form->Fields()->dataFieldByName($equalFieldName)->Title();
+        $equalFieldValue = null;
+        $equalFieldTitle = '';
+
+        if (is_array($equalFieldName)) {
+            $fieldName = $equalFieldName['fieldName'] ?? $equalFieldName['field'] ?? null;
+            if (array_key_exists('value', $equalFieldName)) {
+                $equalFieldValue = $equalFieldName['value'];
+            } elseif ($fieldName) {
+                $otherField = $this->form->Fields()->dataFieldByName($fieldName);
+                $equalFieldValue = $otherField ? $otherField->getValue() : null;
+                $equalFieldTitle = $otherField ? $otherField->Title() : '';
+            } else {
+                $error = true;
+                $errorMessage = 'Field ' . $formField->getName()
+                    . ' is misconfigured for "CustomRequiredFields->mustEqual".';
+            }
+        } else {
+            $otherField = $this->form->Fields()->dataFieldByName($equalFieldName);
+            $equalFieldValue = $otherField ? $otherField->getValue() : null;
+            $equalFieldTitle = $otherField ? $otherField->Title() : '';
+        }
         
         if ($value !== $equalFieldValue) {
             $error = true;
@@ -912,7 +931,7 @@ class CustomRequiredFields extends RequiredFields
      * @since 08.11.2017
      */
     public function mustEqualDependentOn(FormField $formField, $value, $parameters) {
-        return $this->isValidDependentOn($parameters, 'mustEqual');
+        return $this->isValidDependentOn($formField, $value, $parameters, 'mustEqual');
     }
 
     /**
@@ -928,14 +947,34 @@ class CustomRequiredFields extends RequiredFields
      *
      * @return array
      * 
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 08.11.2017
+     * @author Jiri Ripa <jripa@pixeltricks.de>,
+     *         Sebastian Diel <sdiel@pixeltricks.de>
+     * @since  22.01.2026
      */
     public function mustNotEqual(FormField $formField, $value, $notEqualFieldName) {
         $error = false;
         $errorMessage = '';
-        $notEqualFieldValue = $this->form->Fields()->dataFieldByName($notEqualFieldName)->Value();
-        $notEqualFieldTitle = $this->form->Fields()->dataFieldByName($notEqualFieldName)->Title();
+        $notEqualFieldValue = null;
+        $notEqualFieldTitle = '';
+
+        if (is_array($notEqualFieldName)) {
+            $fieldName = $notEqualFieldName['fieldName'] ?? $notEqualFieldName['field'] ?? null;
+            if (array_key_exists('value', $notEqualFieldName)) {
+                $notEqualFieldValue = $notEqualFieldName['value'];
+            } elseif ($fieldName) {
+                $otherField = $this->form->Fields()->dataFieldByName($fieldName);
+                $notEqualFieldValue = $otherField ? $otherField->getValue() : null;
+                $notEqualFieldTitle = $otherField ? $otherField->Title() : '';
+            } else {
+                $error = true;
+                $errorMessage = 'Field ' . $formField->getName()
+                    . ' is misconfigured for "CustomRequiredFields->mustNotEqual".';
+            }
+        } else {
+            $otherField = $this->form->Fields()->dataFieldByName($notEqualFieldName);
+            $notEqualFieldValue = $otherField ? $otherField->getValue() : null;
+            $notEqualFieldTitle = $otherField ? $otherField->Title() : '';
+        }
 
         if ($value == $notEqualFieldValue) {
             $error = true;
@@ -967,7 +1006,7 @@ class CustomRequiredFields extends RequiredFields
      * @since 08.11.2017
      */
     public function mustNotEqualDependentOn(FormField $formField, $value, $parameters) {
-        return $this->isValidDependentOn($parameters, 'mustNotEqual');
+        return $this->isValidDependentOn($formField, $value, $parameters, 'mustNotEqual');
     }
     
 

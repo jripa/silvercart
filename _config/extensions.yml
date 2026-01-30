@@ -67,9 +67,6 @@ SilverStripe\Security\Security:
 SilverStripe\Security\MemberAuthenticator\LogoutHandler:
   extensions:
     - SilverCart\Security\MemberAuthenticator\LogoutHandlerExtension
-SilverCart\Model\Pages\Page:
-  extensions:
-    - SilverCart\Model\Widgets\PageListWidgetPage
 SilverCart\Model\Product\Product:
   extensions:
     - SilverCart\ORM\DataObjectCacheExtension

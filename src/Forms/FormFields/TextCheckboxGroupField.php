@@ -37,9 +37,9 @@ class TextCheckboxGroupField extends CompositeField
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 19.03.2019
      */
-    public function __construct(string $name, string $title = null)
+    public function __construct(string $name, ?string $title = null)
     {
-        if (!$title) {
+        if (is_null($title)) {
             $title = _t(self::class . '.TitleLabel', 'Title (displayed if checked)');
         }
         $fields = [
@@ -65,7 +65,7 @@ class TextCheckboxGroupField extends CompositeField
 
         $field->replaceField($this->getName(), LiteralField::create(
             $this->getName(),
-            $field->fieldByName($this->getName())->Value()
+            $field->fieldByName($this->getName())->getValue()
         ));
 
         $displayedText    = _t(self::class . '.Displayed', 'Displayed');
@@ -75,7 +75,7 @@ class TextCheckboxGroupField extends CompositeField
         if ($showField !== null) {
             $field->replaceField("Show{$this->getName()}", LiteralField::create(
                 "Show{$this->getName()}",
-                $field->fieldByName("Show{$this->getName()}")->Value() === 'Yes' ? $displayedText : $notDisplayedText
+                $field->fieldByName("Show{$this->getName()}")->getValue() === 'Yes' ? $displayedText : $notDisplayedText
             )->addExtraClass('show-title'));
         }
 

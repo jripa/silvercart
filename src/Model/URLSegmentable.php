@@ -42,10 +42,13 @@ trait URLSegmentable
      * 
      * @return string
      */
-    public function generateURLSegment() : string
+    public function generateURLSegment(bool $write = true) : string
     {
         $index      = 2;
-        $urlSegment = $urlSegmentBase = Tools::string2urlSegment($this->Title);
+        $urlSegment = $urlSegmentBase = Tools::string2urlSegment($this->Title ?? '');
+        if ($urlSegmentBase === '') {
+            return '';
+        }
         do {
             $existing = self::get()
                     ->exclude('ID', $this->ID)
@@ -58,7 +61,9 @@ trait URLSegmentable
         } while ($existing > 0);
         self::$generatedURLSegment[$this->ID] = $urlSegment;
         $this->setField('URLSegment', $urlSegment);
-        $this->write();
+        if ($write) {
+            $this->write();
+        }
         return $urlSegment;
     }
 

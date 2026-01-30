@@ -138,7 +138,7 @@ class PageListWidget extends Widget {
             'ID',
             'Title'
         );
-        $fields->insertAfter($pagesField, 'FrontContent');
+        $fields->insertAfter('FrontContent', $pagesField);
         return $fields;
     }
 }

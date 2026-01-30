@@ -4,6 +4,9 @@ namespace SilverCart\Admin\Forms\GridField;
 
 use SilverStripe\Core\Config\Config;
 use SilverCart\ORM\DataList;
+use SilverStripe\ORM\DataList as FrameworkDataList;
+use SilverStripe\ORM\RelationList;
+use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter as SilverStripeGridFieldAddExistingAutocompleter;
 
 /**
@@ -20,8 +23,9 @@ use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter as SilverStri
  *
  * @package SilverCart
  * @subpackage Admin_Forms_GridField_Components
- * @author Sebastian Diel <sdiel@pixeltricks.de>
- * @since 22.09.2017
+ * @author  Jiri Ripa <jripa@pixeltricks.de>,
+ *          Sebastian Diel <sdiel@pixeltricks.de>
+ * @since 30.01.2026
  * @copyright 2017 pixeltricks GmbH
  * @license see license file in modules root directory
  */
@@ -95,8 +99,9 @@ class GridFieldAddExistingAutocompleter extends SilverStripeGridFieldAddExisting
      * 
      * @return string
      * 
-     * @author Sebastian Diel <sdiel@pixeltricks.de>
-     * @since 21.06.2018
+     * @author  Jiri Ripa <jripa@pixeltricks.de>,
+     *          Sebastian Diel <sdiel@pixeltricks.de>
+     * @since 30.01.2026
      */
     public function doSearch($gridField, $request) {
         DataList::set_do_linear_sort(false);
@@ -104,4 +109,32 @@ class GridFieldAddExistingAutocompleter extends SilverStripeGridFieldAddExisting
         DataList::set_do_linear_sort(true);
         return $result;
     }
+
+    /**
+     * Handle add action early to avoid stale relation lists on first add.
+     *
+     * @param GridField $gridField Grid field
+     * @param string    $actionName Action name
+     * @param array     $arguments Arguments
+     * @param array     $data Data
+     * 
+     * @return void
+     * 
+     * @author  Jiri Ripa <jripa@pixeltricks.de>
+     * @since 30.01.2026
+     */
+    public function handleAction(GridField $gridField, $actionName, $arguments, $data)
+    {
+        if (strtolower((string) $actionName) === 'addto' && !empty($data['relationID'])) {
+            $gridField->State->GridFieldAddRelation = null;
+            $list = $gridField->getList();
+            if ($list instanceof RelationList) {
+                $list->add((int) $data['relationID']);
+                FrameworkDataList::reset($list->dataClass());
+            }
+            return;
+        }
+        parent::handleAction($gridField, $actionName, $arguments, $data);
+    }
+
 }

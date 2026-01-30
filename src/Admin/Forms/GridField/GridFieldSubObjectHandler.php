@@ -290,8 +290,15 @@ class GridFieldSubObjectHandler implements GridField_HTMLProvider, GridField_Act
      */
     public function handleAction(GridField $gridField, $actionName, $arguments, $data) {
         if ($actionName == 'addsubobject') {
-            $recordID    = $data['SubObjectParentID'];
-            $subObjectID = $data[$gridField->getName() . 'SubObjects'][$recordID];
+            $recordID = $data['SubObjectParentID'] ?? null;
+            $subObjectsKey = $gridField->getName() . 'SubObjects';
+            if (empty($recordID)
+             || empty($subObjectsKey)
+             || !isset($data[$subObjectsKey][$recordID])
+            ) {
+                return;
+            }
+            $subObjectID = $data[$subObjectsKey][$recordID];
             
             $list = $gridField->getList();
             $parent    = DataObject::get($gridField->getModelClass())->byID($recordID);

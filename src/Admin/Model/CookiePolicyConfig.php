@@ -15,6 +15,7 @@ use SilverStripe\Core\Extension as DataExtension;
 use SilverStripe\SiteConfig\SiteConfig;
 use SilverStripe\View\Requirements;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
+use SilverCart\ORM\DataList;
 
 /**
  * SiteConfig extension for cookie policy (EU law) settings.

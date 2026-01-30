@@ -1,26 +1,29 @@
 (function($) {
 
-        $(document).on('click', '.cms-menu__list > li > a', function (e) {
-            const $li = $(this).closest('li');
+        $(document).on('click', '.cms-menu__list > li > a .toggle-children', function (e) {
+            const $toggle = $(this);
+            const $li = $toggle.closest('li');
             const $submenu = $li.children('ul.cms-menu__list');
 
-            // Nur wenn es ein Submenü gibt
-            if ($submenu.length) {
-                e.preventDefault();   // ❗ Navigation blockieren
-                e.stopPropagation();
+            if (!$submenu.length) {
+                return;
+            }
 
-                // Optional: andere Menüs schließen
-                /*
-                $('.cms-menu__list > li.opened')
-                    .not($li)
-                    .removeClass('opened')
-                    .children('ul.cms-menu__list')
-                    .slideUp(200);
-                */
+            e.preventDefault();
+            e.stopPropagation();
 
-                // Toggle aktuelles Menü
+            if (window.bootstrap && bootstrap.Collapse) {
+                // Close other open menus to keep only one expanded.
+                $('.cms-menu__list > li > ul.cms-menu__list.show')
+                    .not($submenu)
+                    .each(function () {
+                        bootstrap.Collapse.getOrCreateInstance(this, { toggle: false }).hide();
+                    });
+
+                bootstrap.Collapse.getOrCreateInstance($submenu[0], { toggle: false }).toggle();
+            } else {
                 $li.toggleClass('opened');
-
+                $toggle.attr('aria-expanded', $li.hasClass('opened') ? 'true' : 'false');
                 if ($li.hasClass('opened')) {
                     $submenu.slideDown(200);
                 } else {
@@ -28,12 +31,15 @@
                 }
             }
         });
-/*
-        $('.cms-menu.collapsed .collapsed-flyout li').on('click', function () {
-            $('.cms-menu li.current').removeClass('current');
-            $('#' + $(this).attr('rel')).addClass('current');
+
+        // Sync caret direction with bootstrap collapse state.
+        $(document).on('shown.bs.collapse hidden.bs.collapse', '.cms-menu__list > li > ul.cms-menu__list', function (e) {
+            const $submenu = $(e.target);
+            const $li = $submenu.closest('li');
+            const isOpen = $submenu.hasClass('show');
+            $li.toggleClass('opened', isOpen);
+            $li.find('> a .toggle-children').attr('aria-expanded', isOpen ? 'true' : 'false');
         });
-        */
         
         $('li[aria-controls="Root_PrintPreviewTab"]').on('click', function() {
             $('iframe.print-preview').height($('.cms-content-fields').height() - 54);
@@ -152,6 +158,7 @@
                 window.open(postTargetURL + '?ExportContext=' + exportContext);
             }
         });
+
         
     });
 }(jQuery));
