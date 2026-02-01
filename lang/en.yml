@@ -1177,6 +1177,7 @@ en:
         DateRangePickerDATE: Date
         DateRangePickerEND_DATE: 'End date'
         DateRangePickerLAST_7_DAYS: 'Last 7 days'
+        DateRangePickerLAST_30_DAYS: 'Last 30 days'
         DateRangePickerLAST_MONTH: 'Last month'
         DateRangePickerNEXT: Next
         DateRangePickerPERIOD: Period
@@ -1186,6 +1187,8 @@ en:
         DateRangePickerTHIS_YEAR: 'This year'
         DateRangePickerTODAY: Today
         MENUTITLE: Orders
+    SilverCart\Admin\Forms\GridField\GridFieldOrderTotalSummary:
+        TOTAL_AMOUNT: 'Total amount (filtered)'
     SilverCart\Model\Pages\OrderHolder:
         AllowReorder: 'Allow to reorder an already placed order'
         AllowReorderDesc: 'Adds a button to reorder an order by click to the order detail page within the my account area.'

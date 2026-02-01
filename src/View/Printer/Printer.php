@@ -4,7 +4,7 @@ namespace SilverCart\View\Printer;
 
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Model\List\SS_List;
-use SilverStripe\ORM\Map;
+use SilverStripe\Model\List\Map;
 use SilverStripe\View\Requirements;
 
 /**
@@ -59,7 +59,7 @@ class Printer {
                 $printURL = sprintf(
                         'silvercart-print-many/%s/%s',
                         str_replace('\\', '-', $dataObject->ClassName),
-                        implode('-', $map)
+                        implode('-', (array) $map)
                 );
             }
         }

@@ -1180,6 +1180,7 @@ de:
         DateRangePickerDATE: Datum
         DateRangePickerEND_DATE: Enddatum
         DateRangePickerLAST_7_DAYS: 'Letzte 7 Tage'
+        DateRangePickerLAST_30_DAYS: 'Letzte 30 Tage'
         DateRangePickerLAST_MONTH: 'Vorheriger Monat'
         DateRangePickerNEXT: Nächster
         DateRangePickerPERIOD: Zeitraum
@@ -1189,6 +1190,8 @@ de:
         DateRangePickerTHIS_YEAR: 'Dieses Jahr'
         DateRangePickerTODAY: Heute
         MENUTITLE: Bestellungen
+    SilverCart\Admin\Forms\GridField\GridFieldOrderTotalSummary:
+        TOTAL_AMOUNT: 'Gesamtbetrag (gefiltert)'
     SilverCart\Model\Pages\OrderHolder:
         AllowReorder: 'Erneute Bestellung eines bereits getätigten Auftrags erlauben'
         AllowReorderDesc: 'Fügt der Seite für die Auftragsdetails im Kundenkonto einen Button hinzu, der dem Kunden eine erneute Bestellung per Klick erlaubt.'

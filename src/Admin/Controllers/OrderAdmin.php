@@ -4,6 +4,7 @@ namespace SilverCart\Admin\Controllers;
 
 use SilverCart\Admin\Controllers\ModelAdmin;
 use SilverCart\Admin\Forms\GridField\GridFieldOrderExportButton;
+use SilverCart\Admin\Forms\GridField\GridFieldOrderTotalSummary;
 use SilverCart\Admin\Forms\GridField\GridFieldResendOrderConfirmationAction;
 use SilverCart\Dev\Tools;
 use SilverCart\Model\Order\Order;
@@ -84,15 +85,22 @@ class OrderAdmin extends ModelAdmin
                     sprintf("
                 (function($) {
                     $(document).ready(function() { 
-                      $('#Form_BestellungenSearchForm_Search_Created').entwine({
-                        onclick: function() {
-                        //Date picker
-                        $('input[id=Form_BestellungenSearchForm_Search_Created]').daterangepicker({
+                      if (!$.fn.size) {
+                        $.fn.size = function() {
+                          return this.length;
+                        };
+                      }
+                      var initDateRange = function(\$field) {
+                        if (!\$field.length || \$field.data('daterangepicker-initialized')) {
+                          return;
+                        }
+                        \$field.daterangepicker({
                             arrows: false,
                             dateFormat: 'dd.mm.yy',
                             presetRanges: [
                                 {text: '%s', dateStart: 'today', dateEnd: 'today' },
                                 {text: '%s', dateStart: 'today-7days', dateEnd: 'today' },
+                                {text: '%s', dateStart: 'today-30days', dateEnd: 'today' },
                                 {text: '%s', dateStart: function(){ return Date.parse('today').moveToFirstDayOfMonth();  }, dateEnd: 'today' },
                                 {text: '%s', dateStart: function(){ var x= Date.parse('today'); x.setMonth(0); x.setDate(1); return x; }, dateEnd: 'today' },
                                 {text: '%s', dateStart: function(){ return Date.parse('1 month ago').moveToFirstDayOfMonth();  }, dateEnd: function(){ return Date.parse('1 month ago').moveToLastDayOfMonth();  } }
@@ -107,13 +115,34 @@ class OrderAdmin extends ModelAdmin
                             rangeEndTitle: '%s',
                             nextLinkText: '%s',
                             prevLinkText: '%s'
-                        });   
-                      }
-                     });
+                        });
+                        \$field.data('daterangepicker-initialized', true);
+                      };
+
+                      $(document).on('focus click', 'input.silvercart-date-range, input[name=\"Search__Created\"]', function() {
+                        var \$input = $(this);
+                        var preserved = \$input.val();
+                        initDateRange($(this));
+                        if (preserved !== undefined) {
+                          setTimeout(function() {
+                            if (!\$input.val()) {
+                              \$input.val(preserved);
+                            } else if (\$input.val() !== preserved) {
+                              \$input.val(preserved);
+                            }
+                          }, 0);
+                        }
+                      });
+
+                      $('input.silvercart-date-range, input[name=\"Search__Created\"]').each(function() {
+                        initDateRange($(this));
+                      });
+
                     });
                 })(jQuery);",
                             _t(OrderAdmin::class . '.DateRangePickerTODAY', 'Today'),
                             _t(OrderAdmin::class . '.DateRangePickerLAST_7_DAYS', 'Last 7 days'),
+                            _t(OrderAdmin::class . '.DateRangePickerLAST_30_DAYS', 'Last 30 days'),
                             _t(OrderAdmin::class . '.DateRangePickerTHIS_MONTH', 'This month'),
                             _t(OrderAdmin::class . '.DateRangePickerTHIS_YEAR', 'This year'),
                             _t(OrderAdmin::class . '.DateRangePickerLAST_MONTH', 'Last month'),
@@ -147,6 +176,7 @@ class OrderAdmin extends ModelAdmin
                 return;
             }
             $config       = $this->getGridFieldConfigFor($form);
+            $config->addComponent(new GridFieldOrderTotalSummary());
             $config->addComponent(new GridFieldResendOrderConfirmationAction());
             $exportButton = GridFieldOrderExportButton::create();
             $config->addComponent($exportButton);
@@ -187,7 +217,7 @@ class OrderAdmin extends ModelAdmin
      * 
      * @return \SilverCart\ORM\DataList
      */
-    protected function getStatusList(string $tab = null) : DataList
+    protected function getStatusList(?string $tab = null) : DataList
     {
         if ($tab !== null) {
             $modelClass       = $this->modelClass;

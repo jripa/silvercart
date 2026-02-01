@@ -50,7 +50,7 @@ class SearchContext extends \SilverStripe\ORM\Search\SearchContext {
             foreach ($dates as $d) {
                 $fields->removeByName($d->getName());
                 $myField = new TextField($d->getName(), $d->Title());
-                //$myField->addExtraClass("Form_SearchForm_q_Created");
+                $myField->addExtraClass("silvercart-date-range");
                 $fields->push($myField);
             }
         }
@@ -159,4 +159,3 @@ class SearchContext extends \SilverStripe\ORM\Search\SearchContext {
     }
     
 }
-
