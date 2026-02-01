@@ -303,9 +303,9 @@ class RegisterRegularCustomerForm extends CustomForm
         // Create new regular customer and perform a log in
         $customer = $this->handleAnonymousCustomer()->castedUpdate($data);
         $customer->write();
+        Member::password_validator()->setHistoricCount(0);
         $customer->changePassword($data['Password']);
         $this->setCustomer($customer);
-        Member::password_validator()->checkHistoricalPasswords(0);
 
         $customerGroup = $this->getTargetCustomerGroup($data);
         if ($customerGroup) {

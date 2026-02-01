@@ -74,8 +74,8 @@ trait PaymentCheckoutStep
             /* @var $paymentMethod PaymentMethod */
             if ($paymentMethod instanceof PaymentMethod) {
                 $paymentMethod->setController($controller);
-                $paymentMethod->setCancelLink(Director::absoluteURL($controller->Link()) . 'step/4');
-                $paymentMethod->setReturnLink(Director::absoluteURL($controller->Link()) . 'step/' . $currentStep->StepNumber());
+                $paymentMethod->setCancelLink(Director::absoluteURL($controller->Link('step/4')));
+                $paymentMethod->setReturnLink(Director::absoluteURL($controller->Link('step/' . $currentStep->StepNumber())));
                 $paymentMethod->setCustomerDetailsByCheckoutData($checkoutData);
                 $paymentMethod->setInvoiceAddressByCheckoutData($checkoutData);
                 $paymentMethod->setShippingAddressByCheckoutData($checkoutData);

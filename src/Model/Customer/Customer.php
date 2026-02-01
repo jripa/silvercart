@@ -1031,7 +1031,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
                 $member->Groups()->add($customerGroup);
             }
             
-            $member->logIn(true);
+           // $member->logIn(true);
             /** @var IdentityStore $identityStore */
             $identityStore = Injector::inst()->get(IdentityStore::class);
             $identityStore->logIn($member, false, Controller::curr()->getRequest());

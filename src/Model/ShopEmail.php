@@ -28,6 +28,7 @@ use SilverStripe\View\SSViewer;
 use SilverStripe\TemplateEngine\SSTemplateEngine;
 use SilverStripe\View\ViewLayerData;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
+use SilverCart\Model\System\SystemErrorLog;
 
 /**
  * base class for emails.
@@ -687,7 +688,13 @@ class ShopEmail extends DataObject
         if (is_array($attachments) && !empty($attachments)) {
             self::attachFiles($email, $attachments);
         }
-        return $email->send();
+        try {
+            $email->send();
+            return true;
+        } catch (\Throwable $e) {
+            SystemErrorLog::addEmailFailure($recipient, $subject, $e, ['sender' => Config::EmailSender()]);
+            return false;
+        }
     }
     
     /**
