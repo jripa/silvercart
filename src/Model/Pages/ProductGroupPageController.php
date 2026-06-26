@@ -27,6 +27,7 @@ use SilverStripe\Model\ArrayData;
 use SilverStripe\View\SSViewer;
 use SilverStripe\Model\ModelData;
 use SilverStripe\Core\Injector\Injector;
+use SilverStripe\Core\Injector\InjectorNotFoundException;
 use Psr\SimpleCache\CacheInterface;
 
 /**
@@ -144,6 +145,12 @@ class ProductGroupPageController extends PageController
      * @var string
      */
     protected $currentSortableFrontendFieldLabel = null;
+    /**
+     * Cache TTL for expensive product count queries in seconds.
+     *
+     * @var int
+     */
+    private const PRODUCT_COUNT_CACHE_TTL = 900;
 
     /**
      * Indicates wether a filter plugin can be registered for the current view.
@@ -306,7 +313,7 @@ class ProductGroupPageController extends PageController
      *
      * @return ProductGroupPage
      */
-    public function getTopProductGroup(ProductGroupPage $productGroup = null) : ProductGroupPage
+    public function getTopProductGroup(?ProductGroupPage $productGroup = null) : ProductGroupPage
     {
         if (is_null($productGroup)) {
             $productGroup = $this;
@@ -336,7 +343,7 @@ class ProductGroupPageController extends PageController
      * @author Sebastian Diel <sdiel@pixeltricks.de>
      * @since 17.02.2011
      */
-    public function OriginalLink(string $action = null) : string
+    public function OriginalLink(?string $action = null) : string
     {
         return (string) $this->data()->OriginalLink($action);
     }
@@ -484,7 +491,7 @@ class ProductGroupPageController extends PageController
                 $paginatedProducts->setPageLength($this->getProductsPerPageSetting());
                 $this->extend('onAfterGetProducts', $paginatedProducts);
                 $this->groupProducts[$hashKey] = $paginatedProducts;
-                $this->totalNumberOfProducts   = $paginatedProducts->count();
+                $this->totalNumberOfProducts   = $this->getCachedProductsCount($paginatedProducts, $filter, $sort);
             }
             if ($this->groupProducts[$hashKey]) {
                 $this->groupProducts[$hashKey]->HasMorePagesThan = $this->HasMorePagesThan;
@@ -553,6 +560,46 @@ class ProductGroupPageController extends PageController
             $this->groupProducts[$hashKey] = $groupProducts;
         }
         return $this;
+    }
+
+    /**
+     * Returns the count of products, using a short-lived cache to avoid
+     * expensive repeated COUNT queries.
+     *
+     * @param PaginatedList $paginatedProducts Product list
+     * @param string        $filter            SQL filter string
+     * @param string        $sort              SQL sort string
+     *
+     * @return int
+     */
+    protected function getCachedProductsCount(PaginatedList $paginatedProducts, string $filter, string $sort) : int
+    {
+        // In dev, cache I/O can be slower than a direct COUNT and skew profiling.
+        if (!Director::isLive()) {
+            return (int) $paginatedProducts->count();
+        }
+
+        try {
+            $cache = Injector::inst()->get(CacheInterface::class . '.cacheblock');
+        } catch (InjectorNotFoundException $e) {
+            return (int) $paginatedProducts->count();
+        }
+        $cacheKey = 'ProductGroupPageController_count_' . md5(implode('|', [
+            $this->ID,
+            Tools::current_locale(),
+            $this->data()->MemberGroupCacheKey(),
+            $filter,
+            $sort,
+        ]));
+
+        $cachedCount = $cache->get($cacheKey);
+        if ($cachedCount !== null) {
+            return (int) $cachedCount;
+        }
+
+        $count = (int) $paginatedProducts->count();
+        $cache->set($cacheKey, $count, self::PRODUCT_COUNT_CACHE_TTL);
+        return $count;
     }
 
     /**

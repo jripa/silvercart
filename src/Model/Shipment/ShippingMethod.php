@@ -350,6 +350,30 @@ class ShippingMethod extends DataObject
     {
         $fields = DataObjectExtension::getCMSFields($this, 'CarrierID', false);
         
+        // Ensure core fields are only shown in Root.Main (not above tabs or repeated)
+        $mainFieldNames = [
+            'CarrierID',
+            'Title',
+            'Description',
+            'DescriptionForShippingFeesPage',
+        ];
+        $mainFields = [];
+        foreach ($mainFieldNames as $fieldName) {
+            $field = $fields->dataFieldByName($fieldName);
+            if ($field) {
+                $fields->removeByName($fieldName);
+                $mainFields[] = $field;
+            }
+        }
+        $anchorField = 'isActive';
+        foreach ($mainFields as $field) {
+            if ($fields->dataFieldByName($anchorField) || $fields->fieldByName($anchorField)) {
+                $fields->insertBefore($anchorField, $field);
+            } else {
+                $fields->addFieldToTab('Root.Main', $field);
+            }
+        }
+        
         $fields->dataFieldByName('DeliveryTimeMin')->setDescription($this->fieldLabel('DeliveryTimeMinDesc'));
         $fields->dataFieldByName('DeliveryTimeMax')->setDescription($this->fieldLabel('DeliveryTimeMaxDesc'));
         $fields->dataFieldByName('DeliveryTimeText')->setDescription($this->fieldLabel('DeliveryTimeTextDesc'));

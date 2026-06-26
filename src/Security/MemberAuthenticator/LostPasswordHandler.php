@@ -42,7 +42,7 @@ class LostPasswordHandler extends SilverStripeLostPasswordHandler
                 $variables[$dbFieldName] = $member->{$dbFieldName};
             }
         }
-        $variables['SalutationText'] = Tools::getSalutationText($variables['Salutation']);
+        $variables['SalutationText'] = Tools::getSalutationText($variables['Salutation'] ?? null);
         $variables['InvoiceAddress'] = $member->InvoiceAddress();
         return ShopEmail::send(
                 'ChangePassword',

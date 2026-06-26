@@ -42,7 +42,7 @@ class Requirements_Backend extends SilverStripeRequirements_Backend
      *
      * @var bool
      */
-    private static $force_combine_files_async = true;
+    private static $force_combine_files_async = false;
     /**
      * List of file names to skip combining files for.
      *
@@ -55,6 +55,12 @@ class Requirements_Backend extends SilverStripeRequirements_Backend
      * @var bool
      */
     protected $minifyCombinedFiles = true;
+    /**
+     * Minification service.
+     *
+     * @var Requirements_Minifier|null
+     */
+    protected $minifier = null;
     /**
      * Whether or not file headers should be written when combining files
      *
@@ -72,11 +78,80 @@ class Requirements_Backend extends SilverStripeRequirements_Backend
      */
     public function __construct()
     {
+        $this->setMinifier(Requirements_Minifier::create());
         if (Director::isDev()) {
-          //  $this->setMinifyCombinedFiles(false);
+            // Keep JS readable/stable in dev to avoid hard-to-debug minification side effects.
+            $this->setMinifyCombinedFiles(false);
             $this->setWriteHeaderComment(true);
         }
-        //$this->setMinifier(Requirements_Minifier::create());
+    }
+
+    /**
+     * Backward compatible getter for minify flag.
+     *
+     * @return bool
+     */
+    public function getMinifyCombinedFiles() : bool
+    {
+        return (bool) $this->minifyCombinedFiles;
+    }
+
+    /**
+     * Backward compatible setter for minify flag.
+     *
+     * @param bool $minify Minify combined files.
+     *
+     * @return Requirements_Backend
+     */
+    public function setMinifyCombinedFiles(bool $minify) : Requirements_Backend
+    {
+        $this->minifyCombinedFiles = $minify;
+        return $this;
+    }
+
+    /**
+     * Alias for SilverStripe 6+ API.
+     *
+     * @return bool
+     */
+    public function getMinifyCombinedJSFiles() : bool
+    {
+        return $this->getMinifyCombinedFiles();
+    }
+
+    /**
+     * Alias for SilverStripe 6+ API.
+     *
+     * @param bool $minify Minify combined JS files.
+     *
+     * @return Requirements_Backend
+     */
+    public function setMinifyCombinedJSFiles(bool $minify) : Requirements_Backend
+    {
+        return $this->setMinifyCombinedFiles($minify);
+    }
+
+    /**
+     * Returns the current minifier service.
+     *
+     * @return Requirements_Minifier|null
+     */
+    public function getMinifier() : ?Requirements_Minifier
+    {
+        return $this->minifier;
+    }
+
+    /**
+     * Sets the minifier service.
+     *
+     * @param Requirements_Minifier|null $minifier Minifier service.
+     *
+     * @return Requirements_Backend
+     */
+    public function setMinifier(?Requirements_Minifier $minifier) : Requirements_Backend
+    {
+        $this->minifier = $minifier;
+        return $this;
     }
     
     /**
@@ -266,12 +341,33 @@ class Requirements_Backend extends SilverStripeRequirements_Backend
             if (array_key_exists('files', $combinedFileProperties)
              && is_array($combinedFileProperties['files'])
             ) {
+                $localFiles = [];
                 foreach ($combinedFileProperties['files'] as $index => $file) {
+                    if ($this->isExternalFilePath($file)) {
+                        continue;
+                    }
                     $realFile = ModuleResourceLoader::singleton()->resolvePath($file);
-                    $this->combinedFiles[$combinedFileName]['files'][$index] = $realFile;
+                    $localFiles[] = $realFile;
+                }
+                if (empty($localFiles)) {
+                    unset($this->combinedFiles[$combinedFileName]);
+                } else {
+                    $this->combinedFiles[$combinedFileName]['files'] = $localFiles;
                 }
             }
         }
+    }
+
+    /**
+     * Returns whether the given path points to an external resource.
+     *
+     * @param string $file File path or URL
+     *
+     * @return bool
+     */
+    protected function isExternalFilePath(string $file) : bool
+    {
+        return (bool) preg_match('{^(//)|(http[s]?:)}', $file);
     }
     
     /**
@@ -391,6 +487,7 @@ MESSAGE
         $jsFilesToCombine = [];
         foreach ($this->getJavascript() as $file => $attributes) {
             if (in_array($file, $existingFiles)
+             || $this->isExternalFilePath($file)
              || in_array(basename($file), $skipFiles)
              || in_array($file, $skipFiles)
             ) {

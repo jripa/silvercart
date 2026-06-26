@@ -25,12 +25,10 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\FormAction;
 use SilverStripe\Forms\GridField\GridField;
 use SilverStripe\Forms\GridField\GridFieldConfig_RecordEditor;
-use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ToggleCompositeField;
 use SilverStripe\Model\List\ArrayList;
 use SilverStripe\Core\Extension;
 use SilverStripe\ORM\DB;
-use SilverStripe\Model\ArrayData;
 use SilverStripe\SiteConfig\SiteConfig;
 use Symbiote\GridFieldExtensions\GridFieldOrderableRows;
 
@@ -134,6 +132,15 @@ class SiteConfigExtension extends Extension
         'MobileTouchIcon'           => Image::class,
         'StandardProductCondition'  => ProductCondition::class,
         'ShopCountry'               => Country::class,
+        'ActiveColorScheme'         => ColorScheme::class,
+    ];
+    /**
+     * Has-many relationships.
+     *
+     * @var array
+     */
+    private static $has_many = [
+        'ColorSchemes' => ColorScheme::class,
     ];
     /**
      * Defaults for empty fields.
@@ -340,6 +347,8 @@ class SiteConfigExtension extends Extension
                     'MobileTouchIcon'          => _t(Config::class . '.MobileTouchIcon', 'Mobile Touch Icon'),
                     'MobileTouchIconDesc'      => _t(Config::class . '.MobileTouchIconDesc', 'The mobile touch icon will be used if a visitor saves your shop as a shourtcut on the homescreen of a smartphone or tablet. The icon should have dimensions of 192x192 pixels.'),
                     'ColorScheme'              => _t(Config::class . '.ColorScheme', 'Color scheme'),
+                    'ActiveColorSchemeID'      => _t(Config::class . '.ActiveColorScheme', 'Active color scheme'),
+                    'ColorSchemes'             => _t(Config::class . '.ColorSchemes', 'Color schemes'),
                     'ColorSchemeTab'           => _t(Config::class . '.ColorSchemeTab', 'Color scheme'),
                     'ColorSchemeConfiguration' => _t(Config::class . '.ColorSchemeConfiguration', 'Title & color scheme'),
                 ]
@@ -594,77 +603,49 @@ class SiteConfigExtension extends Extension
      */
     public function getCMSFieldsForColorScheme(FieldList $fields)
     {
-        $colorSchemePath = Director::publicFolder() . '/_resources/vendor/silvercart/silvercart/client/css';
-        if (is_dir($colorSchemePath)) {
-            if ($handle = opendir($colorSchemePath)) {
-                $colorSchemes = ArrayList::create();
-                while (false !== ($entry = readdir($handle))) {
-                    if (substr($entry, -4) != '.css') {
-                        continue;
-                    }
-                    if (substr($entry, 0, 6) != 'color_') {
-                        continue;
-                    }
-                    $colorSchemeName  = substr($entry, 6, -4);
-                    $colorSchemeFile  = $colorSchemePath . '/' . $entry;
-                    $lines            = file($colorSchemeFile);
-                    $backgroundColors = [];
-                    $fontColors       = [];
-                    foreach ($lines as $line) {
-                        if (strpos(strtolower($line), 'background-color') !== false
-                         && preg_match('/#[a-z|A-Z|0-9]{3,6}/', $line, $matches)
-                        ) {
-                            $backgroundColors[$matches[0]] = ArrayData::create(['Color' => $matches[0]]);
-                        } elseif (strpos(strtolower(trim($line)), 'color') === 0
-                         && preg_match('/#[a-z|A-Z|0-9]{3,6}/', $line, $matches)
-                        ) {
-                            $fontColors[$matches[0]] = ArrayData::create(['Color' => $matches[0]]);
-                        }
-                    }
-                    $colorSchemes->push(ArrayData::create([
-                                'Name'             => $colorSchemeName,
-                                'Title'            => _t(Config::class . '.ColorScheme_' . $colorSchemeName, ucfirst($colorSchemeName)),
-                                'BackgroundColors' => ArrayList::create($backgroundColors),
-                                'FontColors'       => ArrayList::create($fontColors),
-                                'IsActive'         => $this->owner->ColorScheme == $colorSchemeName,
-                    ]));
-                }
-                closedir($handle);
-            }
+        $fields->removeByName(['ColorScheme', 'ActiveColorSchemeID', 'ColorSchemes']);
             
-            $colorSchemes->sort('Title');
+        $logoField      = UploadField::create('ShopLogo',        $this->owner->fieldLabel('ShopLogo'));
+        $faviconField   = UploadField::create('Favicon',         $this->owner->fieldLabel('Favicon'));
+        $touchIconField = UploadField::create('MobileTouchIcon', $this->owner->fieldLabel('MobileTouchIcon'));
+        $logoField->setDescription($this->owner->fieldLabel('ShopLogoDesc'));
+        $faviconField->setDescription($this->owner->fieldLabel('FaviconDesc'));
+        $touchIconField->setDescription($this->owner->fieldLabel('MobileTouchIconDesc'));
 
-            $fields->removeByName('ColorScheme');
-            
-            $logoField      = UploadField::create('ShopLogo',        $this->owner->fieldLabel('ShopLogo'));
-            $faviconField   = UploadField::create('Favicon',         $this->owner->fieldLabel('Favicon'));
-            $touchIconField = UploadField::create('MobileTouchIcon', $this->owner->fieldLabel('MobileTouchIcon'));
-            $logoField->setDescription($this->owner->fieldLabel('ShopLogoDesc'));
-            $faviconField->setDescription($this->owner->fieldLabel('FaviconDesc'));
-            $touchIconField->setDescription($this->owner->fieldLabel('MobileTouchIconDesc'));
-            // Build color scheme toggle group
-            $colorSchemeConfigurationField = ToggleCompositeField::create(
-                    'ColorSchemeConfiguration',
-                    $this->owner->fieldLabel('ColorSchemeConfiguration'),
-                    [
-                        $fields->dataFieldByName('Title'),
-                        $fields->dataFieldByName('Tagline'),
-                        $logoField,
-                        $faviconField,
-                        $touchIconField,
-                        LiteralField::create('ColorScheme', $this->owner->customise(['ColorSchemes' => $colorSchemes])->renderWith('SilverCart/Admin/Forms/ColorSchemeField'))
-                    ]
-            )->setHeadingLevel(4)->setStartClosed(true);
-            
-            $fields->removeByName('Title');
-            $fields->removeByName('Tagline');
-            
-            $fields->addFieldToTab('Root.Main', $colorSchemeConfigurationField);
-        } else {
-            $fields->removeByName('ColorScheme');
-        }
+        $colorSchemes = $this->owner->ColorSchemes();
+        $activeColorSchemeField = DropdownField::create(
+            'ActiveColorSchemeID',
+            $this->owner->fieldLabel('ActiveColorSchemeID'),
+            $colorSchemes->map('ID', 'Title')->toArray()
+        )->setEmptyString(_t(Config::class . '.ColorSchemeUseStaticCSS', 'Use static color CSS'));
+
+        $colorSchemeGrid = GridField::create(
+            'ColorSchemes',
+            $this->owner->fieldLabel('ColorSchemes'),
+            $colorSchemes,
+            GridFieldConfig_RecordEditor::create(20)
+        );
+
+        $colorSchemeConfigurationField = ToggleCompositeField::create(
+                'ColorSchemeConfiguration',
+                $this->owner->fieldLabel('ColorSchemeConfiguration'),
+                [
+                    $fields->dataFieldByName('Title'),
+                    $fields->dataFieldByName('Tagline'),
+                    $logoField,
+                    $faviconField,
+                    $touchIconField,
+                    $activeColorSchemeField,
+                    $colorSchemeGrid,
+                ]
+        )->setHeadingLevel(4)->setStartClosed(true);
+        
+        $fields->removeByName('Title');
+        $fields->removeByName('Tagline');
+        
+        $fields->addFieldToTab('Root.Main', $colorSchemeConfigurationField);
     }
-    
+
     /**
      * Sets the ColorScheme.
      * 
@@ -684,9 +665,16 @@ class SiteConfigExtension extends Extension
 
         $request     = $controller->getRequest();
         $colorScheme = $request->postVar('ColorScheme');
+        $activeColorSchemeID = (int) $request->postVar('ActiveColorSchemeID');
         
         if (is_string($colorScheme)) {
             $this->owner->ColorScheme = $colorScheme;
+        }
+        if ($activeColorSchemeID > 0) {
+            $activeColorScheme = ColorScheme::get()->byID($activeColorSchemeID);
+            if ($activeColorScheme instanceof ColorScheme) {
+                $this->owner->ColorScheme = $activeColorScheme->Code;
+            }
         }
     }
 

@@ -13,6 +13,8 @@ use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
+use TractorCow\Fluent\Extension\FluentDirectorExtension;
+use TractorCow\Fluent\State\FluentState;
 
 /**
  * Shop Email Content.
@@ -198,7 +200,15 @@ class Content extends DataObject
                 $exampleEmail = ExampleData::render_example_email($this->ShopEmail()->TemplateName);
                 if (!empty($exampleEmail)) {
                     $fields->findOrMakeTab('Root.Preview', $this->ShopEmail()->fieldLabel('Preview'));
-                    $frame = '<iframe class="full-height" src="' . Director::absoluteURL('example-data/renderemail/' . $this->ShopEmail()->TemplateName) . '"></iframe>';
+                    $previewUrl = Director::absoluteURL('example-data/renderemail/' . $this->ShopEmail()->TemplateName);
+                    if (class_exists(FluentDirectorExtension::class)) {
+                        $localeParam = FluentDirectorExtension::config()->get('query_param');
+                        $localeValue = FluentState::singleton()->getLocale();
+                        if (!empty($localeParam) && !empty($localeValue)) {
+                            $previewUrl .= '?' . $localeParam . '=' . urlencode($localeValue);
+                        }
+                    }
+                    $frame = '<iframe class="full-height" src="' . $previewUrl . '"></iframe>';
                     $fields->addFieldToTab('Root.Preview', LiteralField::create('Preview', $frame));
                 }
             }

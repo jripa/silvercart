@@ -670,7 +670,7 @@ class RequireDefaultRecords
         $addressHolder->write();
         $addressHolder->copyVersionToStage(Versioned::DRAFT, Versioned::LIVE);
     }
-    
+
     /**
      * Re-renders the ErrorPage templates
      * 

@@ -174,7 +174,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
      * 
      * @return void
      */
-    public static function setRegistrationOptInConfirmationBaseLink(string $link = null) : void
+    public static function setRegistrationOptInConfirmationBaseLink(?string $link = null) : void
     {
         self::$registrationOptInConfirmationBaseLink = $link;
     }
@@ -194,7 +194,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
     /**
      * Group ID string to use as cache key part
      *
-     * @var string
+     * @var string[]
      */
     protected $groupCacheKey = [];
     /**
@@ -763,7 +763,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
     {
         return LoginAttempt::get()
                 ->filterAny([
-                    'EmailHashed' => sha1($this->owner->Email),
+                    'EmailHashed' => sha1((string) $this->owner->Email),
                     'MemberID'    => $this->owner->ID,
                 ])
                 ->sort('Created', 'DESC');
@@ -1626,7 +1626,7 @@ class Customer extends DataExtension implements TemplateGlobalProvider, Permissi
                 $variables[$dbFieldName] = $member->{$dbFieldName};
             }
         }
-        $variables['SalutationText'] = Tools::getSalutationText($variables['Salutation']);
+        $variables['SalutationText'] = Tools::getSalutationText($variables['Salutation'] ?? null);
         $variables['InvoiceAddress'] = $this->owner->InvoiceAddress();
 
         $this->requireDefaultChangePasswordEmail();

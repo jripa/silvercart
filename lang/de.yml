@@ -38,6 +38,18 @@ de:
     SilverCart\Admin\Forms\GridField\GridFieldDuplicateAction:
         DUPLICATE_DESCRIPTION: 'Dupliziert dieses Objekt'
         Duplicate: Duplizieren
+    SilverCart\Admin\Model\ColorScheme:
+        AlternateColor: Alternativ
+        BgColor: Hintergrund
+        BorderColor: Rahmen
+        Code: Code
+        ColorPreview: Farben
+        Hint: 'Diese Farben werden als CSS-Variablen für das aktive Storefront-Theme ausgegeben.'
+        LinkColor: Link
+        PrimaryColor: Primär
+        SecondaryColor: Sekundär
+        TextColor: Text
+        Title: Titel
         DuplicatePermissionsFailure: 'Duplizieren nicht erlaubt'
     SilverCart\Admin\Forms\GridField\GridFieldOrderExportButton:
         Export-current-month: 'Aktuellen Monat exportieren'
@@ -323,15 +335,20 @@ de:
         CLEAN_DATABASE_INPROGRESS: 'Die Datenbank wird optimiert... (%s/%s) (%s%% abgeschlossen, etwa %s verbleibend)'
         CLEAN_DATABASE_START_INDEX: Startindex
         CheckoutConfiguration: 'Warenkorb- & Checkout-Einstellungen'
+        ActiveColorScheme: 'Aktives Farbschema'
         ColorScheme: Farbschema
+        ColorSchemes: Farbschemen
         ColorSchemeTab: Farbschema
         ColorSchemeConfiguration: 'Titel & Farbschema'
+        ColorSchemeUseStaticCSS: 'Statische Farb-CSS verwenden'
         ColorScheme_blue: Blau
         ColorScheme_brown: Braun
         ColorScheme_green: Grün
         ColorScheme_orange: Orange
         ColorScheme_red: Rot
         ColorScheme_carmin: Karmin
+        ColorScheme_blueyellow: Blau/Gelb
+        ColorScheme_creme: Creme
         CustomerConfiguration: Kunden-Einstellungen
         DEFAULTCURRENCY: 'Standard Währung'
         DEFAULTPRICETYPE: 'Standard Preistyp'

@@ -5,7 +5,7 @@ namespace SilverCart\Model\Pages;
 use SilverCart\Forms\ContactForm;
 use SilverCart\Model\Pages\MetaNavigationHolderController;
 use SilverCart\Model\Product\Product;
-use SilverStripe\Control\HTTPRequest;
+use SilverStripe\Forms\Form;
 
 /**
  * ContactFormPage Controller class.
@@ -55,21 +55,33 @@ class ContactFormPageController extends MetaNavigationHolderController {
      * @since 13.11.2017
      */
     public function addProductQuestion(ContactForm $contactForm) {
+
         $urlID = $this->getRequest()->param('ID');
+
         if (!empty($urlID) &&
             is_numeric($urlID)) {
+ 
             $product = Product::get()->byID($urlID);
             if ($product instanceof Product &&
                 $product->exists()) {
-                $contactForm->Fields()->dataFieldByName('Message')->setValue(
-                        _t(Product::class . '.PRODUCT_QUESTION',
-                            'Please answer the following questions for the product {title} ({productnumber}):',
-                            [
-                                'title' => $product->Title,
-                                'productnumber' => $product->ProductNumberShop,
-                            ]
-                        )
+                $message = _t(Product::class . '.PRODUCT_QUESTION',
+                    'Please answer the following questions for the product {title} ({productnumber}):',
+                    [
+                        'title' => $product->Title,
+                        'productnumber' => $product->ProductNumberShop,
+                    ]
                 );
+
+                $field = $contactForm->Fields()->dataFieldByName('Message');
+               
+                if ($field) {
+                    $field->setValue($message);
+                    $field->setValue($message, Form::MERGE_AS_INTERNAL_VALUE);
+                }
+
+                $contactForm->loadDataFrom([
+                    'Message' => $message,
+                ], Form::MERGE_AS_INTERNAL_VALUE);
             }
         }
     }

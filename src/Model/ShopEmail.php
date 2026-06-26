@@ -15,12 +15,16 @@ use SilverStripe\CMS\Model\SiteTree;
 use SilverStripe\Control\Director;
 use SilverStripe\Control\HTTP;
 use SilverStripe\Control\Email\Email;
+use SilverStripe\Control\Controller;
+use SilverStripe\Admin\LeftAndMain;
 use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\GridField\GridFieldAddExistingAutocompleter;
 use SilverStripe\Forms\GridField\GridFieldDeleteAction;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\i18n\i18n;
+use TractorCow\Fluent\State\FluentState;
+use TractorCow\Fluent\Extension\FluentDirectorExtension;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\ORM\FieldType\DBHTMLText;
 use SilverStripe\View\Requirements;
@@ -241,7 +245,15 @@ class ShopEmail extends DataObject
             $exampleEmail      = ExampleData::render_example_email($this->TemplateName);
             if (!empty($exampleEmail)) {
                 $fields->findOrMakeTab('Root.Preview', $this->fieldLabel('Preview'));
-                $frame = '<iframe class="full-height min-vh-100 d-flex flex-column" src="' . Director::absoluteURL('example-data/renderemail/' . $this->TemplateName) . '"></iframe>';
+                $previewUrl = Director::absoluteURL('example-data/renderemail/' . $this->TemplateName);
+                if (class_exists(FluentDirectorExtension::class)) {
+                    $localeParam = FluentDirectorExtension::config()->get('query_param');
+                    $localeValue = FluentState::singleton()->getLocale();
+                    if (!empty($localeParam) && !empty($localeValue)) {
+                        $previewUrl .= '?' . $localeParam . '=' . urlencode($localeValue);
+                    }
+                }
+                $frame = '<iframe class="full-height min-vh-100 d-flex flex-column" src="' . $previewUrl . '"></iframe>';
                 $fields->addFieldToTab('Root.Preview', LiteralField::create('Preview', $frame));
             }
         });
@@ -399,7 +411,7 @@ class ShopEmail extends DataObject
      * 
      * @return void
      */
-    public static function register_email_template(string $templateName, string $templateNameTitle = null) : void
+    public static function register_email_template(string $templateName, ?string $templateNameTitle = null) : void
     {
         if (is_null($templateNameTitle)) {
             $templateNameTitle = $templateName;
@@ -511,8 +523,17 @@ class ShopEmail extends DataObject
      */
     public function getTemplateNameTitle(string $templateName = '') : string
     {
-        if ($templateName !=='') {
+        if ($templateName === '') {
             $templateName = $this->TemplateName;
+        }
+        $controller = Controller::curr();
+        if ($controller instanceof LeftAndMain && class_exists(FluentState::class)) {
+            $locale = FluentState::singleton()->getLocale();
+            if (!empty($locale)) {
+                return (string) i18n::with_locale($locale, function () use ($templateName) {
+                    return self::get_template_name_title($templateName);
+                });
+            }
         }
         return (string) self::get_template_name_title($templateName);
     }

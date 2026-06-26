@@ -186,11 +186,11 @@ class Tools
      * Takes the given string and puts it into a DBHTMLText object to render properly in a 
      * template.
      * 
-     * @param string $string String to convert.
+     * @param string|null $string String to convert.
      * 
      * @return DBHTMLText
      */
-    public static function string2html(string $string = "") : DBHTMLText
+    public static function string2html(?string $string = "") : DBHTMLText
     {
         return StringTools::string2html((string) $string);
     }
@@ -760,13 +760,15 @@ class Tools
     /**
      * Returns the localized salutation string.
      * 
-     * @param string $salutation Enum value for salutation to get i18n for
+     * @param string|null $salutation Enum value for salutation to get i18n for
      *
      * @return string
      */
     public static function getSalutationText($salutation)
     {
-        if ($salutation == 'Herr') {
+        if (empty($salutation)) {
+            $salutationText = '';
+        } elseif ($salutation == 'Herr') {
             $salutationText = Address::singleton()->fieldLabel('Mister');
         } elseif ($salutation == 'Frau') {
             $salutationText = Address::singleton()->fieldLabel('Misses');

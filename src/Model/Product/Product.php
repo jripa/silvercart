@@ -34,6 +34,7 @@ use SilverStripe\Control\Controller;
 use SilverStripe\Control\Director;
 use SilverStripe\Core\Convert;
 use SilverStripe\Forms\CheckboxField;
+use SilverStripe\Forms\DropdownField;
 use SilverStripe\Forms\FieldList;
 use SilverStripe\Forms\LiteralField;
 use SilverStripe\Forms\ReadonlyField;
@@ -1736,7 +1737,20 @@ class Product extends DataObject implements PermissionProvider
 
         /******** Misc FieldGroup *******/
         $miscGroup = FieldGroup::create('MiscGroup', '', $fields);
-        $manufactuerField = $fields->dataFieldByName('ManufacturerID');
+        $manufacturerField = $fields->dataFieldByName('ManufacturerID');
+        if (is_null($manufacturerField)) {
+            $manufacturerField = $fields->dataFieldByName('Manufacturer');
+        }
+        if (is_null($manufacturerField)) {
+            $manufacturerMap = Manufacturer::get()->sort('Title')->map('ID', 'Title')->toArray();
+            $manufacturerField = DropdownField::create(
+                'ManufacturerID',
+                $this->fieldLabel('Manufacturer'),
+                $manufacturerMap
+            );
+            $manufacturerField->setEmptyString(_t(Product::class . '.SelectManufacturer', 'Please select'));
+            $manufacturerField->setValue((int) $this->ManufacturerID);
+        }
         $siteConfig = SiteConfig::current_site_config();
         $miscGroup->breakAndPush($fields->dataFieldByName('ExcludeFromPaymentDiscounts'));
         $miscGroup->breakAndPush($fields->dataFieldByName('PackagingQuantity'));
@@ -1766,8 +1780,14 @@ class Product extends DataObject implements PermissionProvider
             $fields->insertAfter('isActive', CheckboxField::create('RefreshCache', $this->fieldLabel('RefreshCache')));
        }
 
-        if (!is_null($manufactuerField)) {
-            $miscGroup->pushAndBreak($manufactuerField);
+        if (!is_null($manufacturerField)) {
+            $miscGroup->pushAndBreak($manufacturerField);
+        }
+
+        // Final visibility fallback for edge cases where nested field composition
+        // from extensions prevents fields inside MiscGroup from rendering.
+        if (!$fields->fieldByName('ManufacturerID') && !$fields->fieldByName('Manufacturer')) {
+            $fields->insertAfter('MiscGroupToggle', $manufacturerField);
         }
     }
 
@@ -1957,10 +1977,11 @@ class Product extends DataObject implements PermissionProvider
      */
     public function getHtmlEncodedShortDescription($cutToLength = false) : DBHTMLText
     {
+        $shortDescription = (string) ($this->ShortDescription ?? '');
         $output = str_replace(
             ['&lt;', '&gt;', PHP_EOL, "\n"],
             ['<',    '>',    '<br/>', '<br/>'],
-            htmlentities($this->ShortDescription, ENT_NOQUOTES, 'UTF-8', false)
+            htmlentities($shortDescription, ENT_NOQUOTES, 'UTF-8', false)
         );
 
         if ($cutToLength !== false) {
@@ -2728,7 +2749,7 @@ class Product extends DataObject implements PermissionProvider
      */
     public function ProductQuestionLink() : string
     {
-        return Tools::PageByIdentifierCodeLink(Page::IDENTIFIER_CONTACT_FORM_PAGE) . "productQuestion/{$this->ID}";
+        return rtrim(Tools::PageByIdentifierCodeLink(Page::IDENTIFIER_CONTACT_FORM_PAGE), '/') . "/productQuestion/{$this->ID}";
     }
     
     /**

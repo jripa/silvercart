@@ -13,6 +13,8 @@ use SilverStripe\Model\List\ArrayList;
 use SilverStripe\ORM\DataObject;
 use SilverStripe\Model\ArrayData;
 use SilverStripe\View\Requirements;
+use SilverStripe\Control\Controller;
+use SilverStripe\Security\SecurityToken;
 
 /**
  * Extension for the LeftAndMain class.

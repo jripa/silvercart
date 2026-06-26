@@ -119,7 +119,7 @@ class SystemErrorLog extends DataObject implements ModelAdmin_ReadonlyInterface
                 $log->ExceptionClass = get_class($exception);
                 $log->ExceptionMessage = $exception->getMessage();
             }
-            if (Controller::has_curr()) {
+            if (Controller::curr()) {
                 $request = Controller::curr()->getRequest();
                 if ($request) {
                     $log->RequestURL = $request->getURL(true);

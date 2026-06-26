@@ -65,20 +65,50 @@ class SCTemplateParser extends SSTemplateParser
         if (isset($sub['Call']['CallArguments'])
          && $arguments = $sub['Call']['CallArguments']['php']
         ) {
-            $cacheProperty = 'true';
-            if (($property === 'fieldLabel'
-              && (bool) $this->config()->disable_field_label_cache)
-             || in_array($property, (array) $this->config()->disable_cache_for_properties)
-            ) {
-                $cacheProperty = 'false';
-            }
-            $res['php'] .= "->{$method}('{$property}', array({$arguments}), {$cacheProperty})";
+            $res['php'] .= "->{$method}('{$property}', [{$arguments}])";
         } else {
-            $cacheProperty = 'true';
-            if (in_array($property, (array) $this->config()->disable_cache_for_properties)) {
-                $cacheProperty = 'false';
-            }
-            $res['php'] .= "->{$method}('{$property}', null, {$cacheProperty})";
+            $res['php'] .= "->{$method}('{$property}', [])";
+        }
+    }
+
+    /**
+     * Adds a fallback for legacy SilverCart include paths.
+     *
+     * SilverStripe 6 no longer resolves <% include SilverCart/Model/Pages/Foo %>
+     * to SilverCart/Model/Pages/Includes/Foo automatically.
+     *
+     * @param array &$res Resource data
+     *
+     * @return void
+     */
+    public function Include__finalise(&$res) : void
+    {
+        $template      = $res['template'];
+        $arguments     = $res['arguments'];
+        $templateNames = '[["type" => "Includes", ' . $template . '], ' . $template;
+        $templateName  = trim($template, "'");
+        $prefix        = 'SilverCart/Model/Pages/';
+
+        if (str_starts_with($templateName, $prefix)
+         && !str_contains($templateName, '/Includes/')
+        ) {
+            $legacyTemplateName = "'{$prefix}Includes/" . substr($templateName, strlen($prefix)) . "'";
+            $templateNames .= ', ["type" => "Includes", ' . $legacyTemplateName . '], ' . $legacyTemplateName;
+        }
+
+        $templateNames .= ']';
+
+        $res['php'] = '$val .= \\SilverStripe\\TemplateEngine\\SSTemplateEngine::execute_template('
+            . $templateNames
+            . ', $scope->getCurrentItem(), ['
+            . implode(',', $arguments)
+            . "], \$scope, true);\n";
+
+        if ($this->includeDebuggingComments) {
+            $res['php'] =
+                '$val .= \'<!-- include ' . addslashes($template ?? '') . ' -->\';' . "\n" .
+                $res['php'] .
+                '$val .= \'<!-- end include ' . addslashes($template ?? '') . ' -->\';' . "\n";
         }
     }
 }

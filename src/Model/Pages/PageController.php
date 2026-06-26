@@ -3,6 +3,7 @@
 namespace SilverCart\Model\Pages;
 
 use Broarm\CookieConsent\Model\CookiePolicyPage;
+use SilverCart\Admin\Model\ColorScheme;
 use SilverCart\Admin\Model\Config;
 use SilverCart\Admin\Model\CookiePolicyConfig;
 use SilverCart\Checkout\Checkout;
@@ -250,8 +251,16 @@ class PageController extends ContentController
      */
     public function RequireColorSchemeCSS() : void
     {
-        if (!is_null(Config::getConfig()->ColorScheme)) {
-            Requirements::themedCSS('client/css/color_' . Config::getConfig()->ColorScheme);
+        $config = Config::getConfig();
+        if (!is_null($config->ColorScheme)) {
+            Requirements::themedCSS('client/css/color_' . $config->ColorScheme);
+        }
+
+        $activeColorScheme = $config->ActiveColorScheme();
+        if ($activeColorScheme instanceof ColorScheme
+         && $activeColorScheme->exists()
+        ) {
+            Requirements::customCSS($activeColorScheme->getCustomCSS(), 'silvercart-active-color-scheme');
         }
     }
     

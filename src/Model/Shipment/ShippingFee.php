@@ -273,6 +273,19 @@ class ShippingFee extends DataObject
             $fieldGroup->push(          $fields->dataFieldByName('Price'));
             $fieldGroup->pushAndBreak(  $fields->dataFieldByName('TaxID'));
             $fieldGroup->pushAndBreak(  $postPricingField);
+            $shippingMethodField = $fields->dataFieldByName('ShippingMethodID');
+            if ($shippingMethodField) {
+                $shippingMethods = ShippingMethod::get();
+                if ($shippingMethodField instanceof \SilverStripe\Forms\SearchableDropdownField) {
+                    $shippingMethodField->setSource($shippingMethods);
+                    $shippingMethodField->setLabelField('TitleWithCarrier');
+                } else {
+                    if ($shippingMethods instanceof \SilverStripe\ORM\DataList) {
+                        $shippingMethods = $shippingMethods->map('ID', 'TitleWithCarrier')->toArray();
+                    }
+                    $shippingMethodField->setSource($shippingMethods);
+                }
+            }
             // only the carriers zones must be selectable
             $zoneTable      = Tools::get_table_name(Zone::class);
             $carrierTable   = Tools::get_table_name(Carrier::class);
@@ -409,7 +422,15 @@ class ShippingFee extends DataObject
      */
     public function AttributedShippingMethods() : string
     {
-        return Tools::AttributedDataObject($this->ShippingMethod());
+        $shippingMethod = $this->ShippingMethod();
+        if (!$shippingMethod || !$shippingMethod->exists()) {
+            return '';
+        }
+        $title = $shippingMethod->TitleWithCarrier;
+        if ($title === false || $title === null || $title === '') {
+            $title = $shippingMethod->Title;
+        }
+        return (string) $title;
     }
 
     /**
@@ -731,4 +752,3 @@ class ShippingFee extends DataObject
         return $title;
     }
 }
-

@@ -13,25 +13,6 @@
             </div>
         </td>
     <% end_if %>
-    <!--
-    <% loop $CheckoutSteps %>
-        <% if $IsVisible %>
-        <td <% if $IsCurrentStep %>class="current-step"<% end_if %>>
-            <div class="well">
-                <% if $IsCurrentStep %>
-                <span class="highlight active step-{$StepNumber}"><strong><span class="icon-checkoutstep{$StepNumber}"></span> {$VisibleStepNumber}. <span class="step-title">{$StepTitle}</span></strong></span>
-                <% else_if $IsCompleted %>
-                <a class="highlight" href="{$Top.Link(step)}/{$StepNumber}"><span class="icon-ok"></span> <span class="icon-checkoutstep{$StepNumber}"></span> {$VisibleStepNumber}. <span class="step-title">{$StepTitle}</span></a>
-                <% else_if $IsPreviousStepCompleted %>
-                <a class="highlight" href="{$Top.Link(step)}/{$StepNumber}"><span class="icon-ok"></span> <span class="icon-checkoutstep{$StepNumber}"></span> {$VisibleStepNumber}. <span class="step-title">{$StepTitle}</span></a>
-                <% else %>
-                <span><span class="icon-checkoutstep{$StepNumber}"></span> {$VisibleStepNumber}. <span class="step-title">{$StepTitle}</span></span>
-                <% end_if %>
-            </div>
-        </td>
-        <% end_if %>
-    <% end_loop %>
-     -->
     </tr>
 </table>
     <% end_with %>

@@ -71,9 +71,14 @@ class SecurityExtension extends Extension
         $action  = $request->param('Action');
         if ($action === 'login') {
             $backURL = $request->getVar('BackURL');
-            if (!empty($backURL)) {
+            if ($member
+             && $member->exists()
+             && !empty($backURL)
+            ) {
                 if (strpos($backURL, 'admin') !== 0
                  && strpos($backURL, '/admin') !== 0
+                 && stripos($backURL, 'flush=') === false
+                 && stripos($backURL, 'dev/build') === false
                 ) {
                     $this->owner->redirect($backURL);
                 }
